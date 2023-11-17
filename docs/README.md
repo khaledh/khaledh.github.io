@@ -1,6 +1,5 @@
 ---
-title: Page One
-description: Description of this page
+title: Home page
 ---
 
 ## Hello World
