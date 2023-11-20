@@ -1,5 +1,6 @@
 import { defineUserConfig } from 'vuepress'
 import { defaultTheme } from 'vuepress'
+import { searchProPlugin } from "vuepress-plugin-search-pro";
 import { mdEnhancePlugin } from 'vuepress-plugin-md-enhance';
 import markdownItDeflist from 'markdown-it-deflist';
 import { commentPlugin } from "vuepress-plugin-comment2";
@@ -20,6 +21,9 @@ export default defineUserConfig({
     emoji: false
   },
   plugins: [
+    searchProPlugin({
+      indexContent: true,
+    }),
     mdEnhancePlugin({
     }),
     commentPlugin({
