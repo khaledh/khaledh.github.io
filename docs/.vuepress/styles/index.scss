@@ -8,7 +8,8 @@
   --font-family-code: "JetBrains Mono", "Andale Mono", "Monaco", monospace;
 }
 
-pre, code {
+pre,
+code {
   // font-family: var(--font-family-code);
   // color: var(--c-text-lighter);
   // padding: 0.25rem 0.5rem;
@@ -21,8 +22,7 @@ pre, code {
 }
 
 code[class*=language-],
-pre[class*=language-]
-{
+pre[class*=language-] {
   // color: #ccc;
   // background: none;
   // font-family: var(--font-family-code);
@@ -116,6 +116,6 @@ div[class*=language-].line-numbers-mode .line-numbers {
   // --navbar-padding-h: 1.5rem;
   // --sidebar-width: 20rem;
   // --sidebar-width-mobile: calc(var(--sidebar-width) * 0.82);
-  --content-width: 870px;
+  --content-width: 880px;
   // --homepage-width: 960px;
 }
