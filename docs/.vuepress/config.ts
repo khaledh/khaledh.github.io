@@ -15,7 +15,8 @@ export default defineUserConfig({
       '/osdev/01-intro.md',
       '/osdev/02-environment-setup.md',
       '/osdev/03-bootloader.md',
-    ]
+    ],
+    contributors: false,
   }),
   markdown: {
     emoji: false

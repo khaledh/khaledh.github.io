@@ -28,5 +28,7 @@ As any hobby OS project, it needs a name. I decided to call it **Fusion OS**, fo
 
 In the next section, we'll set up our development environment.
 
+<!--
 ---
 <CommentService />
+-->

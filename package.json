@@ -12,6 +12,7 @@
   "license": "ISC",
   "devDependencies": {
     "@vuepress/client": "2.0.0-rc.0",
+    "@vuepress/plugin-last-updated": "^1.9.10",
     "markdown-it-deflist": "^2.1.0",
     "vue": "^3.3.8",
     "vuepress": "2.0.0-rc.0",
