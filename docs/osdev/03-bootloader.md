@@ -145,7 +145,7 @@ Now we have a PE32+ executable with the correct subsystem type. Let's see how we
 
 ## Loading the bootloader
 
-The default BIOS for QEMU is **SeaBIOS**, which is a legacy BIOS. We need to use a UEFI BIOS instead. To download the latest UEFI BIOS for QEMU, we can use the edk2-ovmf package:
+The default BIOS for QEMU is a legacy BIOS. We need to use a UEFI BIOS instead. To download the latest UEFI BIOS for QEMU, we can use the edk2-ovmf package:
 
 ```sh-session
 $ sudo pacman -S edk2-ovmf
@@ -156,6 +156,6 @@ This installs the UEFI BIOS image to `/usr/share/edk2-ovmf/x64/OVMF_CODE.fd`. We
 
 ```sh-session
 $ qemu-system-x86_64 \
-    -bios /usr/share/edk2-ovmf/x64/OVMF_CODE.fd \
+    -drive if=pflash,format=raw,readonly=on,file=/usr/share/edk2-ovmf/x64/OVMF_CODE.fd \
     -drive format=raw,file=build/x86boot.efi
 ```
