@@ -188,9 +188,10 @@ $ qemu-system-x86_64 \
     -nic none
 ```
 
-We're greeted with the TianoCore splash screen, and then we are dropped into the UEFI shell:
+We're greeted with the TianoCore splash screen, and then we are dropped into the OVMF menu:
 
-![UEFI Shell](qemu-uefi-shell.png)
+![OVMF Menu](ovmf-menu.png)
+
 
 At this point we don't know if our bootloader has been loaded or not, since we return 0 (i.e. `EfiSuccess`) from the entry point without doing anything. The UEFI spec says that in the case 
 
