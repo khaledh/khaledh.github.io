@@ -1,6 +1,6 @@
 # Environment Setup
 
-In this section, we'll set up our development environment. We'll be using **Nim** as our programming language, so we'll need to install the **Nim compiler** and a **cross-compiler** for our target platform. We'll also need **QEMU** to test our OS.
+In this section, we'll set up our development environment. We'll be using **Nim** as our programming language, so obviously we'll need to install the **Nim compiler**. We also need a way to cross-compile to a freestanding environment. We'll use LLVM's **clang** and **lld** for that. Finally, we'll need a way to test our OS. We'll use **QEMU** for that.
 
 ## Nim compiler
 
@@ -22,16 +22,20 @@ Nim Compiler Version 2.0.0 [Linux: amd64]
 ...
 ```
 
-## C Cross-compiler
+## LLVM toolchain
 
-Now that we have Nim installed, we need to install a C cross-compiler for our target platform. Since we'll be targeting **UEFI** as our boot environment, we'll need a compiler/linker that generates **PE32+** binaries (as required by the UEFI spec). The easiest way to get this is to use the **MinGW-w64** toolchain. I'm on Arch Linux, so I can install it with:
+Now that we have Nim installed, we need to install the **LLVM** toolchain. We'll use **clang** and **lld** to cross-compile to a freestanding environment.
 
 ```sh-session
-$ sudo pacman -S mingw-w64-gcc
+$ sudo pacman -S clang lld
 ...
 
-$ x86_64-w64-mingw32-gcc -dumpversion
-12.2.0
+$ clang --version
+clang version 16.0.6
+...
+
+$ ld.lld --version
+LLD 16.0.6 (compatible with GNU linkers)
 ```
 
 ## QEMU

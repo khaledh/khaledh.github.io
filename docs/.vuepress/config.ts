@@ -14,7 +14,10 @@ export default defineUserConfig({
     sidebar: [
       '/osdev/01-intro.md',
       '/osdev/02-environment-setup.md',
-      '/osdev/03-bootloader.md',
+      '/osdev/03-targeting-uefi-p1.md',
+      '/osdev/04-targeting-uefi-p2.md',
+      '/osdev/05-bootloader-p1.md',
+      '/osdev/06-bootloader-p2.md',
     ],
     contributors: false,
   }),

@@ -8,8 +8,9 @@
   --font-family-code: "JetBrains Mono", "Andale Mono", "Monaco", monospace;
 }
 
-pre,
-code {
+p pre,
+p code,
+pre code {
   // font-family: var(--font-family-code);
   // color: var(--c-text-lighter);
   // padding: 0.25rem 0.5rem;
@@ -26,7 +27,7 @@ pre[class*=language-] {
   // color: #ccc;
   // background: none;
   // font-family: var(--font-family-code);
-  font-size: 0.3em !important;
+  font-size: 9pt !important;
   // text-align: left;
   // white-space: pre;
   // word-spacing: normal;
