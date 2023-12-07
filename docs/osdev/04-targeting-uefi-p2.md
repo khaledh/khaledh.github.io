@@ -42,11 +42,12 @@ proc fflush*(stream: File): cint {.exportc.} =
   return 0.cint
 ```
 
-### `stderr`
+### `stdout`/`stderr`
 
-The `stderr` global variable is a pointer to a `FILE` struct that represents the standard error stream.
+The `stdout` and `stderr` global variables are pointers to a `FILE` struct that represents the standard output and error streams.
 
 ```c
+FILE *stdout;
 FILE *stderr;
 ```
 
@@ -55,7 +56,9 @@ We can define it in Nim as a variable of type `File`, which will be initialized 
 ```nim
 # src/libc.nim
 
-var stderr* {.exportc.}: File
+var
+  stdout* {.exportc.}: File
+  stderr* {.exportc.}: File
 ```
 
 ### `exit`
