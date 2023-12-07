@@ -12,7 +12,7 @@ Build a minimal UEFI executable using Nim. The executable should assume a freest
 
 The first hurdle we have to overcome is that the UEFI firmware expects a PE32+ executable (Portable Executable with 64-bit extension to the standard PE32 format), which is an executable format used by Windows. It also expects the executable to follow the Windows ABI x64 calling convention. But since we're developing on Linux, we'll need a way to cross-compile our bootloader to this format.
 
-Let's forget about Nim for a moment. Can we cross-compile a simple C program to a freestanding PE32+ executable on Linux? This is why we installed `clang` earlier, which supports multiple targets. The target we're interested in is `x86_64-unknown-windows` (the `unknown` part is for the vendor, which is not important in our case). We also need to tell the compiler to limit the use of the standard library by passing the `-ffreestanding` flag:
+Let's forget about Nim for a moment. Can we cross-compile a simple C program to a freestanding PE32+ executable on Linux? This is why we installed `clang` earlier, which supports multiple targets. The target we're interested in is `x86_64-unknown-windows` (the `unknown` part is for the vendor, which is not important in our case). We also need to tell the compiler that we don't have a standard library by passing the `-ffreestanding` flag:
 
 ```c
 // main.c
@@ -45,13 +45,13 @@ lld-link: error: could not open 'libcmt.lib': No such file or directory
 lld-link: error: could not open 'oldnames.lib': No such file or directory
 ```
 
-The linker is trying to statically link `libcmt.lib`, the native Windows CRT startup library, and `oldnames.lib`, a compatibility library for redirecting old function names to new ones. We're not going to rely on these default libraries, so we can tell the linker to exclude them by passing the `-nodefaultlib` flag (the `-Wl` prefix tells `clang` to pass the flag to the linker):
+The linker is trying to statically link `libcmt.lib`, the native Windows CRT startup library, and `oldnames.lib`, a compatibility library for redirecting old function names to new ones. We're not going to rely on these default libraries, so we can tell the linker to exclude them by passing the `-nostdlib` flag:
 
 ```sh-session
 $ clang \
     -target x86_64-unknown-windows \
     -fuse-ld=lld-link \
-    -Wl,-nodefaultlib \
+    -nostdlib \
     -o build/main.exe \
     build/main.o
 lld-link: error: <root>: undefined symbol: mainCRTStartup
@@ -59,12 +59,11 @@ lld-link: error: <root>: undefined symbol: mainCRTStartup
 
 The linker is unable to find the C runtime entry point, `mainCRTStartup`, which makes sense because we're not linking the startup library. We can tell the linker to use our `main` function as the entry point by passing the `-entry:main` flag:
 
-
 ```sh-session
 $ clang \
     -target x86_64-unknown-windows \
     -fuse-ld=lld-link \
-    -Wl,-nodefaultlib \
+    -nostdlib \
     -Wl,-entry:main \
     -o build/main.exe \
     build/main.o
@@ -79,7 +78,7 @@ Great! We have a PE32+ executable. But notice that it says `(console)`. This mea
 $ clang \
     -target x86_64-unknown-windows \
     -fuse-ld=lld-link \
-    -Wl,-nodefaultlib \
+    -nostdlib \
     -Wl,-entry:main \
     -Wl,-subsystem:efi_application \
     -o build/main.exe \
@@ -90,7 +89,6 @@ build/main.exe: PE32+ executable (EFI application) x86-64, for MS Windows
 ```
 
 Now we have a true UEFI application.
-
 
 ## Cross-compiling Nim to PE32+
 
@@ -123,7 +121,7 @@ $ nim c \
     --passC:"-target x86_64-unknown-windows" \
     --passC:"-ffreestanding" \
     --passL:"-fuse-ld=lld-link" \
-    --passL:"-Wl,-nodefaultlib" \
+    --passL:"-nostdlib" \
     --passL:"-Wl,-entry:main" \
     --passL:"-Wl,-subsystem:efi_application" \
     --out:build/main.exe \
@@ -146,7 +144,7 @@ $ nim c \
     --passC:"-target x86_64-unknown-windows" \
     --passC:"-ffreestanding" \
     --passL:"-fuse-ld=lld-link" \
-    --passL:"-Wl,-nodefaultlib" \
+    --passL:"-nostdlib" \
     --passL:"-Wl,-entry:main" \
     --passL:"-Wl,-subsystem:efi_application" \
     -d:StandaloneHeapSize=1048576 \
@@ -167,7 +165,7 @@ $ nim c \
       |
 ```
 
-At first glance, it looks like we're missing some C headers. It turns out that `clang` needs to be told where to find the system headers. In my case, the headers are located in `/usr/include`, so we'll pass that to the compiler using the `-I` flag:
+At first glance, it looks like we're missing some C headers. It turns out that `clang` needs to be told where to find the system headers. In my case, the headers are located in `/usr/include` (on macOS, the system headers are located at `` `xcrun --show-sdk-path`/usr/include ``), so we'll pass that to the compiler using the`-I` flag:
 
 ```sh-session
 $ nim c \
@@ -180,7 +178,7 @@ $ nim c \
     --passC:"-I/usr/include" \
     --passL:"-target x86_64-unknown-windows" \
     --passL:"-fuse-ld=lld-link" \
-    --passL:"-Wl,-nodefaultlib" \
+    --passL:"-nostdlib" \
     --passL:"-Wl,-entry:main" \
     --passL:"-Wl,-subsystem:efi_application" \
     -d:StandaloneHeapSize=1048576 \
@@ -195,14 +193,16 @@ $ nim c \
       |
 ```
 
-So, in order to understand what's going on here it's important to note that, unlike C, Nim programs are not required to have a `main` function. You can have a file with code at the top level and it will be executed when the program starts. When we defined a `main` proc (which, to Nim, is just another proc that has no special meaning), we caused a conflict with the `main` function that the Nim compiler generates by default. Since we're not going to rely on the C library startup code, we need to take over the startup process ourselves. We can tell Nim to not generate its own `main` function by passing the `--noMain:on` flag.
+> **Note**: On macOS, the system headers are located at `` `xcrun --show-sdk-path`/usr/include ``, so you'll need to replace `/usr/include` with that path in the `--passC` flag. Also, you'll need to pass `--passC:"-fgnuc-version=4.2.1"` (which defines `__GNUC__`) to avoid any macOS-specific marcros and stick with the GNU C ones.
 
-However, by doing so, we lose initialization of global variables done by the automatically generated `NimMain` function. We can get it back by forward declaring `NimMain` and calling it from our `main` proc:
+In order to understand what's going on here it's important to note that, unlike C, Nim programs are not required to have a `main` function. You can have a file with code at the top level and it will be executed when the program starts. When we defined a `main` proc (which, to Nim, is just another proc that has no special meaning), we caused a conflict with the `main` function that the Nim compiler generates by default. Since we're not going to rely on the C library startup code, we need to take over the startup process ourselves. We can tell Nim to not generate its own `main` function by passing the `--noMain:on` flag.
+
+However, by doing so, we lose initialization of global variables done by the automatically generated `NimMain` function. We can get it back by forward importing `NimMain` and calling it from our `main` proc:
 
 ```nim
 # main.nim
 
-proc NimMain() {.exportc.}
+proc NimMain() {.importc.}
 
 proc main(): int {.exportc.} =
     NimMain()
@@ -222,7 +222,7 @@ $ nim c \
     --passC:"-I/usr/include" \
     --passL:"-target x86_64-unknown-windows" \
     --passL:"-fuse-ld=lld-link" \
-    --passL:"-Wl,-nodefaultlib" \
+    --passL:"-nostdlib" \
     --passL:"-Wl,-entry:main" \
     --passL:"-Wl,-subsystem:efi_application" \
     -d:StandaloneHeapSize=1048576 \
@@ -273,7 +273,7 @@ OK, the linker is complaining that it can't find some C functions. This is becau
 - `signal` for signal handlers
 - `exit` for exiting the program
 
-Since our OS won't be a POSIX system, we can disable signals by passing the `-d:noSignalHandler` flag. For the rest of the functions, we'll need to implement them ourselves.
+Since our OS won't be a POSIX system, we can disable signals by passing the `-d:noSignalHandler` flag. For the rest of the functions, we'll need to implement them ourselves. Also, Nim includes implementation of some memory functions, which we can leverage by passing the `-d:nimNoLibc` flag.
 
 Before we go any further, let's most the compiler flags to a **nim.cfg** file in the project root, so we don't have to pass them every time we compile:
 
@@ -285,6 +285,7 @@ Before we go any further, let's most the compiler flags to a **nim.cfg** file in
 
 --noMain:on
 -d:StandaloneHeapSize=1048576
+-d:nimNoLibc
 -d:noSignalHandler
 
 --cpu:amd64
@@ -297,7 +298,7 @@ Before we go any further, let's most the compiler flags to a **nim.cfg** file in
 
 --passL:"-target x86_64-unknown-windows"
 --passL:"-fuse-ld=lld-link"
---passL:"-Wl,-nodefaultlib"
+--passL:"-nostdlib"
 --passL:"-Wl,-entry:main"
 --passL:"-Wl,-subsystem:efi_application"
 ```
@@ -312,16 +313,13 @@ This seems weird. The `--os:any` target should disable threads by default, which
 ```sh-session
 $ nim c --os:any main.nim
 ...
-lld-link: error: undefined symbol: memcpy
 lld-link: error: undefined symbol: stderr
 lld-link: error: undefined symbol: exit
 lld-link: error: undefined symbol: fwrite
 lld-link: error: undefined symbol: fflush
-lld-link: error: undefined symbol: strlen
-lld-link: error: undefined symbol: memset
 ...
 ```
 
-We get the same linker errors as before (except for the `signal` function, which we disabled). 
+We get less linker errors now, thanks to the `--d:nimNoLibc` and `--d:noSignalHandler` flags. We still, however, need to implement `stderr`, `exit`, `fwrite`, and `fflush`.
 
 This section is already too long, so we'll continue in the next section, where we'll implement the missing C functions.

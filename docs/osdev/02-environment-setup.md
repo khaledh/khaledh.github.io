@@ -6,13 +6,13 @@ In this section, we'll set up our development environment. We'll be using **Nim*
 
 First, we need to install the **Nim compiler**. An easy way to install Nim is through the **choosenim** installer, so let's install that first:
 
-```sh-session
+```plaintext
 $ curl https://nim-lang.org/choosenim/init.sh -sSf | sh
 ```
 
 Then, we can install the latest stable version of Nim:
 
-```sh-session
+```plaintext
 $ choosenim stable
 Downloading Nim 2.0.0 from nim-lang.org
 ...
@@ -24,30 +24,30 @@ Nim Compiler Version 2.0.0 [Linux: amd64]
 
 ## LLVM toolchain
 
-Now that we have Nim installed, we need to install the **LLVM** toolchain. We'll use **clang** and **lld** to cross-compile to a freestanding environment.
+Now that we have Nim installed, we need to install the **LLVM** toolchain. We'll use **clang** and **lld** to cross-compile to a UEFI environment.
 
-```sh-session
+```plaintext
 $ sudo pacman -S clang lld
 ...
 
 $ clang --version
-clang version 16.0.6
+clang version 18.0.0
 ...
 
 $ ld.lld --version
-LLD 16.0.6 (compatible with GNU linkers)
+LLD 18.0.0 (compatible with GNU linkers)
 ```
 
 ## QEMU
 
 Next, let's install **QEMU** so that we can test our OS:
 
-```sh-session
+```plaintext
 $ sudo pacman -S qemu-desktop
 ...
 
 $ qemu-system-x86_64 --version
-QEMU emulator version 8.1.2
+QEMU emulator version 8.1.3
 ...
 ```
 
@@ -55,13 +55,13 @@ QEMU emulator version 8.1.2
 
 Now that we have our environment set up, we can create our project. We'll start by creating a new directory for our project:
 
-```sh-session
+```plaintext
 $ mkdir fusion && cd fusion
 ```
 
 Next, we'll create a new **nimble** project with binary package type:
 
-```sh-session
+```plaintext
 $ nimble init
 ...
     Prompt: Package type?
@@ -76,9 +76,9 @@ $ nimble init
 
 Let's also create a `build` directory for our build artifacts and add it to `.gitignore`:
 
-```sh-session
+```plaintext
 $ mkdir build
 $ echo build >> .gitignore
 ```
 
-In the next section, we'll start writing our bootloader.
+Now that we have our project set up, let's move on to setting up our build to target the UEFI environment.
