@@ -26,6 +26,8 @@ where `ImageHandle` is a handle to the loaded image, and `SystemTable` is a poin
 ```nim
 # src/bootx64.nim
 
+import libc
+
 type
   EfiStatus = uint
   EfiHandle = pointer
@@ -36,18 +38,19 @@ const
 
 proc NimMain() {.exportc.}
 
-proc main(imgHandle: EfiHandle, sysTable: ptr EFiSystemTable): EfiStatus {.exportc.} =
+proc EfiMain(imgHandle: EfiHandle, sysTable: ptr EFiSystemTable): EfiStatus {.exportc.} =
   NimMain()
   return EfiSuccess
 ```
 
-Let's change our `nim.cfg` to output an executable called `bootx64.efi` in the `build` directory:
+I'm also changing the entry point from `main` to `EfiMain`, which is a typical convention for UEFI applications. Let's change our `nim.cfg` to output an executable called `bootx64.efi` in the `build` directory, and also change the entry point in the linker arguments:
 
 ```properties
 # nim.cfg
 
 --out:"build/bootx64.efi"
 ...
+--passL:"-Wl,-entry:EfiMain"
 ```
 
 Let's compile the code and check the output binary:
@@ -141,7 +144,7 @@ const
 
 proc NimMain() {.exportc.}
 
-proc main(imgHandle: EfiHandle, sysTable: ptr EFiSystemTable): EfiStatus {.exportc.} =
+proc EfiMain(imgHandle: EfiHandle, sysTable: ptr EFiSystemTable): EfiStatus {.exportc.} =
   NimMain()
   return EfiLoadError
 ```
