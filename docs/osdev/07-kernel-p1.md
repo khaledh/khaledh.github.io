@@ -93,7 +93,7 @@ The kernel entry point is the first function that is executed by the bootloader.
 import debugcon, libc, malloc
 
 proc KernelMain() {.exportc.} =
-  debugln("Hello, world!")
+  debugln "Hello, world!"
   quit()
 ```
 
@@ -108,7 +108,7 @@ A flat binary image doesn't have metadata to specify an entry point, so the boot
 OK, how do we tell the linker to link the kernel at a specific address? We use a linker script. A linker script is a text file that tells the linker how to link the object files into an executable. We'll create a file called `kernel.ld` in the kernel directory:
 
 ```ld
-# src/kernel/kernel.ld
+/* src/kernel/kernel.ld */
 
 SECTIONS
 {
@@ -266,7 +266,7 @@ Idx Name          Size     VMA              Type
 We can see that the `.rodata` and `.bss` sections are now included. But there's also other sections that we didn't see before. These are sections that the compiler generated for debugging information. We don't need these sections in the kernel image, so let's remove them from the linker script:
 
 ```ld
-# src/kernel/kernel.ld
+/* src/kernel/kernel.ld */
 
 SECTIONS
 {
@@ -291,7 +291,7 @@ ld.lld: error: discarding .shstrtab section is not allowed
 Oops, we can't discard the `.shstrtab` section. This section contains the names of the sections, and is required to identify the sections in the output file. Let's add an entry for it in the linker script:
 
 ```ld
-# src/kernel/kernel.ld
+/* src/kernel/kernel.ld */
 
 SECTIONS
 {
@@ -346,7 +346,7 @@ The `.text` section starts at `0x100000`, so that's good. However, the first obj
 The order of the object files in the image is based on the order of the object files in the linker command line, which we don't have much control over (Nim generates the command line for us). What we can do is adjust the linker script a bit to tell it to put the kernel object file first.
 
 ```ld
-# src/kernel/kernel.ld
+/* src/kernel/kernel.ld */
 
 SECTIONS
 {
