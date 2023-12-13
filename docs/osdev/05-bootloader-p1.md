@@ -43,7 +43,7 @@ proc EfiMain(imgHandle: EfiHandle, sysTable: ptr EFiSystemTable): EfiStatus {.ex
   return EfiSuccess
 ```
 
-I'm also changing the entry point from `main` to `EfiMain`, which is a typical convention for UEFI applications. Let's change our `nim.cfg` to output an executable called `bootx64.efi` in the `build` directory, and also change the entry point in the linker arguments:
+I'm also changing the entry point from `main` to `EfiMain`, which is a typical convention for UEFI applications. Let's change the entry point in the linker arguments in `nim.cfg`:
 
 ```properties
 # nim.cfg
@@ -53,10 +53,10 @@ I'm also changing the entry point from `main` to `EfiMain`, which is a typical c
 --passL:"-Wl,-entry:EfiMain"
 ```
 
-Let's compile the code and check the output binary:
+Let's compile the code, changing the output executable to `bootx64.efi`:
 
 ```sh-session
-$ nim c --os:any src/bootx64.nim
+$ nim c --os:any src/bootx64.nim --out:build/bootx64.efi
 ...
 
 $ file build/bootx64.efi
@@ -105,14 +105,6 @@ $ cat diskimg >> .gitignore
 $ cp build/bootx64.efi diskimg/efi/boot/bootx64.efi
 ```
 
-While we're at it, let's modify the output path in **nim.cfg** to match the expected path, so that we don't have to copy the file every time we build:
-
-```properties
-# nim.cfg
-...
---out:"diskimg/efi/boot/bootx64.efi"
-```
-
 Now we ask QEMU to use the `diskimg` directory as a virtual FAT filesystem. A couple of notes on the QEMU arguments I used:
 - I'm setting `-machine q35` to use the Q35 + ICH9 chipsets (circa 2009), instead of the default i440FX + PIIX chipsets (circa 1996). This gives us a more modern environment, with support for PCI Express, AHCI, and better UEFI, ACPI, and USB support.
 - I'm setting `-nic none` to disable the default network card (to prevent the firmware from trying to use PXE network boot)
@@ -157,6 +149,35 @@ Let's use the UEFI shell to run our bootloader manually and check its exit code 
 
 ![Checking bootloader](checking-bootloader.png)
 
-As expected, the bootloader returns `1` as its exit code. Great! Now we have a working bootloader (if you can call it that). In the next section, we'll implement text output using the UEFI console so that we can print messages to the screen.
+As expected, the bootloader returns `1` as its exit code. Great! Now we have a working bootloader (if you can call it that). In the next section, we'll implement text output using the UEFI console so that we can print messages to the screen. But before we do that, let's add a build tool to our project so that we don't have to repeat the same commands over and over again.
+
+## Build tool
+
+Typically we'd use `make` to build our project, but I'm not a big fan of `make`. I recently started using the [`Just`](https://github.com/casey/just) build tool, which is a simple command runner that uses a `justfile` to define commands. Assuming it's already installed, let's create a `justfile` in the project root directory:
+
+```justfile
+# justfile
+
+bootloader:
+  nim c --os:any src/bootx64.nim --out:build/bootx64.efi
+
+run: bootloader
+  qemu-system-x86_64 \
+    -drive if=pflash,format=raw,file=ovmf/OVMF_CODE.fd,readonly=on \
+    -drive if=pflash,format=raw,file=ovmf/OVMF_VARS.fd \
+    -drive format=raw,file=fat:rw:diskimg \
+    -machine q35 \
+    -net none
+```
+
+Now we can build and run our bootloader using `just`:
+
+```sh-session
+$ just run
+nim ...
+qemu-system-x86_64 ...
+```
+
+Much better!
 
 [1]: https://gist.github.com/haharoit/a81fecd847003626ef9ef700e4901d15

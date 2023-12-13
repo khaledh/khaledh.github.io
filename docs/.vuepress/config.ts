@@ -18,6 +18,7 @@ export default defineUserConfig({
       '/osdev/04-targeting-uefi-p2.md',
       '/osdev/05-bootloader-p1.md',
       '/osdev/06-bootloader-p2.md',
+      '/osdev/07-kernel-p1.md',
     ],
     contributors: false,
   }),

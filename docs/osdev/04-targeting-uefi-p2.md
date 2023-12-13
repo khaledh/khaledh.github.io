@@ -128,7 +128,7 @@ proc exit*(status: cint) {.exportc, asmNoStackFrame.} =
 Let's compile and link our code:
 
 ```sh-session
-$ nim c --os:any src/main.nim
+$ nim c --os:any src/main.nim --out:build/main.exe
 
 $ file build/main.exe
 build/main.exe: PE32+ executable (EFI application) x86-64, for MS Windows, 4 sections

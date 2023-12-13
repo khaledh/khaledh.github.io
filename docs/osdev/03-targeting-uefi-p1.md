@@ -1,6 +1,6 @@
 # Targeting UEFI - Part 1
 
-Traditionally, booting an operating system on x86/x86\_64 hardware has been done using the BIOS. The BIOS has been considered legacy for a long time, and has been replaced by UEFI (Unified Extensible Firmware Interface) on most modern hardware. In this section we will just focus on cross-compiling to UEFI (we'll get to the actual booting part later).
+Traditionally, booting an operating system on x86/x86\_64 hardware has been done using the BIOS. The BIOS has been considered legacy for a long time, and has been replaced by UEFI (Unified Extensible Firmware Interface) on most modern hardware. We no longer have to write a boot sector in assembly and rely on BIOS interrupts to load the OS. In this section we will focus on cross-compiling to UEFI (we'll get to the actual booting part later).
 
 Since there is no OS to target yet, we'll need to cross-compile to a **freestanding** environment (as opposed to an OS hosted environment), where only a subset of the C standard library and runtime is available. That means we can't use features from the standard library that rely on OS support like memory allocation, threads, IO, etc.
 
@@ -133,7 +133,49 @@ The compiler is complaining that it doesn't know how to allocate memory on this 
 
 > The `-d:useMalloc` option configures Nim to use only the standard C memory manage primitives `malloc()`, `free()`, `realloc()`. If your platform does not provide these functions it should be trivial to provide an implementation for them and link these to your program.
 
-So eventually we'll need to implement these memory management functions. But fortunately, Nim already has a primitive implementation of a "bump pointer"-based heap allocator that we can take advantage of initially until we implement our own memory management. We just need to tell the compiler to use it by defining `StandaloneHeapSize` (here I'm setting the heap size to 1MB):
+OK, at least we have a way to provide memory allocation primitives to Nim, instead of assuming they're provided by an existing OS (e.g. `mmap` on Linux or `VirtualAlloc` on Windows). Since we don't have an OS yet, let's implement a simple bump allocator backed by a fixed-size buffer. To keep things simple, we will not worry about freeing memory for now (we'll get to that later when we implement a proper memory manager).
+
+```nim
+# malloc.nim
+
+{.used.}
+
+var
+  heap*: array[1*1024*1024, byte] # 1 MB heap
+  heapBumpPtr*: int = cast[int](addr heap)
+  heapMaxPtr*: int = cast[int](addr heap) + heap.high
+
+proc malloc*(size: csize_t): pointer {.exportc.} =
+  if heapBumpPtr + size.int > heapMaxPtr:
+    return nil
+
+  result = cast[pointer](heapBumpPtr)
+  inc heapBumpPtr, size.int
+
+proc calloc*(num: csize_t, size: csize_t): pointer {.exportc.} =
+  result = malloc(size * num)
+
+proc realloc*(p: pointer, new_size: csize_t): pointer {.exportc.} =
+  result = malloc(new_size)
+  copyMem(result, p, new_size)
+  free(p)
+
+proc free*(p: pointer) {.exportc.} =
+  discard
+```
+
+Notice that I added the `{.used.}` pragma at the top of the file. This tells the compiler to consider the module as used, even if we don't call any of its procs directly. Otherwise, the compiler will consider it dead code and will eliminate it from the output.
+
+For Nim to actually know about this module, we need to import it in our main module:
+
+```nim
+# main.nim
+
+import malloc
+...
+```
+
+Now let's pass the `-d:useMalloc` flag to the compiler and try to compile again:
 
 ```sh-session
 $ nim c \
@@ -147,7 +189,7 @@ $ nim c \
     --passL:"-nostdlib" \
     --passL:"-Wl,-entry:main" \
     --passL:"-Wl,-subsystem:efi_application" \
-    -d:StandaloneHeapSize=1048576 \
+    -d:useMalloc \
     --out:build/main.exe \
     main.nim
 ...
@@ -165,6 +207,8 @@ $ nim c \
       |
 ```
 
+We're getting a different error, which means that Nim is happy with our memory allocation primitives.
+
 At first glance, it looks like we're missing some C headers. It turns out that `clang` needs to be told where to find the system headers. In my case, the headers are located in `/usr/include` (on macOS, the system headers are located at `` `xcrun --show-sdk-path`/usr/include ``), so we'll pass that to the compiler using the`-I` flag:
 
 ```sh-session
@@ -181,7 +225,7 @@ $ nim c \
     --passL:"-nostdlib" \
     --passL:"-Wl,-entry:main" \
     --passL:"-Wl,-subsystem:efi_application" \
-    -d:StandaloneHeapSize=1048576 \
+    -d:useMalloc \
     --out:build/main.exe \
     main.nim
 ...
@@ -225,7 +269,7 @@ $ nim c \
     --passL:"-nostdlib" \
     --passL:"-Wl,-entry:main" \
     --passL:"-Wl,-subsystem:efi_application" \
-    -d:StandaloneHeapSize=1048576 \
+    -d:useMalloc \
     --noMain:on \
     --out:build/main.exe \
     main.nim
@@ -275,16 +319,15 @@ OK, the linker is complaining that it can't find some C functions. This is becau
 
 Since our OS won't be a POSIX system, we can disable signals by passing the `-d:noSignalHandler` flag. For the rest of the functions, we'll need to implement them ourselves. Also, Nim includes implementation of some memory functions, which we can leverage by passing the `-d:nimNoLibc` flag.
 
-Before we go any further, let's most the compiler flags to a **nim.cfg** file in the project root, so we don't have to pass them every time we compile:
+Before we go any further, let's move the compiler flags to a **nim.cfg** file in the project root, so we don't have to pass them every time we compile:
 
 ```properties
 # nim.cfg
 
 --nimcache:build
---out:"build/main.exe"
 
 --noMain:on
--d:StandaloneHeapSize=1048576
+-d:useMalloc
 -d:nimNoLibc
 -d:noSignalHandler
 
@@ -304,14 +347,14 @@ Before we go any further, let's most the compiler flags to a **nim.cfg** file in
 ```
 
 ```sh-session
-$ nim c main.nim
+$ nim c main.nim --out:build/main.exe
 .../lib/std/typedthreads.nim(51, 10) Error: Threads not implemented for os:any. Please compile with --threads:off.
 ```
 
 This seems weird. The `--os:any` target should disable threads by default, which we know is true because we didn't get this error when we passed the flags on the command line. It turns out that Nim processes its default `nim.cfg` file (which turns off threads for `os:any`) _before_ the project `nim.cfg` file (which defines `--os:any`). So by the time the project `nim.cfg` file is processed, threads are already enabled. We can technically disable threads in the project `nim.cfg` file using `--threads:off`, but since the default `nim.cfg` makes a lot of decisions based on the `os` flag, we'll need to pass this flag explicitly every time we compile.
 
 ```sh-session
-$ nim c --os:any main.nim
+$ nim c --os:any main.nim --out:build/main.exe
 ...
 lld-link: error: undefined symbol: stderr
 lld-link: error: undefined symbol: exit
@@ -320,6 +363,6 @@ lld-link: error: undefined symbol: fflush
 ...
 ```
 
-We get less linker errors now, thanks to the `--d:nimNoLibc` and `--d:noSignalHandler` flags. We still, however, need to implement `stderr`, `exit`, `fwrite`, and `fflush`.
+We get less linker errors now, thanks to the `--d:nimNoLibc` and `--d:noSignalHandler` flags. We still, however, need to implement `stderr`, `fwrite`, `fflush`, and `exit`.
 
 This section is already too long, so we'll continue in the next section, where we'll implement the missing C functions.

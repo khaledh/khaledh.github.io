@@ -121,6 +121,29 @@ When we compile and load this in QEMU, we see the message printed to the screen,
 
 ![Bootloader Hello World](bootloader-hello-world.png)
 
+Let's make it easier to create a wide string by adding a `W` prefix operator to `string`:
+
+```nim
+# src/uefi.nim
+
+proc W*(str: string): WideCString =
+  newWideCString(str).toWideCString
+```
+
+Now we can create a wide string using `W`:
+
+```nim
+# src/bootx64.nim
+
+proc EfiMain(imgHandle: EfiHandle, sysTable: ptr EFiSystemTable): EfiStatus {.exportc.} =
+  NimMain()
+
+  discard sysTable.conOut.clearScreen(sysTable.conOut)
+  discard sysTable.conOut.outputString(sysTable.conOut, W"Hello, world!\n")
+
+  quit()
+```
+
 ## Using `echo`
 
 Preparing a UTF-16 string and calling `outputString` every time we want to print to the screen is tedious. Ideally we should be able to use the built-in `echo` procedure to print to the screen. This requires us to define a `stdout` file descriptor, and implement `fwrite` to use the UEFI `outputString` function. But instead of making the `libc` module deal with UEFI internals, we'll create a new module called `uefi` to handle this. We'll also move all the UEFI types and constants to this module. In the process, we'll mark all types, constants, and vars as public so that they can be used by other modules.
@@ -141,13 +164,11 @@ proc consoleClear*() =
 
 proc consoleOut*(str: string) =
   assert not sysTable.isNil
-  let msg = newWideCString(str).toWideCString
-  discard sysTable.conOut.outputString(sysTable.conOut, msg)
+  discard sysTable.conOut.outputString(sysTable.conOut, W(str))
 
 proc consoleError*(str: string) =
   assert not sysTable.isNil
-  let msg = newWideCString(str).toWideCString
-  discard sysTable.stdErr.outputString(sysTable.stdErr, msg)
+  discard sysTable.stdErr.outputString(sysTable.stdErr, W(str))
 ```
 
 We'll initalize the `sysTable` variable in `src/bootx64.nim` later. Let's implement `fwrite` to use the `consoleOut` procedure we just defined. Notice that we don't use the `stream` argument to differentiate between `stdout` and `stderr` here (since they're both `nil` for now). We'll leave that for later.
@@ -214,7 +235,7 @@ proc EfiMain(imgHandle: EfiHandle, sysTable: ptr EFiSystemTable): EfiStatus {.ex
   NimMain()
 
   try:
-    EfiMainInner(imgHandle, sysTable)
+    return EfiMainInner(imgHandle, sysTable)
   except Exception as e:
     unhandledException(e)
 ```
@@ -240,6 +261,6 @@ proc fwrite(buf: const_pointer, size: csize_t, count: csize_t, stream: File): cs
 
 ![Catching Exceptions 2](catching-exceptions-2.png)
 
-Much better! We just have to keep in mind that stack traces are available only in debug builds (which is the default). If we compile in release mode, we won't see the stack trace.
+Much better! We just have to keep in mind that stack traces are available only in debug builds (which is the default). If we compile in release mode, we won't see the stack trace. But this is great! We now have a way to print to the screen and catch and display unhandled exceptions (so we're not flying blind).
 
-This is great! We now have a way to print to the screen and catch and display unhandled exceptions (so we're not flying blind). In the next section, we'll start loading a simple kernel from the filesystem.
+The next logical step is to load our kernel from disk, but we don't have a kernel yet. So we'll take a short break from the bootloader and start working on the kernel in the next section.
