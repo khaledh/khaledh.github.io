@@ -50,6 +50,30 @@ Let's move the following part of the `nim.cfg` file into the `nim.cfg` file in t
 
 We'll work on what to use in the kernel's `nim.cfg` file later.
 
+Let's also add a task in our `justfile` to build the the kernel:
+
+```justfile{8-9}
+# justfile
+
+nimflags := "--os:any"
+
+bootloader:
+  nim c {{nimflags}} src/boot/bootx64.nim --out:build/bootx64.efi
+
+kernel:
+  nim c {{nimflags}} src/kernel/kernel.nim --out:build/kernel.bin
+
+run: bootloader
+  mkdir -p diskimg/efi/boot
+  cp build/bootx64.efi diskimg/efi/boot/bootx64.efi
+  qemu-system-x86_64 \
+    -drive if=pflash,format=raw,file=ovmf/OVMF_CODE.fd,readonly=on \
+    -drive if=pflash,format=raw,file=ovmf/OVMF_VARS.fd \
+    -drive format=raw,file=fat:rw:diskimg \
+    -machine q35 \
+    -net none
+```
+
 ## Debug output
 
  We cannot rely on any UEFI services in the kernel; the bootloader will exit UEFI Boot Services before jumping to the kernel. This means that we will not be able to use the UEFI console to print to the screen. The kernel will have to write directly to the graphics framebuffer, but we'll get to that later.
@@ -105,22 +129,7 @@ Our goal is to build a raw binary kernel image. We can do this by passing the `-
 
 A flat binary image doesn't have metadata to specify an entry point, so the bootloader and the kernel have to agree on a convention. The convention that we'll use is to place the entry point at the beginning of the image. This means that the bootloader will load the kernel image into memory and jump to the beginning of the image. Since the binary image is not relocatable, the kernel has to be linked at a specific address. We'll use the address `0x100000` (1 MiB) for the kernel image. The reason for this particular address is that below this address (specifically the region between 640 KiB to 1 MiB) is reserved for legacy BIOS compatibility (VGA memory, BIOS ROM, etc.) and is not accessible as RAM.
 
-OK, how do we tell the linker to link the kernel at a specific address? We use a linker script. A linker script is a text file that tells the linker how to link the object files into an executable. We'll create a file called `kernel.ld` in the kernel directory:
-
-```ld
-/* src/kernel/kernel.ld */
-
-SECTIONS
-{
-  . = 0x100000;
-  .text   : { *(.text) }
-  .rodata : { *(.rodata) }
-  .data   : { *(.data) }
-  .bss    : { *(.bss) }
-}
-```
-
-This tells the linker that the image will be loaded at address `0x100000`, and that the `.text` section (from all object files), the `.data` section, the `.rodata`, and the `.bss` section should be placed in the output file, in this order. The `.text` section contains the code, the `.rodata` section contains read-only data, the `.data` section contains initialized data, and the `.bss` section contains uninitialized data. We may need to adjust these section names depending on what the compiler generates for each object file.
+OK, how do we tell the linker to link the kernel at a specific address? We use a linker script. A linker script is a text file that tells the linker how to map sections from the input object files to sections in the output image, and in what order, and at what address. But before we use a linker script let's link the kernel without one, and see what sections are included in the output image.
 
 The `lld-link` linker that we've been using so far (to generate a PE image) doesn't seem to support linker scripts (at least I couldn't find a way to do it). That's OK; we don't the PE format anymore, it was only needed for the UEFI bootloader. So for the kernel, we'll switch to using the `ld.lld` linker, which is the LLVM linker for Unix systems. The most widely used executable format on Unix systems is ELF, so we'll use that as well. We'll come back later to building a raw binary image.
 
@@ -129,64 +138,101 @@ Let's add some arguments in `src/kernel/nim.cfg` to use `ld.lld` and generate an
 ```properties
 # src/kernel/nim.cfg
 
+amd64.any.clang.linkerexe = "ld.lld"
+
 --passC:"-target x86_64-unknown-elf"
 --passC:"-ffreestanding"
 
---passL:"-target x86_64-unknown-elf"
 --passL:"-nostdlib"
---passL:"-T src/kernel/kernel.ld"
 --passL:"-Map=build/kernel.map"
+--passL:"-entry KernelMain"
 ```
 
-We're also passing the `-Map` switch to generate a linker map file. This is useful for showing us the address of each symbol in the output file.
-
-Now let's compile the kernel:
+We're also passing the `-Map` switch to generate a linker map file. This is useful for showing us the address of each symbol in the output file. Now let's compile the kernel:
 
 ```sh-session
-$ nim c --os:any src/kernel/kernel.nim --out:build/kernel.elf
+$ just kernel
 
-$ file build/kernel.elf
-build/kernel.elf: ELF 64-bit LSB executable, x86-64, version 1 (SYSV), statically linked, stripped
+$ file build/kernel.bin
+build/kernel.bin: ELF 64-bit LSB executable, x86-64, version 1 (SYSV), statically linked, not stripped
 ```
 
-Great! We have an ELF executable kernel image. Let's see what's in it:
+Great! We have an ELF executable kernel image. Let's see what's in it using `llvm-readelf` (I've highlighted the interesting parts):
 
-```sh-session
-$ llvm-objdump --section-headers build/kernel.elf
+```sh-session{12,27-30,48-50,56-58}
+$ llvm-readelf --headers build/kernel.bin
+ELF Header:
+  Magic:   7f 45 4c 46 02 01 01 00 00 00 00 00 00 00 00 00
+  Class:                             ELF64
+  Data:                              2's complement, little endian
+  Version:                           1 (current)
+  OS/ABI:                            UNIX - System V
+  ABI Version:                       0
+  Type:                              EXEC (Executable file)
+  Machine:                           Advanced Micro Devices X86-64
+  Version:                           0x1
+  Entry point address:               0x20D580
+  Start of program headers:          64 (bytes into file)
+  Start of section headers:          65648 (bytes into file)
+  Flags:                             0x0
+  Size of this header:               64 (bytes)
+  Size of program headers:           56 (bytes)
+  Number of program headers:         5
+  Size of section headers:           64 (bytes)
+  Number of section headers:         9
+  Section header string table index: 7
+There are 9 section headers, starting at offset 0x10070:
 
-build/kernel.elf:       file format elf64-x86-64
+Section Headers:
+  [Nr] Name              Type            Address          Off    Size   ES Flg Lk Inf Al
+  [ 0]                   NULL            0000000000000000 000000 000000 00      0   0  0
+  [ 1] .rodata           PROGBITS        0000000000200160 000160 000e90 00 AMS  0   0 16
+  [ 2] .text             PROGBITS        0000000000201ff0 000ff0 00b82b 00  AX  0   0 16
+  [ 3] .data             PROGBITS        000000000020e820 00c820 0000e0 00  WA  0   0  8
+  [ 4] .bss              NOBITS          000000000020e900 00c900 1004b0 00  WA  0   0 16
+  [ 5] .comment          PROGBITS        0000000000000000 00c900 00007d 01  MS  0   0  1
+  [ 6] .symtab           SYMTAB          0000000000000000 00c980 001b00 18      8 286  8
+  [ 7] .shstrtab         STRTAB          0000000000000000 00e480 00003d 00      0   0  1
+  [ 8] .strtab           STRTAB          0000000000000000 00e4bd 001bac 00      0   0  1
+Key to Flags:
+  W (write), A (alloc), X (execute), M (merge), S (strings), I (info),
+  L (link order), O (extra OS processing required), G (group), T (TLS),
+  C (compressed), x (unknown), o (OS specific), E (exclude),
+  R (retain), l (large), p (processor specific)
 
-Sections:
-Idx Name          Size     VMA              Type
-  0               00000000 0000000000000000 
-  1 .text         0000b5fb 0000000000100000 TEXT
-  2 .data         002013f0 000000000010b600 DATA
-  3 .shstrtab     00000017 0000000000000000
+Elf file type is EXEC (Executable file)
+Entry point 0x20d580
+There are 5 program headers, starting at offset 64
+
+Program Headers:
+  Type           Offset   VirtAddr           PhysAddr           FileSiz  MemSiz   Flg Align
+  PHDR           0x000040 0x0000000000200040 0x0000000000200040 0x000118 0x000118 R   0x8
+  LOAD           0x000000 0x0000000000200000 0x0000000000200000 0x000ff0 0x000ff0 R   0x1000
+  LOAD           0x000ff0 0x0000000000201ff0 0x0000000000201ff0 0x00b82b 0x00b82b R E 0x1000
+  LOAD           0x00c820 0x000000000020e820 0x000000000020e820 0x0000e0 0x100590 RW  0x1000
+  GNU_STACK      0x000000 0x0000000000000000 0x0000000000000000 0x000000 0x000000 RW  0x0
+
+ Section to Segment mapping:
+  Segment Sections...
+   00     
+   01     .rodata 
+   02     .text 
+   03     .data .bss 
+   04     
+   None   .comment .symtab .shstrtab .strtab
 ```
 
-We can see that the `.text` section starts at address `0x100000`, which is what we wanted. The `.data` section follows the `.text` section, and the `.shstrtab` section is at the end. The `.shstrtab` section contains the names of the sections.
+Here's what we can see from the output:
 
-But wait, where are the `.rodata` and `.bss` sections? This is where we need to inspect the object files that make up the kernel image. Let's take a look at the object files that were generated by the compiler:
+- The entry point is at address `0x20D580`, which is not what we wanted. We wanted the entry point to be at address `0x100000`. We'll fix this later.
+- The sections that we're interested in are `.text`, `.rodata`, `.data`, and `.bss`. The `.text` section contains the code, the `.rodata` section contains read-only data, the `.data` section contains initialized data, and the `.bss` section contains uninitialized data. These are the sections that we want to include in the kernel image.
+- There are other sections that we're not interested in (`.comment`, `.symtab`, `.shstrtab`, and `.strtab`). These sections are used for debugging information, and we don't need them in the output image. We'll discard these sections later.
 
-```sh-session
-$ ls -1 build/*.o
-build/@m..@s..@s..@s..@s..@s..@s.choosenim@stoolchains@snim-2.0.0@slib@sstd@sassertions.nim.c.o
-build/@m..@s..@s..@s..@s..@s..@s.choosenim@stoolchains@snim-2.0.0@slib@sstd@sprivate@sdigitsutils.nim.c.o
-build/@m..@s..@s..@s..@s..@s..@s.choosenim@stoolchains@snim-2.0.0@slib@sstd@swidestrs.nim.c.o
-build/@m..@s..@s..@s..@s..@s..@s.choosenim@stoolchains@snim-2.0.0@slib@ssystem.nim.c.o
-build/@m..@s..@s..@s..@s..@s..@s.choosenim@stoolchains@snim-2.0.0@slib@ssystem@sdollars.nim.c.o
-build/@m..@s..@s..@s..@s..@s..@s.choosenim@stoolchains@snim-2.0.0@slib@ssystem@sexceptions.nim.c.o
-build/@m..@scommon@slibc.nim.c.o
-build/@m..@scommon@smalloc.nim.c.o
-build/@m..@scommon@suefi.nim.c.o
-build/@mdebugcon.nim.c.o
-build/@mkernel.nim.c.o
-```
+Keep in mind that these are the output sections as generated by the linker. The inputs sections from the object files are mapped to these output sections. So in order to write our own linker script, we need to know what sections are generated by the compiler for each object file. Let's take a look at one of the object files that were generated by the compiler:
 
-The compiler generated object files for the standard library modules that we imported, and for modules that we defined. The names are mangled to avoid name collisions. Let's inspect the object file for the `kernel` module:
-
-```sh-session
+```sh-session{9,11-12}
 $ llvm-objdump --section-headers build/@mkernel.nim.c.o
+
 build/@mkernel.nim.c.o: file format elf64-x86-64
 
 Sections:
@@ -204,66 +250,9 @@ Idx Name            Size     VMA              Type
  10 .symtab         00000270 0000000000000000 
 ```
 
-We can see that there are one text section (`.text`), two data sections (`.rodata.str1.1` and `.rodata`). Let's take a look at another object file:
+We can see that there are two read-only data sections (`.rodata.str1.1` and `.rodata`). The `rodata.str1.1` section contains string literals, so we'll need to include it in the kernel image. The other sections (other than `.text`) are not relevant to us.
 
-```sh-session
-$ llvm-objdump --section-headers build/@m..@scommon@slibc.nim.c.o
-
-build/@m..@scommon@slibc.nim.c.o:       file format elf64-x86-64
-
-Sections:
-Idx Name            Size     VMA              Type
-  0                 00000000 0000000000000000 
-  1 .strtab         00000210 0000000000000000 
-  2 .text           00000ca6 0000000000000000 TEXT
-  3 .rela.text      000005b8 0000000000000000 
-  4 .rodata.str1.1  0000019a 0000000000000000 DATA
-  5 .rodata         00000020 0000000000000000 DATA
-  6 .rela.rodata    00000018 0000000000000000 
-  7 .bss            00000010 0000000000000000 BSS
-  8 .comment        0000006a 0000000000000000 
-  9 .note.GNU-stack 00000000 0000000000000000 
- 10 .llvm_addrsig   00000010 0000000000000000 
- 11 .symtab         000002b8 0000000000000000
-```
-
-We see one extra section `.bss` here. This is the uninitialized data section, which makes sense, since the `malloc.nim` module defines an uninitalized heap that we use for memory allocation. All other sections have similar sections. So we need to adjust our linker script to account for these sections:
-
-```ld
-/* src/kernel/kernel.ld */
-
-SECTIONS
-{
-  . = 0x100000;
-  .text   : { *(.text) }
-  .rodata : { *(.rodata*) }
-  .data   : { *(.data) }
-  .bss    : { *(.bss) }
-}
-```
-
-The only change we made is to use `*(.rodata*)` instead of `*(.rodata)`, which should include `.rodata` and `.rodata.str1.1`. Let's compile the kernel again:
-
-```sh-session
-$ nim c --os:any src/kernel/kernel.nim --out:build/kernel.elf
-
-$ llvm-objdump --section-headers build/kernel.elf
-build/kernel.elf:       file format elf64-x86-64
-
-Sections:
-Idx Name          Size     VMA              Type
-  0               00000000 0000000000000000 
-  1 .text         0000b822 0000000000100000 TEXT
-  2 .rodata       00000e90 000000000010b830 DATA
-  3 .data         000000e0 000000000010c6c0 DATA
-  4 .bss          001004b0 000000000010c7a0 BSS
-  5 .comment      0000007d 0000000000000000 
-  6 .symtab       00001b18 0000000000000000 
-  7 .shstrtab     0000003d 0000000000000000 
-  8 .strtab       00001bb9 0000000000000000 
-```
-
-We can see that the `.rodata` and `.bss` sections are now included. But there's also other sections that we didn't see before. These are sections that the compiler generated for debugging information. We don't need these sections in the kernel image, so let's remove them from the linker script:
+OK, let's create a linker script called `kernel.ld` in the kernel directory, and map the sections that we're interested in to the output sections that we saw earlier, and discard all other sections:
 
 ```ld
 /* src/kernel/kernel.ld */
@@ -280,10 +269,20 @@ SECTIONS
 }
 ```
 
-The `/DISCARD/` section tells the linker to discard all sections that match the pattern `*`. Let's compile the kernel again:
+This tells the linker that the image will be loaded at address `0x100000`, and that the `.text` section (from all object files), the `.data` section, the `.rodata`, and the `.bss` section should be placed in the output file, in this order.
+
+Let's add the linker script to the linker arguments in `nim.cfg`:
+
+```properties
+# src/kernel/nim.cfg
+
+--passL:"-T src/kernel/kernel.ld"
+```
+
+Let's compile the kernel again, this time using the linker script:
 
 ```sh-session
-$ nim c --os:any src/kernel/kernel.nim --out:build/kernel.elf
+$ just kernel
 ...
 ld.lld: error: discarding .shstrtab section is not allowed
 ```
@@ -308,44 +307,82 @@ SECTIONS
 
 Let's compile the kernel again:
 
-```sh-session
-$ nim c --os:any src/kernel/kernel.nim --out:build/kernel.elf
+```sh-session{11,26-29}
+$ ELF Header:
+  Magic:   7f 45 4c 46 02 01 01 00 00 00 00 00 00 00 00 00
+  Class:                             ELF64
+  Data:                              2's complement, little endian
+  Version:                           1 (current)
+  OS/ABI:                            UNIX - System V
+  ABI Version:                       0
+  Type:                              EXEC (Executable file)
+  Machine:                           Advanced Micro Devices X86-64
+  Version:                           0x1
+  Entry point address:               0x10B590
+  Start of program headers:          64 (bytes into file)
+  Start of section headers:          55240 (bytes into file)
+  Flags:                             0x0
+  Size of this header:               64 (bytes)
+  Size of program headers:           56 (bytes)
+  Number of program headers:         4
+  Size of section headers:           64 (bytes)
+  Number of section headers:         6
+  Section header string table index: 5
+There are 6 section headers, starting at offset 0xd7c8:
 
-$ llvm-objdump --section-headers build/kernel.elf
+Section Headers:
+  [Nr] Name              Type            Address          Off    Size   ES Flg Lk Inf Al
+  [ 0]                   NULL            0000000000000000 000000 000000 00      0   0  0
+  [ 1] .text             PROGBITS        0000000000100000 001000 00b82b 00  AX  0   0 16
+  [ 2] .rodata           PROGBITS        000000000010b830 00c830 000e90 00 AMS  0   0 16
+  [ 3] .data             PROGBITS        000000000010c6c0 00d6c0 0000e0 00  WA  0   0  8
+  [ 4] .bss              NOBITS          000000000010c7a0 00d7a0 1004b0 00  WA  0   0 16
+  [ 5] .shstrtab         STRTAB          0000000000000000 00d7a0 000024 00      0   0  1
+Key to Flags:
+  W (write), A (alloc), X (execute), M (merge), S (strings), I (info),
+  L (link order), O (extra OS processing required), G (group), T (TLS),
+  C (compressed), x (unknown), o (OS specific), E (exclude),
+  R (retain), l (large), p (processor specific)
 
-build/kernel.elf:       file format elf64-x86-64
+Elf file type is EXEC (Executable file)
+Entry point 0x10b590
+There are 4 program headers, starting at offset 64
 
-Sections:
-Idx Name          Size     VMA              Type
-  0               00000000 0000000000000000 
-  1 .text         0000b822 0000000000100000 TEXT
-  2 .rodata       00000e90 000000000010b830 DATA
-  3 .data         000000e0 000000000010c6c0 DATA
-  4 .bss          001004b0 000000000010c7a0 BSS
-  5 .shstrtab     00000024 0000000000000000
+Program Headers:
+  Type           Offset   VirtAddr           PhysAddr           FileSiz  MemSiz   Flg Align
+  LOAD           0x001000 0x0000000000100000 0x0000000000100000 0x00b82b 0x00b82b R E 0x1000
+  LOAD           0x00c830 0x000000000010b830 0x000000000010b830 0x000e90 0x000e90 R   0x1000
+  LOAD           0x00d6c0 0x000000000010c6c0 0x000000000010c6c0 0x0000e0 0x100590 RW  0x1000
+  GNU_STACK      0x000000 0x0000000000000000 0x0000000000000000 0x000000 0x000000 RW  0x0
+
+ Section to Segment mapping:
+  Segment Sections...
+   00     .text 
+   01     .rodata 
+   02     .data .bss 
+   03     
+   None   .shstrtab
 ```
 
-Great! We have a kernel image that contains only the sections that we need. Let's see what the linker map file looks like:
+OK, it looks like the section mapping worked as expected, but the entry point (`KernelMain`) is at `0x10B590` instead of `0x100000`. Let's take a look at the linker map file:
 
 ```sh-session
-$ head -n 20 build/kernel.map
-      VMA              LMA     Size Align Out     In      Symbol
-        0                0   100000     1 . = 0x100000
-   100000           100000     b82b    16 .text
-   100000           100000      9c3    16         /Users/.../fusion/build/@m..@s..@s..@s..@s..@s..@s.choosenim@stoolchains@snim-2.0.0@slib@ssystem@sexceptions.nim.c.o:(.text)
-   100000           100000       3b     1                 rttiDestroy__systemZexceptions_u56
-   100040           100040       38     1                 eqtrace___system_u4516
-   100080           100080       3b     1                 rttiDestroy__systemZexceptions_u60
-   1000c0           1000c0       38     1                 eqtrace___system_u4585
-   100100           100100       3b     1                 rttiDestroy__systemZexceptions_u62
-   100140           100140       38     1                 eqtrace___system_u4980
+$ head -n 10 build/kernel.map
+     VMA              LMA     Size Align Out     In      Symbol
+       0                0   100000     1 . = 0x100000
+  100000           100000     b82b    16 .text
+  100000           100000      9c3    16         /Users/khaledhammouda/src/github.com/khaledh/fusion/build/@m..@s..@s..@s..@s..@s..@s.choosenim@stoolchains@snim-2.0.0@slib@ssystem@sexceptions.nim.c.o:(.text)
+  100000           100000       3b     1                 rttiDestroy__systemZexceptions_u56
+  100040           100040       38     1                 eqtrace___system_u4516
+  100080           100080       3b     1                 rttiDestroy__systemZexceptions_u60
+  1000c0           1000c0       38     1                 eqtrace___system_u4585
+  100100           100100       3b     1                 rttiDestroy__systemZexceptions_u62
+  100140           100140       38     1                 eqtrace___system_u4980
 ```
 
-The `.text` section starts at `0x100000`, so that's good. However, the first object file linked at this address is Nim's standard library module `system/exceptions.nim`. This is not good. We want our kernel object file to be the first, as this will be the entry point to which the bootloader will transfer control.
+We can see that the first object file in the output `.text` section is from Nim's standard library module `system/exceptions.nim`. This is because the linker uses the order of the object files in the command line to determine the order in the output image. We don't have much control over the order of the object files in the command line, since Nim generates the command line for us. What we can do is adjust the linker script a bit to tell it to put the kernel object file first.
 
-The order of the object files in the image is based on the order of the object files in the linker command line, which we don't have much control over (Nim generates the command line for us). What we can do is adjust the linker script a bit to tell it to put the kernel object file first.
-
-```ld
+```ld{6}
 /* src/kernel/kernel.ld */
 
 SECTIONS
@@ -364,22 +401,47 @@ SECTIONS
 I'm using a wildcard pattern for the kernel object file, since the name is mangled. Let's compile the kernel again and see what the linker map file looks like:
 
 ```sh-session
-$ nim c --os:any src/kernel/kernel.nim --out:build/kernel.elf
-
 $ head -n 10 build/kernel.map
-      VMA              LMA     Size Align Out     In      Symbol
-        0                0   100000     1 . = 0x100000
-   100000           100000     b822    16 .text
-   100000           100000      29b    16         /Users/.../fusion/build/@mkernel.nim.c.o:(   text)
-   100000           100000       c9     1                 KernelMain
-   1000d0           1000d0       87     1                 nimFrame
-   100160           100160       20     1                 nimErrorFlag
-   100180           100180       10     1                 NimMain
-   100190           100190       ad     1                 quit__system_u6343
-   100240           100240       19     1                 popFrame
+        VMA              LMA     Size Align Out     In      Symbol
+          0                0   100000     1 . = 0x100000
+    100000           100000     b822    16 .text
+    100000           100000      29b    16         /Users/khaledhammouda/src/github.com/khaledh/fusion/build/@mkernel.nim.c.o:(.text)
+    100000           100000       c9     1                 KernelMain
+    1000d0           1000d0       87     1                 nimFrame
+    100160           100160       20     1                 nimErrorFlag
+    100180           100180       10     1                 NimMain
+    100190           100190       ad     1                 quit__system_u6343
+    100240           100240       19     1                 popFrame
 ```
 
-Great! The kernel object file is now the first object file in the image, and our `KernelMain` proc is exactly at address `0x100000`.
+Great! The kernel object file is now the first object file in the image, and our `KernelMain` proc is exactly at address `0x100000`. Let's double check the ELF headers:
+
+```sh-session{12}
+$ llvm-readelf --headers build/kernel.bin
+ELF Header:
+  Magic:   7f 45 4c 46 02 01 01 00 00 00 00 00 00 00 00 00
+  Class:                             ELF64
+  Data:                              2's complement, little endian
+  Version:                           1 (current)
+  OS/ABI:                            UNIX - System V
+  ABI Version:                       0
+  Type:                              EXEC (Executable file)
+  Machine:                           Advanced Micro Devices X86-64
+  Version:                           0x1
+  Entry point address:               0x100000
+  Start of program headers:          64 (bytes into file)
+  Start of section headers:          55240 (bytes into file)
+  Flags:                             0x0
+  Size of this header:               64 (bytes)
+  Size of program headers:           56 (bytes)
+  Number of program headers:         4
+  Size of section headers:           64 (bytes)
+  Number of section headers:         6
+  Section header string table index: 5
+...
+```
+
+And viola! The entry point is now at address `0x100000`.
 
 ## Building a raw binary
 
@@ -395,7 +457,7 @@ We have an ELF executable kernel image, but we want a raw binary image. Let's ad
 Let's compile the kernel again:
 
 ```sh-session
-$ nim c --os:any src/kernel/kernel.nim --out:build/kernel.bin
+$ just kernel
 
 $ file build/kernel.bin
 build/kernel.bin: data
@@ -412,7 +474,7 @@ The kernel image is about 51 KB. But remember that we have a 1 MB heap in the `m
 
 Let's modify the linker script to move the `.bss` section into the `.data` section:
 
-```ld
+```ld{8}
 /* src/kernel/kernel.ld */
 
 SECTIONS
@@ -430,12 +492,39 @@ SECTIONS
 Let's compile the kernel again and see what the size of the image is:
 
 ```sh-session
-$ nim c --os:any src/kernel/kernel.nim --out:build/kernel.bin
+$ just kernel
 
 $ wc -c build/kernel.bin
   1100880 build/kernel.bin
 ```
 
 The image is now about 1.1 MB, which means that the `.bss` section is now included in the image. Now the bootloader will be able to load the image into memory without having to worry about initializing sections.
+
+Let's update our `justfile` to copy the kernel image to the disk image in a place where the bootloader can find it:
+
+```justfile{11-13,15}
+# justfile
+
+nimflags := "--os:any"
+
+bootloader:
+  nim c {{nimflags}} src/boot/bootx64.nim --out:build/bootx64.efi
+
+kernel:
+  nim c {{nimflags}} src/kernel/kernel.nim --out:build/kernel.bin
+
+run: bootloader kernel
+  mkdir -p diskimg/efi/boot
+  mkdir -p diskimg/efi/fusion
+  cp build/bootx64.efi diskimg/efi/boot/bootx64.efi
+  cp build/kernel.bin diskimg/efi/fusion/kernel.bin
+  qemu-system-x86_64 \
+    -drive if=pflash,format=raw,file=ovmf/OVMF_CODE.fd,readonly=on \
+    -drive if=pflash,format=raw,file=ovmf/OVMF_VARS.fd \
+    -drive format=raw,file=fat:rw:diskimg \
+    -machine q35 \
+    -net none
+```
+
 
 In the next section we will continue working on our bootloader. Specifically we will try to use UEFI services to locate the kernel image file, load it into memory address `0x100000`, and jump to it.

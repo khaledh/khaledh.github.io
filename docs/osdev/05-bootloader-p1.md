@@ -48,7 +48,6 @@ I'm also changing the entry point from `main` to `EfiMain`, which is a typical c
 ```properties
 # nim.cfg
 
---out:"build/bootx64.efi"
 ...
 --passL:"-Wl,-entry:EfiMain"
 ```
@@ -126,7 +125,7 @@ The spec says that upon boot, the firmware should try the available boot options
 
 On the other hand, if the bootloader returns any other value, the firmware is expected to try the next boot option, which in the case of OVMF is the UEFI shell. Let's change the return value of our bootloader to `EFI_LOAD_ERROR` (numeric value `1`) to see what happens:
 
-```nim
+```nim{6,12}
 # src/bootx64.nim
 
 ...
@@ -158,10 +157,14 @@ Typically we'd use `make` to build our project, but I'm not a big fan of `make`.
 ```justfile
 # justfile
 
+nimflags := "--os:any"
+
 bootloader:
-  nim c --os:any src/bootx64.nim --out:build/bootx64.efi
+  nim c {{nimflags}} src/bootx64.nim --out:build/bootx64.efi
 
 run: bootloader
+  mkdir -p diskimg/efi/boot
+  cp build/bootx64.efi diskimg/efi/boot/bootx64.efi
   qemu-system-x86_64 \
     -drive if=pflash,format=raw,file=ovmf/OVMF_CODE.fd,readonly=on \
     -drive if=pflash,format=raw,file=ovmf/OVMF_VARS.fd \
@@ -175,6 +178,8 @@ Now we can build and run our bootloader using `just`:
 ```sh-session
 $ just run
 nim ...
+mkdir ...
+cp ...
 qemu-system-x86_64 ...
 ```
 

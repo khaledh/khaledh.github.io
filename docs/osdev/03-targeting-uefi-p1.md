@@ -47,7 +47,7 @@ lld-link: error: could not open 'oldnames.lib': No such file or directory
 
 The linker is trying to statically link `libcmt.lib`, the native Windows CRT startup library, and `oldnames.lib`, a compatibility library for redirecting old function names to new ones. We're not going to rely on these default libraries, so we can tell the linker to exclude them by passing the `-nostdlib` flag:
 
-```sh-session
+```sh-session{4}
 $ clang \
     -target x86_64-unknown-windows \
     -fuse-ld=lld-link \
@@ -59,7 +59,7 @@ lld-link: error: <root>: undefined symbol: mainCRTStartup
 
 The linker is unable to find the C runtime entry point, `mainCRTStartup`, which makes sense because we're not linking the startup library. We can tell the linker to use our `main` function as the entry point by passing the `-entry:main` flag:
 
-```sh-session
+```sh-session{5}
 $ clang \
     -target x86_64-unknown-windows \
     -fuse-ld=lld-link \
@@ -74,7 +74,7 @@ build/main.exe: PE32+ executable (console) x86-64, for MS Windows
 
 Great! We have a PE32+ executable. But notice that it says `(console)`. This means that the executable is a console application, which cannot run on UEFI. We need to tell the linker to create a UEFI application instead by passing the `-subsystem:efi_application` flag:
 
-```sh-session
+```sh-session{6}
 $ clang \
     -target x86_64-unknown-windows \
     -fuse-ld=lld-link \
@@ -177,7 +177,7 @@ import malloc
 
 Now let's pass the `-d:useMalloc` flag to the compiler and try to compile again:
 
-```sh-session
+```sh-session{12}
 $ nim c \
     --nimcache:build \
     --cpu:amd64 \
@@ -211,7 +211,7 @@ We're getting a different error, which means that Nim is happy with our memory a
 
 At first glance, it looks like we're missing some C headers. It turns out that `clang` needs to be told where to find the system headers. In my case, the headers are located in `/usr/include` (on macOS, the system headers are located at `` `xcrun --show-sdk-path`/usr/include ``), so we'll pass that to the compiler using the`-I` flag:
 
-```sh-session
+```sh-session{8}
 $ nim c \
     --nimcache:build \
     --cpu:amd64 \
@@ -253,9 +253,9 @@ proc main(): int {.exportc.} =
     return 0
 ```
 
-Let's try to compile again:
+Let's try to compile again with the `--noMain:on` flag:
 
-```sh-session
+```sh-session{15}
 $ nim c \
     --nimcache:build \
     --cpu:amd64 \

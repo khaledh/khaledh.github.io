@@ -6,7 +6,7 @@ In the previous section, we wrote a simple UEFI entry point for the bootloader. 
 
 The UEFI system table is a data structure that is passed to the bootloader by the UEFI firmware. It contains pointers to various UEFI services, such as the console, file system, and memory management. We'll start by defining the system table in `src/bootx64.nim`:
 
-```nim
+```nim{8-40}
 # src/bootx64.nim
 
 type
@@ -59,7 +59,7 @@ We're particularly interested in the `conOut` field, which is a pointer to the c
 
 Let's start by clearing the screen. To avoid returning to the UEFI shell, we'll call the `quit` function, which eventually calls the `exit` function we implemented earlier, which halts the CPU.
 
-```nim
+```nim{6}
 # src/bootx64.nim
 ...
 
@@ -103,7 +103,7 @@ Since we're going to pass a pointr to a null-terminated UTF-16 string to `output
 
 We create a wide string using `newWideCString` (which returns a `WideCStringObj`), use the `toWideCString` converter to get access to the underlying data buffer, and then pass it to `outputString`.
 
-```nim
+```nim{6-9}
 # src/bootx64.nim
 
 proc EfiMain(imgHandle: EfiHandle, sysTable: ptr EFiSystemTable): EfiStatus {.exportc.} =
@@ -132,7 +132,7 @@ proc W*(str: string): WideCString =
 
 Now we can create a wide string using `W`:
 
-```nim
+```nim{7}
 # src/bootx64.nim
 
 proc EfiMain(imgHandle: EfiHandle, sysTable: ptr EFiSystemTable): EfiStatus {.exportc.} =
@@ -148,7 +148,7 @@ proc EfiMain(imgHandle: EfiHandle, sysTable: ptr EFiSystemTable): EfiStatus {.ex
 
 Preparing a UTF-16 string and calling `outputString` every time we want to print to the screen is tedious. Ideally we should be able to use the built-in `echo` procedure to print to the screen. This requires us to define a `stdout` file descriptor, and implement `fwrite` to use the UEFI `outputString` function. But instead of making the `libc` module deal with UEFI internals, we'll create a new module called `uefi` to handle this. We'll also move all the UEFI types and constants to this module. In the process, we'll mark all types, constants, and vars as public so that they can be used by other modules.
 
-```nim
+```nim{7-20}
 # src/uefi.nim
 
 type
@@ -173,20 +173,20 @@ proc consoleError*(str: string) =
 
 We'll initalize the `sysTable` variable in `src/bootx64.nim` later. Let's implement `fwrite` to use the `consoleOut` procedure we just defined. Notice that we don't use the `stream` argument to differentiate between `stdout` and `stderr` here (since they're both `nil` for now). We'll leave that for later.
 
-```nim
+```nim{6-7}
 # src/libc.nim
 
 import uefi
 
 proc fwrite*(buf: const_pointer, size: csize_t, count: csize_t, stream: File): csize_t {.exportc.} =
-  let str = $cast[cstring](buf)
-  consoleOut(str)
+  let output = $cast[cstring](buf)
+  consoleOut(output)
   return count
 ```
 
 Now let's update `src/bootx64.nim` to initialize the `sysTable` variable and call `echo` to print to the screen.
 
-```nim
+```nim{8,10-11}
 # src/bootx64.nim
 
 import uefi
@@ -212,7 +212,7 @@ In a normal application, Nim generates a `main` entry point which executes our t
 
 We'll do this by wrapping the code in `EfiMain` in a `try` block, and printing the exception message (and the stack trace, if one exists) to the screen if one was raised. To avoid cluttering the `try` block with a lot of code, we'll move that code to a new `EfiMainInner` procedure.
 
-```nim
+```nim{3-17,22-25}
 # src/bootx64.nim
 
 proc unhandledException*(e: ref Exception) =
@@ -246,7 +246,7 @@ When we compile and load this in QEMU, we see the exception message and stack tr
 
 The problem is that Nim uses LF as the newline character, but UEFI expects CRLF. We can fix this by modifying the `fwrite` procedure to split the string into lines, and print a CR after each line.
 
-```nim
+```nim{7-9}
 # src/libc.nim
 
 import std/strutils
