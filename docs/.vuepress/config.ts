@@ -19,6 +19,7 @@ export default defineUserConfig({
       '/osdev/05-bootloader-p1.md',
       '/osdev/06-bootloader-p2.md',
       '/osdev/07-kernel-p1.md',
+      '/osdev/08-bootloader-p3.md',
     ],
     contributors: false,
   }),
