@@ -447,7 +447,7 @@ Idx Name                          Size     VMA              Type
 
 Looks good. We can now update the linker script to put the `.text.KernelMain` section at the beginning of the `.text` section. We'll follow it with the other function sections from the kernel main object file, and then all other function sections. The reason for this is that we want to keep the code from the kernel main object file together for better cache locality.
 
-```ld{6-9}
+```ld{6-10}
 /* src/kernel/kernel.ld */
 
 SECTIONS
@@ -516,15 +516,16 @@ The kernel image is about 51 KB. But remember that we have a 1 MB heap in the `m
 
 Let's modify the linker script to move the `.bss` section into the `.data` section:
 
-```ld{8}
+```ld{12}
 /* src/kernel/kernel.ld */
 
 SECTIONS
 {
   . = 0x100000;
-  .text   : {
-    *kernel*.o(.text.KernelMain)
-    *(.text*)
+  .text     : {
+    *main*.o(.text.KernelMain)
+    *main*.o(.text.*)
+    *(.text.*)
   }
   .rodata   : { *(.rodata*) }
   .data     : { *(.data) *(.bss) }
