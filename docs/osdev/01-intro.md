@@ -24,7 +24,7 @@ As any hobby OS project, it needs a name. I decided to call it **Fusion OS**, fo
 : <p>State machines will communicate with each other by sending messages (think events/commands), both synchronously and asynchronously.</p>
 
 **Memory Mapped Filesystem**
-: <p>The filesystem will be memory mapped into the address space, so that files can be accessed as memory. This will allow for zero-copy file I/O.</p>
+: <p>The filesystem will be memory mapped into the address space, so that files can be accessed as memory.</p>
 
 In the next section, we'll set up our development environment.
 

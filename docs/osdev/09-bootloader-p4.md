@@ -469,4 +469,76 @@ Memory Map (107 entries):
 
 The memory map looks good. Notice that memory region at `0x100000` is marked as `EfiLoaderCode`, which is the memory region we allocated for the kernel. Its size is 280 pages (1120 KB), which matches the size of the kernel image (rounded up to the nearest page). When we implement the physical memory manager we'll have to mark this region as used.
 
-We're in a great place now. We can now switch our focus to the kernel, assuming full control of the system. Where we go from here is up to us. In the next section, we'll forumlate an initial plan for the kernel.
+## Handling exceptions
+
+Before we move on to the next section, let's make sure we handle exceptions properly at the top level of the kernel, similar to what we did with the bootloader. Let's define an `unhandledException` proc that prints the exception and stack trace and quits, and move the code in `KernelMain` to a new `KernelMainInner` proc.
+
+```nim{6-11,20-45}
+# src/kernel/main.nim
+...
+
+# forward declarations
+proc NimMain() {.importc.}
+proc KernelMainInner(
+  memoryMap: ptr UncheckedArray[EfiMemoryDescriptor],
+  memoryMapSize: uint,
+  memoryMapDescriptorSize: uint,
+)
+proc unhandledException*(e: ref Exception)
+
+proc KernelMain(
+  memoryMap: ptr UncheckedArray[EfiMemoryDescriptor],
+  memoryMapSize: uint,
+  memoryMapDescriptorSize: uint,
+) {.exportc.} =
+  NimMain()
+
+  try:
+    KernelMainInner(memoryMap, memoryMapSize, memoryMapDescriptorSize)
+  except Exception as e:
+    unhandledException(e)
+
+  quit()
+
+proc KernelMainInner(
+  memoryMap: ptr UncheckedArray[EfiMemoryDescriptor],
+  memoryMapSize: uint,
+  memoryMapDescriptorSize: uint,
+) =
+  let numMemoryMapEntries = memoryMapSize div memoryMapDescriptorSize
+
+  debugln ""
+  debugln &"Memory Map ({numMemoryMapEntries} entries):"
+  ...
+
+proc unhandledException*(e: ref Exception) =
+  debugln ""
+  debugln &"Unhandled exception: {e.msg} [{e.name}]"
+  if e.trace.len > 0:
+    debugln ""
+    debugln "Stack trace:"
+    debugln getStackTrace(e)
+  quit()
+```
+
+Let's test this by forcing an exception in `KernelMainInner`:
+
+```nim
+# src/kernel/main.nim
+
+proc KernelMainInner(
+  memoryMap: ptr UncheckedArray[EfiMemoryDescriptor],
+  memoryMapSize: uint,
+  memoryMapDescriptorSize: uint,
+) =
+  # force an IndexDefect exception
+  let a = [1, 2, 3]
+  let n = 5
+  discard a[n]
+```
+
+We should see the following output in the debug console:
+
+![Kernel - Exception handling](kernel-exceptionhandling.png)
+
+Great! We're in a great place now. We can now switch our focus to the kernel, assuming full control of the system. Where we go from here is up to us. In the next section, we'll forumlate an initial plan for the kernel.

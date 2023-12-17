@@ -414,34 +414,76 @@ $ head -n 10 build/kernel.map
     100240           100240       19     1                 popFrame
 ```
 
-Great! The kernel object file is now the first object file in the image, and our `KernelMain` proc is exactly at address `0x100000`. Let's double check the ELF headers:
+Great! The kernel object file is now the first object file in the image, and our `KernelMain` proc is exactly at address `0x100000`. This should work, but there's a hidden issue here. The fact that the linker decided to put `KernelMain` at the beginning of the `.text` section is an implementation detail of the linker. If we add more code to the kernel, the linker might decide to put `KernelMain` at a different address. So how do we tell the linker to always put `KernelMain` at the beginning of the `.text` section? Linker scripts work at a section level, so we can't tell the linker to put a specific symbol at a specific address. One thing we can do is use a C compiler flag called `-ffunction-sections`, which tells the compiler to put each function in its own section. The generated section names are in the form `.text.<function name>`. This way we can tell the linker to put the `.text.KernelMain` section at the beginning of the `.text` section. Let's add this flag to the compiler arguments in `nim.cfg`:
 
-```sh-session{12}
-$ llvm-readelf --headers build/kernel.bin
-ELF Header:
-  Magic:   7f 45 4c 46 02 01 01 00 00 00 00 00 00 00 00 00
-  Class:                             ELF64
-  Data:                              2's complement, little endian
-  Version:                           1 (current)
-  OS/ABI:                            UNIX - System V
-  ABI Version:                       0
-  Type:                              EXEC (Executable file)
-  Machine:                           Advanced Micro Devices X86-64
-  Version:                           0x1
-  Entry point address:               0x100000
-  Start of program headers:          64 (bytes into file)
-  Start of section headers:          55240 (bytes into file)
-  Flags:                             0x0
-  Size of this header:               64 (bytes)
-  Size of program headers:           56 (bytes)
-  Number of program headers:         4
-  Size of section headers:           64 (bytes)
-  Number of section headers:         6
-  Section header string table index: 5
+```properties
+# src/kernel/nim.cfg
+...
+
+--passC:"-ffunction-sections"
+```
+
+Let's compile the kernel and take a look at the sections in the object file:
+
+```sh-session{10}
+$ llvm-objdump --section-headers build/@mmain.nim.c.o
+
+build/@mmain.nim.c.o:   file format elf64-x86-64
+
+Sections:
+Idx Name                          Size     VMA              Type
+  0                               00000000 0000000000000000 
+  1 .strtab                       00000224 0000000000000000 
+  2 .text                         00000000 0000000000000000 TEXT
+  3 .text.KernelMain              00000070 0000000000000000 TEXT  <-- KernelMain is in its own section
+  4 .rela.text.KernelMain         00000090 0000000000000000 
+  5 .text.nimFrame                00000087 0000000000000000 TEXT
+  6 .rela.text.nimFrame           00000078 0000000000000000 
+  7 .text.NimMain                 00000010 0000000000000000 TEXT
+  8 .rela.text.NimMain            00000030 0000000000000000 
+  9 .text.quit__system_u6343      000000ad 0000000000000000 TEXT
 ...
 ```
 
-And viola! The entry point is now at address `0x100000`.
+Looks good. We can now update the linker script to put the `.text.KernelMain` section at the beginning of the `.text` section. We'll follow it with the other function sections from the kernel main object file, and then all other function sections. The reason for this is that we want to keep the code from the kernel main object file together for better cache locality.
+
+```ld{6-9}
+/* src/kernel/kernel.ld */
+
+SECTIONS
+{
+  . = 0x100000;
+  .text     : {
+    *main*.o(.text.KernelMain)
+    *main*.o(.text.*)
+    *(.text.*)
+  }
+  .rodata   : { *(.rodata*) }
+  .data     : { *(.data) }
+  .bss      : { *(.bss) }
+  .shstrtab : { *(.shstrtab) }
+
+  /DISCARD/ : { *(*) }
+}
+```
+
+Let's compile the kernel again and see what the linker map file looks like:
+
+```sh-session{5-6}
+$ head -n 10 build/kernel.map
+             VMA              LMA     Size Align Out     In      Symbol
+               0                0   100000     1 . = 0x100000
+          100000           100000     b254    16 .text
+          100000           100000       70    16         .../fusion/build/@mmain.nim.c.o:(.text.KernelMain)
+          100000           100000       70     1                 KernelMain
+          100070           100070       87    16         .../fusion/build/@mmain.nim.c.o:(.text.nimFrame)
+          100070           100070       87     1                 nimFrame
+          100100           100100       10    16         .../fusion/build/@mmain.nim.c.o:(.text.NimMain)
+          100100           100100       10     1                 NimMain
+          100110           100110       ad    16         .../fusion/build/@mmain.nim.c.o:(.text.quit__system_u6343)
+```
+
+Looks good. Now we're guaranteed that `KernelMain` will always be at the beginning of the `.text` section. The order of other sections is not important to us (unless we want to optimize for cache locality, but let's not pre-optimize for now).
 
 ## Building a raw binary
 
@@ -480,7 +522,10 @@ Let's modify the linker script to move the `.bss` section into the `.data` secti
 SECTIONS
 {
   . = 0x100000;
-  .text     : { *kernel*.o(.text) *(.text) }
+  .text   : {
+    *kernel*.o(.text.KernelMain)
+    *(.text*)
+  }
   .rodata   : { *(.rodata*) }
   .data     : { *(.data) *(.bss) }
   .shstrtab : { *(.shstrtab) }
