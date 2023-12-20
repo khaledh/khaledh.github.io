@@ -1,4 +1,4 @@
-# Targeting UEFI - Part 2
+# Targeting UEFI (Part 2)
 
 In the previous section, we were faced with the need to implement a number of ANSI C library functions. Let's implement them now.
 

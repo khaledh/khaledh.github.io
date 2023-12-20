@@ -1,4 +1,4 @@
-# UEFI Bootloader - Part 4
+# Loading the kernel (Part 2)
 
 In the previous section, we were able to locate the kernel image and get its size. In this section, we'll continue with our plan. We'll allocate memory for the kernel image, read it into memory, exit the Boot Services, and jump to the kernel image.
 

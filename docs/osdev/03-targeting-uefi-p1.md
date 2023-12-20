@@ -1,4 +1,4 @@
-# Targeting UEFI - Part 1
+# Targeting UEFI (Part 1)
 
 Traditionally, booting an operating system on x86/x86\_64 hardware has been done using the BIOS. The BIOS has been considered legacy for a long time, and has been replaced by UEFI (Unified Extensible Firmware Interface) on most modern hardware. We no longer have to write a boot sector in assembly and rely on BIOS interrupts to load the OS. In this section we will focus on cross-compiling to UEFI (we'll get to the actual booting part later).
 
@@ -110,7 +110,7 @@ Before we port this to Nim, we need to understand that Nim itself supports multi
 
 Nim does support cross-compiling to Windows using the `-d:mingw` flag. However, while the executable we want is a Windows executable format, the target OS is not Windows, but UEFI. Nim doesn't have a target OS for UEFI, so we'll need to use the `--os:any` flag to tell the compiler to not use any OS-specific code (it only expects a handful of ANSI C library functions to be available). We'll Nim to use specific values for these arguments.
 
-We also pass the `clang` flags we used earlier to the compiler and linker using the `--passC` and `--passL` flags respectively.
+We also pass the `clang` flags we used earlier to the compiler and linker using the `--passc` and `--passl` flags respectively.
 
 ```sh-session
 $ nim c \
@@ -118,12 +118,12 @@ $ nim c \
     --cpu:amd64 \
     --os:any \
     --cc:clang \
-    --passC:"-target x86_64-unknown-windows" \
-    --passC:"-ffreestanding" \
-    --passL:"-fuse-ld=lld-link" \
-    --passL:"-nostdlib" \
-    --passL:"-Wl,-entry:main" \
-    --passL:"-Wl,-subsystem:efi_application" \
+    --passc:"-target x86_64-unknown-windows" \
+    --passc:"-ffreestanding" \
+    --passl:"-fuse-ld=lld-link" \
+    --passl:"-nostdlib" \
+    --passl:"-Wl,-entry:main" \
+    --passl:"-Wl,-subsystem:efi_application" \
     --out:build/main.exe \
     main.nim
 .../lib/system/osalloc.nim(218, 10) Error: Port memory manager to your platform
@@ -183,12 +183,12 @@ $ nim c \
     --cpu:amd64 \
     --os:any \
     --cc:clang \
-    --passC:"-target x86_64-unknown-windows" \
-    --passC:"-ffreestanding" \
-    --passL:"-fuse-ld=lld-link" \
-    --passL:"-nostdlib" \
-    --passL:"-Wl,-entry:main" \
-    --passL:"-Wl,-subsystem:efi_application" \
+    --passc:"-target x86_64-unknown-windows" \
+    --passc:"-ffreestanding" \
+    --passl:"-fuse-ld=lld-link" \
+    --passl:"-nostdlib" \
+    --passl:"-Wl,-entry:main" \
+    --passl:"-Wl,-subsystem:efi_application" \
     -d:useMalloc \
     --out:build/main.exe \
     main.nim
@@ -217,14 +217,14 @@ $ nim c \
     --cpu:amd64 \
     --os:any \
     --cc:clang \
-    --passC:"-target x86_64-unknown-windows" \
-    --passC:"-ffreestanding" \
-    --passC:"-I/usr/include" \
-    --passL:"-target x86_64-unknown-windows" \
-    --passL:"-fuse-ld=lld-link" \
-    --passL:"-nostdlib" \
-    --passL:"-Wl,-entry:main" \
-    --passL:"-Wl,-subsystem:efi_application" \
+    --passc:"-target x86_64-unknown-windows" \
+    --passc:"-ffreestanding" \
+    --passc:"-I/usr/include" \
+    --passl:"-target x86_64-unknown-windows" \
+    --passl:"-fuse-ld=lld-link" \
+    --passl:"-nostdlib" \
+    --passl:"-Wl,-entry:main" \
+    --passl:"-Wl,-subsystem:efi_application" \
     -d:useMalloc \
     --out:build/main.exe \
     main.nim
@@ -237,7 +237,7 @@ $ nim c \
       |
 ```
 
-> **Note**: On macOS, the system headers are located at `` `xcrun --show-sdk-path`/usr/include ``, so you'll need to replace `/usr/include` with that path in the `--passC` flag. Also, you'll need to pass `--passC:"-fgnuc-version=4.2.1"` (which defines `__GNUC__`) to avoid any macOS-specific marcros and stick with the GNU C ones.
+> **Note**: On macOS, the system headers are located at `` `xcrun --show-sdk-path`/usr/include ``, so you'll need to replace `/usr/include` with that path in the `--passc` flag. Also, you'll need to pass `--passc:"-fgnuc-version=4.2.1"` (which defines `__GNUC__`) to avoid any macOS-specific marcros and stick with the GNU C ones.
 
 In order to understand what's going on here it's important to note that, unlike C, Nim programs are not required to have a `main` function. You can have a file with code at the top level and it will be executed when the program starts. When we defined a `main` proc (which, to Nim, is just another proc that has no special meaning), we caused a conflict with the `main` function that the Nim compiler generates by default. Since we're not going to rely on the C library startup code, we need to take over the startup process ourselves. We can tell Nim to not generate its own `main` function by passing the `--noMain:on` flag.
 
@@ -261,14 +261,14 @@ $ nim c \
     --cpu:amd64 \
     --os:any \
     --cc:clang \
-    --passC:"-target x86_64-unknown-windows" \
-    --passC:"-ffreestanding" \
-    --passC:"-I/usr/include" \
-    --passL:"-target x86_64-unknown-windows" \
-    --passL:"-fuse-ld=lld-link" \
-    --passL:"-nostdlib" \
-    --passL:"-Wl,-entry:main" \
-    --passL:"-Wl,-subsystem:efi_application" \
+    --passc:"-target x86_64-unknown-windows" \
+    --passc:"-ffreestanding" \
+    --passc:"-I/usr/include" \
+    --passl:"-target x86_64-unknown-windows" \
+    --passl:"-fuse-ld=lld-link" \
+    --passl:"-nostdlib" \
+    --passl:"-Wl,-entry:main" \
+    --passl:"-Wl,-subsystem:efi_application" \
     -d:useMalloc \
     --noMain:on \
     --out:build/main.exe \
@@ -335,15 +335,15 @@ Before we go any further, let's move the compiler flags to a **nim.cfg** file in
 --os:any
 --cc:clang
 
---passC:"-target x86_64-unknown-windows"
---passC:"-ffreestanding"
---passC:"-I/usr/include"
+--passc:"-target x86_64-unknown-windows"
+--passc:"-ffreestanding"
+--passc:"-I/usr/include"
 
---passL:"-target x86_64-unknown-windows"
---passL:"-fuse-ld=lld-link"
---passL:"-nostdlib"
---passL:"-Wl,-entry:main"
---passL:"-Wl,-subsystem:efi_application"
+--passl:"-target x86_64-unknown-windows"
+--passl:"-fuse-ld=lld-link"
+--passl:"-nostdlib"
+--passl:"-Wl,-entry:main"
+--passl:"-Wl,-subsystem:efi_application"
 ```
 
 ```sh-session

@@ -1,4 +1,4 @@
-# UEFI Bootloader - Part 1
+# UEFI Bootloader (Part 1)
 
 Now that we have a solid base to target a UEFI in a freestanding environment, we can start writing our bootloader. Writing a UEFI bootloader is a complex task. In this section, we'll start by writing a simple UEFI entry point for the bootloader, which we'll build on later.
 
@@ -49,7 +49,7 @@ I'm also changing the entry point from `main` to `EfiMain`, which is a typical c
 # nim.cfg
 
 ...
---passL:"-Wl,-entry:EfiMain"
+--passl:"-Wl,-entry:EfiMain"
 ```
 
 Let's compile the code, changing the output executable to `bootx64.efi`:

@@ -1,4 +1,4 @@
-# UEFI Bootloader - Part 2
+# UEFI Bootloader (Part 2)
 
 In the previous section, we wrote a simple UEFI entry point for the bootloader. In this section, we'll use the UEFI API provided to us through the UEFI system table to print a simple message to the screen.
 

@@ -8,8 +8,8 @@ import { commentPlugin } from "vuepress-plugin-comment2";
 export default defineUserConfig({
   host: 'localhost',
   lang: 'en-US',
-  title: '0xc0ffee',
-  description: 'Khaled Hammouda\'s blog',
+  title: 'Fusion OS',
+  description: 'Building a 64-bit operating system from scratch in Nim',
   theme: defaultTheme({
     sidebar: [
       '/osdev/01-intro.md',
@@ -19,8 +19,9 @@ export default defineUserConfig({
       '/osdev/05-bootloader-p1.md',
       '/osdev/06-bootloader-p2.md',
       '/osdev/07-kernel-image.md',
-      '/osdev/08-bootloader-p3.md',
-      '/osdev/09-bootloader-p4.md',
+      '/osdev/08-loading-the-kernel-p1.md',
+      '/osdev/09-loading-the-kernel-p2.md',
+      '/osdev/10-higher-half-kernel.md',
     ],
     contributors: false,
   }),

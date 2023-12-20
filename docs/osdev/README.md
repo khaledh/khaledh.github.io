@@ -1,5 +1,5 @@
 ---
-title: OS Development
+title: Fusion OS
 ---
 
-## Hello OSDev
+This is both a documentation and a tutorial for building a simple operating system, Fusion OS, from scratch in Nim.

@@ -38,14 +38,14 @@ Now let's move the existing modules into their respective directories. Let's als
 Let's move the following part of the `nim.cfg` file into the `nim.cfg` file in the `boot` directory:
 
 ```properties
---passC:"-target x86_64-unknown-windows"
---passC:"-ffreestanding"
+--passc:"-target x86_64-unknown-windows"
+--passc:"-ffreestanding"
 
---passL:"-target x86_64-unknown-windows"
---passL:"-fuse-ld=lld-link"
---passL:"-nostdlib"
---passL:"-Wl,-entry:EfiMain"
---passL:"-Wl,-subsystem:efi_application"
+--passl:"-target x86_64-unknown-windows"
+--passl:"-fuse-ld=lld-link"
+--passl:"-nostdlib"
+--passl:"-Wl,-entry:EfiMain"
+--passl:"-Wl,-subsystem:efi_application"
 ```
 
 We'll work on what to use in the kernel's `nim.cfg` file later.
@@ -140,12 +140,12 @@ Let's add some arguments in `src/kernel/nim.cfg` to use `ld.lld` and generate an
 
 amd64.any.clang.linkerexe = "ld.lld"
 
---passC:"-target x86_64-unknown-elf"
---passC:"-ffreestanding"
+--passc:"-target x86_64-unknown-elf"
+--passc:"-ffreestanding"
 
---passL:"-nostdlib"
---passL:"-Map=build/kernel.map"
---passL:"-entry KernelMain"
+--passl:"-nostdlib"
+--passl:"-Map=build/kernel.map"
+--passl:"-entry KernelMain"
 ```
 
 We're also passing the `-Map` switch to generate a linker map file. This is useful for showing us the address of each symbol in the output file. Now let's compile the kernel:
@@ -276,7 +276,7 @@ Let's add the linker script to the linker arguments in `nim.cfg`:
 ```properties
 # src/kernel/nim.cfg
 
---passL:"-T src/kernel/kernel.ld"
+--passl:"-T src/kernel/kernel.ld"
 ```
 
 Let's compile the kernel again, this time using the linker script:
@@ -420,7 +420,7 @@ Great! The kernel object file is now the first object file in the image, and our
 # src/kernel/nim.cfg
 ...
 
---passC:"-ffunction-sections"
+--passc:"-ffunction-sections"
 ```
 
 Let's compile the kernel and take a look at the sections in the object file:
@@ -493,7 +493,7 @@ We have an ELF executable kernel image, but we want a raw binary image. Let's ad
 # src/kernel/nim.cfg
 
 ...
---passL:"--oformat=binary"
+--passl:"--oformat=binary"
 ```
 
 Let's compile the kernel again:

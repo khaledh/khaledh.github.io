@@ -1,4 +1,4 @@
-# UEFI Bootloader - Part 3
+# Loading the Kernel (Part 1)
 
 In the last section we built a raw binary kernel image. We'll pick up where we left off in the bootloader and load the kernel image into memory. We'll rely on UEFI Boot Services to do so.
 
