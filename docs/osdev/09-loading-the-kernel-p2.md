@@ -1,4 +1,4 @@
-# Loading the kernel (Part 2)
+# Loading the Kernel (Part 2)
 
 In the previous section, we were able to locate the kernel image and get its size. In this section, we'll continue with our plan. We'll allocate memory for the kernel image, read it into memory, exit the Boot Services, and jump to the kernel image.
 
@@ -424,7 +424,7 @@ proc KernelMain(
   debug &"""   {"Entry"}"""
   debug &"""   {"Type":22}"""
   debug &"""   {"PhysicalStart":>15}"""
-  debug &"""   {"PhysicalStart (KB)":>15}"""
+  debug &"""   {"PhysicalStart (KiB)":>16}"""
   debug &"""   {"NumberOfPages":>13}"""
   debugln ""
   for i in 0 ..< numMemoryMapEntries:
@@ -432,7 +432,7 @@ proc KernelMain(
     debug &"   {i:>5}"
     debug &"   {entry.type:22}"
     debug &"   {entry.physicalStart:>#15x}"
-    debug &"   {entry.physicalStart div 1024:>#18}"
+    debug &"   {entry.physicalStart div 1024:>#19}"
     debug &"   {entry.numberOfPages:>#13}"
     debugln ""
 
@@ -443,7 +443,7 @@ We should see the following output in the debug console:
 
 ```
 Memory Map (107 entries):
-   Entry   Type                       PhysicalStart   PhysicalStart (KB)   NumberOfPages
+   Entry   Type                       PhysicalStart   PhysicalStart (KiB)   NumberOfPages
        0   EfiBootServicesCode                  0x0                    0               1
        1   EfiConventionalMemory             0x1000                    4             159
        2   EfiLoaderCode                   0x100000                 1024             280  <-- kernel image
@@ -467,7 +467,7 @@ Memory Map (107 entries):
      106   EfiReservedMemory           0xfd00000000           1061158912         3145728
 ```
 
-The memory map looks good. Notice that memory region at `0x100000` is marked as `EfiLoaderCode`, which is the memory region we allocated for the kernel. Its size is 280 pages (1120 KB), which matches the size of the kernel image (rounded up to the nearest page). When we implement the physical memory manager we'll have to mark this region as used.
+The memory map looks good. Notice that memory region at `0x100000` is marked as `EfiLoaderCode`, which is the memory region we allocated for the kernel. Its size is 280 pages (1120 KiB), which matches the size of the kernel image (rounded up to the nearest page). When we implement the physical memory manager we'll have to mark this region as used.
 
 ## Handling exceptions
 
@@ -541,4 +541,4 @@ We should see the following output in the debug console:
 
 ![Kernel - Exception handling](kernel-exceptionhandling.png)
 
-Great! We're in a great place now. We can now switch our focus to the kernel, assuming full control of the system. Where we go from here is up to us. In the next section, we'll forumlate an initial plan for the kernel.
+Great! We're in a great place now. We can now switch our focus to the kernel, assuming full control of the system. In the next section, we'll take a closer look at the virtual address space, and how to map the kernel into a dedicated part of the virtual address space (the higher half), the so-called _kernel space_.

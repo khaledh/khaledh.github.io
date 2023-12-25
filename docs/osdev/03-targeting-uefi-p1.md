@@ -141,7 +141,7 @@ OK, at least we have a way to provide memory allocation primitives to Nim, inste
 {.used.}
 
 var
-  heap*: array[1*1024*1024, byte] # 1 MB heap
+  heap*: array[1*1024*1024, byte] # 1 MiB heap
   heapBumpPtr*: int = cast[int](addr heap)
   heapMaxPtr*: int = cast[int](addr heap) + heap.high
 

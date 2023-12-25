@@ -22,6 +22,8 @@ export default defineUserConfig({
       '/osdev/08-loading-the-kernel-p1.md',
       '/osdev/09-loading-the-kernel-p2.md',
       '/osdev/10-higher-half-kernel.md',
+      '/osdev/11-memory-segments.md',
+      '/osdev/12-interrupts.md',
     ],
     contributors: false,
   }),

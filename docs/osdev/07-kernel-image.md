@@ -512,7 +512,7 @@ $ wc -c build/kernel.bin
   51104 build/kernel.bin
 ```
 
-The kernel image is about 51 KB. But remember that we have a 1 MB heap in the `malloc.nim` module. This is not persisted in the image, since it's in the `.bss` section, which is uninitialized data. This poses a problem for the bootloader, since we don't have section metadata in the image. Part of the reason for building a raw binary image is to make it dead simple for the loader to load it into memory without having to worry about initializing sections. One way to solve this problem is to move the `.bss` section into the output `.data` section. This will cause the linker to allocate space for the `.bss` section in the output file. Obviously this will increase the size of the image, but it's a price we're willing to pay to keep the bootloader simple.
+The kernel image is about 51 KiB. But remember that we have a 1 MiB heap in the `malloc.nim` module. This is not persisted in the image, since it's in the `.bss` section, which is uninitialized data. This poses a problem for the bootloader, since we don't have section metadata in the image. Part of the reason for building a raw binary image is to make it dead simple for the loader to load it into memory without having to worry about initializing sections. One way to solve this problem is to move the `.bss` section into the output `.data` section. This will cause the linker to allocate space for the `.bss` section in the output file. Obviously this will increase the size of the image, but it's a price we're willing to pay to keep the bootloader simple.
 
 Let's modify the linker script to move the `.bss` section into the `.data` section:
 
@@ -544,7 +544,7 @@ $ wc -c build/kernel.bin
   1100880 build/kernel.bin
 ```
 
-The image is now about 1.1 MB, which means that the `.bss` section is now included in the image. Now the bootloader will be able to load the image into memory without having to worry about initializing sections.
+The image is now about 1.1 MiB, which means that the `.bss` section is now included in the image. Now the bootloader will be able to load the image into memory without having to worry about initializing sections.
 
 Let's update our `justfile` to copy the kernel image to the disk image in a place where the bootloader can find it:
 

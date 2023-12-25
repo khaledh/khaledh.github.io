@@ -391,4 +391,4 @@ If all goes well, we should see the kernel file size in the output:
 
 ![Boot - Kernel file size](boot-kernelfilesize.png)
 
-Great! The kernel image size is what we expect (around 1.1 MB). In the next section we'll continue to allocate memory for the kernel image and read it into memory.
+Great! The kernel image size is what we expect (around 1.1 MiB). In the next section we'll continue to allocate memory for the kernel image and read it into memory.

@@ -6,7 +6,7 @@ One of the important decisions is how to manage the virtual address space. We ca
 
 ## Virtual address space
 
-The 64-bit virtual address space on x86_64 uses a canonical address format, where the most significant 16 bits of the 64-bit address must be either all 0s or all 1s. This means that the address space is split into two halves: the lower half (from `0x0000000000000000` to `0x00007FFFFFFFFFFF`), and the higher half (from `0xFFFF800000000000` to `0xFFFFFFFFFFFFFFFF`). Each is 48 bits in size, which is equivalent to 256 TB. This is more than enough for our purposes. We'll use the lower half (128 TB) for user processes, and the higher half (128 TB) for the kernel.
+The 64-bit virtual address space on x86_64 uses a canonical address format, where the most significant 16 bits of the 64-bit address must be either all 0s or all 1s. This means that the address space is split into two halves: the lower half (from `0x0000000000000000` to `0x00007FFFFFFFFFFF`), and the higher half (from `0xFFFF800000000000` to `0xFFFFFFFFFFFFFFFF`). Each is 48 bits in size, which is equivalent to 256 TiB. This is more than enough for our purposes. We'll use the lower half (128 TiB) for user processes (**user space**), and the higher half (128 TiB) for the kernel (**kernel space**).
 
 That being said, we have a problem. The kernel is currently linked at address `0x100000`, not at the higher half of the address space. The UEFI environment does have paging enabled, but we need to build our own page tables, and map the kernel at the higher half of the address space. This needs to be done in the bootloader, before we jump to the kernel (since we'll change the kernel to be linked at the higher half). Once we're in the kernel, we can set up different page tables that fit our needs (although we'll still need to map the kernel at the higher half of the address space).
 
@@ -42,7 +42,7 @@ ld.lld: error: /Users/khaledhammouda/src/github.com/khaledh/fusion/build/@mmain.
 ...
 ```
 
-The problem here is that the compiler has something called a "code model", which determines how it generates code. The default code model is `small`, which means that the compiler assumes that the code and data are linked in the lower 2 GB of the address space. What we need here is the `large` code model, which assumes that the code and data are linked anywhere in the address space. We can specify the code model using the `-mcmodel` flag, so let's add it to the kernel's `nim.cfg` file.
+The problem here is that the compiler has something called a "code model", which determines how it generates code. The default code model is `small`, which means that the compiler assumes that the code and data are linked in the lower 2 GiB of the address space. What we need here is the `large` code model, which assumes that the code and data are linked anywhere in the address space. We can specify the code model using the `-mcmodel` flag, so let's add it to the kernel's `nim.cfg` file.
 
 ```properties
 # src/kernel/nim.cfg
@@ -77,7 +77,7 @@ In x64 mode, page tables are used to translate virtual addresses to physical add
 - Each entry points to a **Page Directory Pointer Table** (PDPT), which also contains 512 entries.
 - Each entry in the PDPT points to a **Page Directory** (PD), which contains 512 entries.
 - Each entry in the PD points to a **Page Table** (PT), which contains 512 entries.
-- Each entry in the PT points to a physical page frame. The page frame size is 4 KB of physical memory.
+- Each entry in the PT points to a physical page frame. The page frame size is 4 KiB of physical memory.
 
 The page tables are stored in memory, and the physical address of the root of the tree (the PML4 table) is stored in the `CR3` control register. The virtual address is split into 5 parts:
 
@@ -133,7 +133,7 @@ Here's a diagram of the page tables after we've set the entries:
 
 ## Implementing page tables
 
-Let's start by defining the structures for 4-level paging. Since we're going to need this both in the bootloader and in the kernel, we'll put it in a common module under `common/pagetables.nim`. One important point that we need to keep in mind is that the page tables need to be aligned on a 4 KB boundary. We'll use Nim's `align` pragma to do this.
+Let's start by defining the structures for 4-level paging. Since we're going to need this both in the bootloader and in the kernel, we'll put it in a common module under `common/pagetables.nim`. One important point that we need to keep in mind is that the page tables need to be aligned on a 4 KiB boundary. We'll use Nim's `align` pragma to do this.
 
 
 ```nim
@@ -462,4 +462,8 @@ We should be good to go. Let's try it out.
 
 ![Kernel - Higher Half](kernel-higherhalf.png)
 
-Great! We've entered the kernel, which is now running at the higher half of the address space.
+Great! We've entered the kernel, which is now running at the higher half of the address space. This is another big milestone.
+
+There are many things we can tackle next, but one important thing we need to take care of before we add more code is handling CPU exceptions. The reason is that sooner or later our kernel will crash, and we won't know why. Handling CPU exceptions gives us a way to print a debug message and halt the CPU, so we can see what went wrong.
+
+But before we can do that, we need to set up the **Global Descriptor Table** (GDT), which we'll look at in the next section.
