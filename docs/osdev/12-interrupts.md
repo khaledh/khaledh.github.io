@@ -116,9 +116,9 @@ Interrupt procedures are not normal procedures; there's a catch. When an interru
     ├──────────────────┤
     │                  │
     ├──────────────────┤     ◄──┐                   ◄──┐
-    │        SS        │ +48    │                      │
+    │        SS        │ +40    │                      │
     ├──────────────────┤        │                      │
-    │        RSP       │ +40    │                      │
+    │        RSP       │ +32    │                      │
     ├──────────────────┤        │   Stack              │   Stack
     │       RFLAGS     │ +24    ├── Frame              ├── Frame 
     ├──────────────────┤        │  (no error code)     │  (with error code)
@@ -131,7 +131,7 @@ Interrupt procedures are not normal procedures; there's a catch. When an interru
     │                  │
     ├──────────────────┤
 ```
-
+▼
 Notice that some CPU exceptions push an error code onto the stack. For others, the error code is not pushed. So we have to be careful when defining the different interrupt handlers.
 
 Given this information, we can't just define a normal procedure as an interrupt handler; we have to tell the compiler to generate it differently. Fortunately, the C compiler has a special attribute called `interrupt` that can be used to define interrupt handlers. It generates appropriate function entry/exit code so that it can be used directly as an interrupt service routine. We can use the `codegenDecl` pragma to add this attribute to our interrupt handler signature.

@@ -12,6 +12,7 @@ UEFI Boot Services provides a number of services to help us, including accessing
 - Use the `EfiSimpleFileSystemProtocol` and the kernel image path on the file system to get the `EfiFileProtocol` of the kernel file.
 - Use the `EfiFileProtocol` to get the `EfiFileInfo` of the kernel file, which contains the size of the file.
 - Use the Boot Services `AllocatePages` function to allocate enough pages, starting at address `0x100000` (1 MiB), to hold the kernel image.
+- Use `AllocatePages` to allocate a region for the kernel stack.
 - Use the `EfiFileProtocol` function to read the kernel image into memory.
 
 After reading the kernel into memory, and before jumping to it, we'll need to call the Boot Services `ExitBootServices` function to signal to the UEFI firmware that we're done with the Boot Services. To do so, we're required to also call the `GetMemoryMap` function to get the memory map, which contains a key that we'll pass to `ExitBootServices`. We'll also eventually pass this memory map to the kernel. So in addition to the plan above, we'll also:
@@ -48,25 +49,32 @@ type
     imageCodeType*: EfiMemoryType
     imageDataType*: EfiMemoryType
     unload*: pointer
+```
 
+The `EfiMemoryType` defines the various types of memory in the system. At some point we'll need to allocate memory for the kernel (code, data, and stack), so we'll need to differentiate these types of memory. The UEFI spec doesn't define kernel memory types, so we'll add a few more custom types to the enum, which fall in the range of OSV (Operating System Vendor) defined memory types (`0x80000000` to `0xFFFFFFFF`).
+
+```nim
   EfiMemoryType* = enum
-    EfiReservedMemory,
-    EfiLoaderCode,
-    EfiLoaderData,
-    EfiBootServicesCode,
-    EfiBootServicesData,
-    EfiRuntimeServicesCode,
-    EfiRuntimeServicesData,
-    EfiConventionalMemory,
-    EfiUnusableMemory,
-    EfiACPIReclaimMemory,
-    EfiACPIMemoryNVS,
-    EfiMemoryMappedIO,
-    EfiMemoryMappedIOPortSpace,
-    EfiPalCode,
-    EfiPersistentMemory,
-    EfiUnacceptedMemory,
-    EfiMaxMemoryType,
+    EfiReservedMemory
+    EfiLoaderCode
+    EfiLoaderData
+    EfiBootServicesCode
+    EfiBootServicesData
+    EfiRuntimeServicesCode
+    EfiRuntimeServicesData
+    EfiConventionalMemory
+    EfiUnusableMemory
+    EfiACPIReclaimMemory
+    EfiACPIMemoryNVS
+    EfiMemoryMappedIO
+    EfiMemoryMappedIOPortSpace
+    EfiPalCode
+    EfiPersistentMemory
+    EfiUnacceptedMemory
+    OsvKernelCode = 0x80000000
+    OsvKernelData = 0x80000001
+    OsvKernelStack = 0x80000002
+    EfiMaxMemoryType
 ```
 
 To get the `EfiLoadedImageProtocol` from the bootloader image handle, we'll use the `handleProtocol` function of the Boot Services. So let's define the `BootServices` type and the `handleProtocol` function in `src/common/uefi.nim`. It's a large type with many functions, so I won't define the type of every field; we'll use `pointer` for those fields until we need to use them.

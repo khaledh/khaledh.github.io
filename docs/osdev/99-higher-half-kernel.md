@@ -12,14 +12,14 @@ That being said, we have a problem. The kernel is currently linked at address `0
 
 ## Linking the kernel
 
-To link the kernel at the higher half of the address space, we need to change the base address of the kernel in the linker script. This should be a straightforward change.
+To link the kernel at the higher half of the address space, we need to change the base address of the kernel in the linker script. However, instead of linking the kernel at exactly `0xFFFF800000000000`, we'll link it at 1 MiB above that address, i.e. `0xFFFF800000100000`. This will make virtual addresses and physical addresses line up nicely, and we can compare them visually by just looking at least significant bytes of the address, which makes debugging page table mappings easier.
 
 ```ld{5}
 /* src/kernel/kernel.ld */
 
 SECTIONS
 {
-  . = 0xFFFF800000000000;
+  . = 0xFFFF800000100000;
   .text   : {
     *main*.o(.*text.KernelMain)
     *main*.o(.*text.*)
@@ -56,15 +56,15 @@ Now the kernel should compile and link successfully. Let's take a quick look at 
 ```sh-session
 $ head -n 10 build/kernel.map
              VMA              LMA     Size Align Out     In      Symbol
-               0                0 ffff800000000000     1 . = 0xFFFF800000000000
-ffff800000000000 ffff800000000000    15f6c    16 .text
-ffff800000000000 ffff800000000000      1ee    16         .../fusion/build/@mmain.nim.c.o:(.ltext.KernelMain)
-ffff800000000000 ffff800000000000      1ee     1                 KernelMain
-ffff8000000001f0 ffff8000000001f0     1f5e    16         .../fusion/build/@mmain.nim.c.o:(.ltext.KernelMainInner__main_u7)
-ffff8000000001f0 ffff8000000001f0     1f5e     1                 KernelMainInner__main_u7
-ffff800000002150 ffff800000002150       9b    16         .../fusion/build/@mmain.nim.c.o:(.ltext.nimFrame)
-ffff800000002150 ffff800000002150       9b     1                 nimFrame
-ffff8000000021f0 ffff8000000021f0       20    16         .../fusion/build/@mmain.nim.c.o:(.ltext.nimErrorFlag)
+               0                0 ffff800000100000     1 . = 0xFFFF800000100000
+ffff800000100000 ffff800000100000    2048c    16 .text
+ffff800000100000 ffff800000100000      1ee    16         .../fusion/build/@mmain.nim.c.o:(.ltext.KernelMain)
+ffff800000100000 ffff800000100000      1ee     1                 KernelMain
+ffff8000001001f0 ffff8000001001f0     261f    16         .../fusion/build/@mmain.nim.c.o:(.ltext.KernelMainInner__main_u13)
+ffff8000001001f0 ffff8000001001f0     261f     1                 KernelMainInner__main_u13
+ffff800000102810 ffff800000102810       9b    16         .../fusion/build/@mmain.nim.c.o:(.ltext.nimFrame)
+ffff800000102810 ffff800000102810       9b     1                 nimFrame
+ffff8000001028b0 ffff8000001028b0       25    16         .../fusion/build/@mmain.nim.c.o:(.ltext.nimErrorFlag)
 ```
 
 Looks good. Next, we'll look at how to set up paging in the bootloader.
@@ -99,36 +99,37 @@ Here's a diagram of a virtual address, and how each section of the address maps 
 └──────────────────┴────────────────┴────────────────┴──────────────┴──────────────┴─────────────┘
 ```
 
-So in order to link the kernel at the start of the higher half of the address space (`0xFFFF800000000000`), we need to map the virtual pages at `0xFFFF800000000000` to `0xFFFF800000000000 + (kernel size)` to the physical pages at `0x100000` to `0x100000 + (kernel size)`. We'll need to create a PML4 table, a PDPT, a PD, and a PT, and fill them with the appropriate entries.
+So in order to link the kernel at the start of the higher half of the address space (`0xFFFF800000100000`), we need to map the virtual pages at `0xFFFF800000100000` to `0xFFFF800000100000 + (kernel size)` to the physical pages at `0x100000` to `0x100000 + (kernel size)`. We'll need to create a PML4 table, a PDPT, a PD, and a PT, and fill them with the appropriate entries.
 
-Let's break down the higher half address `0xFFFF800000000000` according to the above diagram:
+Let's break down the higher half address `0xFFFF800000100000` according to the above diagram:
 
 - Bits 63:49: `0xFFFF` (sign-extended from bit 47)
 - Bits 48:39: `0x100` (index 256 in the PML4 table)
 - Bits 38:30: `0x000` (index 0 in the PDP table)
 - Bits 29:21: `0x000` (index 0 in the PD table)
-- Bits 20:12: `0x000` (index 0 in the PT table)
+- Bits 20:12: `0x100` (index 256 in the PT table)
+- Bits 11:0: `0x000` (offset 0 within the page frame)
 
 To map this virtual address to physical address `0x100000`, we need to set the following entries:
 
 - PML4Table: PML4Entry at index 256 points to PDPTable
 - PDPTable: PDPTEntry at index 0 points to PDTable
 - PDTable: PDEntry at index 0 points to PTable
-- PTable: PTEntry at index 0 points to physical address `0x100000`
+- PTable: PTEntry at index 256 points to physical address `0x100000`
 
 Here's a diagram of the page tables after we've set the entries:
 
 ```text
-┌─────────────────┐  ┌──>┌─────────────────┐  ┌──>┌─────────────────┐  ┌──>┌─────────────────┐
-│ PML4Table       │  │   │ PDPTable        │  │   │ PDTable         │  │   │ PTable          │
-├─────────────────┤  │   ├─────────────────┤  │   ├─────────────────┤  │   ├─────────────────┤
-│ PML4Entry 0     │  │   │ PDPTEntry 0     │──┘   │ PDEntry 0       │──┘   │ PTEntry 0       │──> 0x100000
-│ PML4Entry 1     │  │   │ PDPTEntry 1     │      │ PDEntry 1       │      │ PTEntry 1       │
-│ ...             │  │   │                 │      │                 │      │                 │
-│ PML4Entry 256   │──┘   │ ...             │      │ ...             │      │ ...             │
-│ ...             │      │                 │      │                 │      │                 │
-│ PML4Entry 511   │      │ PDPTEntry 511   │      │ PDEntry 511     │      │ PTEntry 511     │
-└─────────────────┘      └─────────────────┘      └─────────────────┘      └─────────────────┘
+  ┌─────────────────┐  ┌──>┌─────────────────┐  ┌──>┌─────────────────┐  ┌──>┌─────────────────┐
+  │ PML4Table       │  │   │ PDPTable        │  │   │ PDTable         │  │   │ PTable          │
+  ├─────────────────┤  │   ├─────────────────┤  │   ├─────────────────┤  │   ├─────────────────┤
+  │ PML4Entry 0     │  │  *│ PDPTEntry 0     │──┘  *│ PDEntry 0       │──┘   │ PTEntry 0       │
+  │ PML4Entry 1     │  │   │ PDPTEntry 1     │      │ PDEntry 1       │      │ PTEntry 1       │
+  │ ...             │  │   │                 │      │                 │      │ ...             │
+ *│ PML4Entry 256   │──┘   │ ...             │      │ ...             │     *│ PTEntry 256     │──> 0x100000
+  │ ...             │      │                 │      │                 │      │ ...             │
+  │ PML4Entry 511   │      │ PDPTEntry 511   │      │ PDEntry 511     │      │ PTEntry 511     │
+  └─────────────────┘      └─────────────────┘      └─────────────────┘      └─────────────────┘
 ```
 
 ## Implementing page tables
@@ -154,7 +155,7 @@ type
     ignored1* {.bitsize: 1.}: uint64     # bit      6
     reserved1* {.bitsize: 1.}: uint64    # bit      7
     ignored2* {.bitsize: 4.}: uint64     # bits 11: 8
-    physAddress* {.bitsize: 28.}: uint64 # bits 51:12
+    physAddress* {.bitsize: 40.}: uint64 # bits 51:12
     ignored3* {.bitsize: 11.}: uint64    # bits 62:52
     xd* {.bitsize: 1.}: uint64           # bit     63
 
@@ -169,7 +170,7 @@ type
     ignored1* {.bitsize: 1.}: uint64     # bit      6
     pageSize* {.bitsize: 1.}: uint64     # bit      7
     ignored2* {.bitsize: 4.}: uint64     # bits 11: 8
-    physAddress* {.bitsize: 28.}: uint64 # bits 51:12
+    physAddress* {.bitsize: 40.}: uint64 # bits 51:12
     ignored3* {.bitsize: 11.}: uint64    # bits 62:52
     xd* {.bitsize: 1.}: uint64           # bit     63
 
@@ -184,7 +185,7 @@ type
     ignored1* {.bitsize: 1.}: uint64     # bit      6
     pageSize* {.bitsize: 1.}: uint64     # bit      7
     ignored2* {.bitsize: 4.}: uint64     # bits 11: 8
-    physAddress* {.bitsize: 28.}: uint64 # bits 51:12
+    physAddress* {.bitsize: 40.}: uint64 # bits 51:12
     ignored3* {.bitsize: 11.}: uint64    # bits 62:52
     xd* {.bitsize: 1.}: uint64           # bit     63
 
@@ -200,7 +201,7 @@ type
     pat* {.bitsize: 1.}: uint64          # bit      7
     global* {.bitsize: 1.}: uint64       # bit      8
     ignored1* {.bitsize: 3.}: uint64     # bits 11: 9
-    physAddress* {.bitsize: 28.}: uint64 # bits 51:12
+    physAddress* {.bitsize: 40.}: uint64 # bits 51:12
     ignored2* {.bitsize: 11.}: uint64    # bits 62:52
     xd* {.bitsize: 1.}: uint64           # bit     63
 
@@ -240,11 +241,134 @@ Ideally we wouldn't need to define an `entries` array field within each object, 
 Then we could access the table by indexing directly into its variable, e.g. `pml4[i]`, instead of `pml4.entries[i]`. Unfortunately Nim doesn't support type-level alginment (yet). See this [RFC](https://github.com/nim-lang/RFCs/issues/545).
 :::
 
+## Accessing page tables
+
+OK, we have the page table structures defined. But before we start using them, we need to think about how we're going to access them. Let's look at a simple example:
+
+- We allocate a `PML4Table` instance (call it `pml4`).
+- We allocate a `PDPTable` instance.
+- We modify `pml4.entries[0].physAddress` to point to the physical address of the `PDPTable` instance.
+- At some later point, we want to modify that `PDPTable` instance. But how do we get its virtual address? All we have is its physical address through `pml4.entries[0].physAddress`.
+
+One solution to this problem entails a way to reverse map a physical address to a virtual address. For example, identity-mapping the page tables, mapping them at a constant offset from their physical addresses, or mapping the entire physical memory at a known virtual address. There are drawbacks to each of these solutions:
+
+- Identity-mapping the page tables requires allocating virtual addresses within the physical memory limits, which pollutes the user space address space.
+- Mapping at a constant offset solves the above problem, but still requires creating new mappings for each page table. It also means that the offset needs to be different for each page table, so it's not as simple as just adding a constant offset to the physical address.
+- Mapping the entire physical memory can be useful sometimes (we may consider it later), but it requires a lot of memory.
+
+A better way to achieve this without dedicating mapping regions or wasting extra space on creating extra mappings is called **recursive page tables**.
+
+## Recursive page tables
+
+The idea behind recursive page tables is use an entry in the PML4 table (usually the last entry at index 511) to point to itself, instead of a physical address of a PDPT table. The address translation process requires traversing four levels of page tables, eventually reaching a physical page frame that we can read from or write to.
+
+But what happens when the first step takes us to the PML4 table itself (by using the recursive entry in the PML4 table), instead of the next level (a PDPT table)? Then the next three steps will take us to a Page Table instead of a physical page frame. This means that we can actually read from or write to the fourth level page table as if it was a physical page frame. What if we want to read/write a PD table? Then we use the PML4 recursive entry twice, leaving the last two steps to take us to the PD table. The same goes for reaching a PDPT table (recurse three times), or a PML4 table (recurse four times), although that doing this to access a PML4 table isn't useful since we need to have a pointer to it stored somewhere to begin with.
+
+What does using the recursive entry means in technical terms? It means that we take a virtual address, and split it into 5 parts as we did before (a PML4 index, a PDPT index, a PD index, a PT index, and an offset). However, depending on how many times we recurse, we shift each index to the right as many times as we recurse, and replace the shifted indices with the recursive entry index (511 or 0x1FF).
+
+For example, if we want to access a PT table, we shift the PML4 index, the PDPT index, the PD index, and the PT index to the right, eventually dropping the offset part and replacing it with the PT index. Then we use the recursive entry index (511) in place of the original PML4 index. This means that the virtual address will be translated to a physical address that points to the PT table, instead of a physical page frame.
+
+This diagram shows the original virtual address and the modified virtual address to access the PT table, the PD table, and the PDPT table.
+
+```text
+Original virtual address
+┌────────────────┬────────────────┬────────────────┬────────────────┬───────────────────┐
+│      48:39     │      38:30     │     29:21      │      20:12     │        11:0       │
+├────────────────┼────────────────┼────────────────┼────────────────┼───────────────────┤
+│ PML4 index (9) │ PDPT index (9) │  PD index (9)  │  PT index (9)  │     Offset (12)   │
+└────────────────┴────────────────┴────────────────┴────────────────┴───────────────────┘
+
+Modified virtual address to access the PT table
+┌────────────────┬────────────────┬────────────────┬────────────────┬───────────────────┐
+│      48:39     │      38:30     │     29:21      │      20:12     │        11:0       │
+├────────────────┼────────────────┼────────────────┼────────────────┼───────────────────┤
+│      0x1FF     │ PML4 index (9) │ PDPT index (9) │  PD index (9)  │   PT index (12)   │
+└────────────────┴────────────────┴────────────────┴────────────────┴───────────────────┘
+
+Modified virtual address to access the PD table
+┌────────────────┬────────────────┬────────────────┬────────────────┬───────────────────┐
+│      48:39     │      38:30     │     29:21      │      20:12     │        11:0       │
+├────────────────┼────────────────┼────────────────┼────────────────┼───────────────────┤
+│      0x1FF     │      0x1FF     │ PML4 index (9) │ PDPT index (9) │   PD index (12)   │
+└────────────────┴────────────────┴────────────────┴────────────────┴───────────────────┘
+
+Modified virtual address to access the PDPT table
+┌────────────────┬────────────────┬────────────────┬────────────────┬───────────────────┐
+│      48:39     │      38:30     │     29:21      │      20:12     │        11:0       │
+├────────────────┼────────────────┼────────────────┼────────────────┼───────────────────┤
+│      0x1FF     │      0x1FF     │     0x1FF      │ PML4 index (9) │  PDPT index (12)  │
+└────────────────┴────────────────┴────────────────┴────────────────┴───────────────────┘
+```
+
+Note: Although the last part of the address is 12 bits (to access an offset with a 4 KiB page frame), the shifted index into this part is only 9 bits, so it's zero-extended to 12 bits.
+
+Let's create a proc to create and initialize a new PML4 table. We'll also add procs to get the virtual address of the PDPT, PD, and PT tables from a virtual address.
+
+```nim
+# src/common/pagetables.nim
+
+const
+  MostSignificantPartMask* = 0xFFFF800000000000'u64
+  RecursiveIndex* = 511
+
+proc newPML4Table*(physAddr: uint64): PML4Table =
+  new(result)
+  result.entries[RecursiveIndex].physAddress = physAddr shr 12
+  result.entries[RecursiveIndex].present = 1
+  result.entries[RecursiveIndex].write = 1
+  result.entries[RecursiveIndex].user = 0
+
+proc getPDPTAddr*(virtAddr: uint64): uint64 =
+  let mostSignificantPart = virtAddr and MostSignificantPartMask
+  let pml4Index = (virtAddr shr 39) and 0x1FF
+  let pdptIndex = (virtAddr shr 30) and 0x1FF
+
+  return (
+    mostSignificantPart or
+    (RecursiveIndex shl 39) or
+    (RecursiveIndex shl 30) or
+    (RecursiveIndex shl 21) or
+    (pml4Index shl 12) or
+    pdptIndex
+  )
+
+proc getPDTableAddr*(virtAddr: uint64): uint64 =
+  let mostSignificantPart = virtAddr and MostSignificantPartMask
+  let pml4Index = (virtAddr shr 39) and 0x1FF
+  let pdptIndex = (virtAddr shr 30) and 0x1FF
+  let pdIndex = (virtAddr shr 21) and 0x1FF
+
+  return (
+    mostSignificantPart or
+    (RecursiveIndex shl 39) or
+    (RecursiveIndex shl 30) or
+    (pml4Index shl 21) or
+    (pdptIndex shl 12) or
+    pdIndex
+  )
+
+proc getPTableAddr*(virtAddr: uint64): uint64 =
+  let mostSignificantPart = virtAddr and MostSignificantPartMask
+  let pml4Index = (virtAddr shr 39) and 0x1FF
+  let pdptIndex = (virtAddr shr 30) and 0x1FF
+  let pdIndex = (virtAddr shr 21) and 0x1FF
+  let ptIndex = (virtAddr shr 12) and 0x1FF
+
+  return (
+    mostSignificantPart or
+    (RecursiveIndex shl 39) or
+    (pml4Index shl 30) or
+    (pdptIndex shl 21) or
+    (pdIndex shl 12) or
+    ptIndex
+  )
+```
+
 ## Mapping pages
 
 With the page tables structures defined, we can now write a function to map a virtual page to a physical page. We'll extract 4 index values from the virtual address, and use them to insert (or update) the appropriate entries in the page tables. Remember that we'll need to store physical addresses at each level of the page tables, which is easy to do in the bootloader, since the physical memory is identity-mapped by the UEFI firmware. In the kernel, however, we'll need to find another way to get the physical address of paging structures that will be allocated using virtual addresses (we'll see how to do this later).
 
-Let's create a `src/boot/paging.nim` module and add a `mapPages` proc.
+Let's create a `src/boot/paging.nim` module and add a `mapPage` proc.
 
 ```nim
 # src/boot/paging.nim
@@ -276,9 +400,10 @@ proc mapPage*(
   else:
     pdpt = new PDPTable
     pml4.entries[pml4Index].physAddress = cast[uint64](pdpt.entries.addr) shr 12
-    pml4.entries[pml4Index].write = access
-    pml4.entries[pml4Index].user = mode
     pml4.entries[pml4Index].present = 1
+
+  pml4.entries[pml4Index].write = access
+  pml4.entries[pml4Index].user = mode
 
   # Page Directory Pointer Table
   if pdpt.entries[pdptIndex].present == 1:
@@ -286,9 +411,10 @@ proc mapPage*(
   else:
     pd = new PDTable
     pdpt.entries[pdptIndex].physAddress = cast[uint64](pd.entries.addr) shr 12
-    pdpt.entries[pdptIndex].write = access
-    pdpt.entries[pdptIndex].user = mode
     pdpt.entries[pdptIndex].present = 1
+
+  pdpt.entries[pdptIndex].write = access
+  pdpt.entries[pdptIndex].user = mode
 
   # Page Directory
   if pd.entries[pdIndex].present == 1:
@@ -296,9 +422,10 @@ proc mapPage*(
   else:
     pt = new PTable
     pd.entries[pdIndex].physAddress = cast[uint64](pt.entries.addr) shr 12
-    pd.entries[pdIndex].write = access
-    pd.entries[pdIndex].user = mode
     pd.entries[pdIndex].present = 1
+
+  pd.entries[pdIndex].write = access
+  pd.entries[pdIndex].user = mode
 
   # Page Table
   pt.entries[ptIndex].physAddress = physAddr shr 12
@@ -410,7 +537,7 @@ Now let's setup paging at the end of the `EfiMainInner` proc.
 
 const
   KernelPhysicalBase = 0x100000'u64
-  KernelVirtualBase = 0xFFFF800000000000'u64
+  KernelVirtualBase = 0xFFFF800000100000'u64
 
 
 proc EfiMainInner(imgHandle: EfiHandle, sysTable: ptr EFiSystemTable): EfiStatus =
