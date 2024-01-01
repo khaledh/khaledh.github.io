@@ -1,6 +1,6 @@
 # Virtual Memory
 
-So we have a working physical memory manager. But we can't keep using physical memory directly; sooner or later we'll run out of it. This is where virtual memory comes in. Virtual memory allows us to use more memory than we actually have, by mapping virtual addresses to physical addresses.
+So we have a working physical memory manager. But we can't keep using physical memory directly; sooner or later we'll run out of it. This is where virtual memory comes in. Virtual memory allows us to use more memory than we actually have, by mapping virtual addresses to physical addresses. In this section we'll implement a **Virtual Memory Manager** (VMM).
 
 When we booted through UEFI, the firmware had already enabled virtual memory for us, but it has been identity-mapped to physical memory. This makes it easy to manage memory during the boot process, but to take advantage of virtual memory we need to set it up ourselves. Let's first take a look at how the x86-64 virtual memory system works.
 
@@ -226,22 +226,27 @@ We'll go with the third option (mapping the entire physical memory at a known vi
 
 ## Mapping pages
 
+Mapping pages will require allocating physical memory frames to hold the page tables themselves. In the kernel, we'll use the physical memory manager to allocate these frames. However, we'll also need to create page tables in the bootloader to map a few regions before we jump to the kernel. So instead of letting the VMM use the PMM implicitly, we'll pass our VMM a callback that it can use to allocate physical memory frames. This will allow us to use the VMM from both the kernel and from the bootloader
+
 Before we implement mapping of pages, let's add a few utility procs that will make our lives easier.
 
 ```nim
-# src/boot/paging.nim
+# src/boot/vmm.nim
 
 import common/pagetables
-import pmm
+import pmm  # only needed for PhysAddr
 
 type
   VirtAddr* = distinct uint64
+  PhysAlloc* = proc (nframes: uint64): Option[PhysAddr]
 
 var
   physicalMemoryOffset: uint64
+  pmalloc: PhysAlloc
 
-proc vmInit*(physMemoryOffset: uint64) =
+proc vmInit*(physMemoryOffset: uint64, physAlloc: PhysAlloc) =
   physicalMemoryOffset = physMemoryOffset
+  pmalloc = physAlloc
 
 template `+!`*(p: VirtAddr, offset: uint64): VirtAddr =
   VirtAddr(cast[uint64](p) + offset)
@@ -259,7 +264,7 @@ proc p2v*(phys: PhysAddr): VirtAddr =
 We can now write a function to map a virtual page to a physical page. We'll extract 4 index values from the virtual address, and use them to insert (or update) the appropriate entries in the page tables.
 
 ```nim
-# src/boot/paging.nim
+# src/boot/vmm.nim
 ...
 
 proc mapPage*(
@@ -283,12 +288,12 @@ proc mapPage*(
 
   # Page Map Level 4 Table
   if pml4.entries[pml4Index].present == 1:
-    let pdptPhysAddr = cast[uint64](pml4.entries[pml4Index].physAddress) shl 12
+    let pdptPhysAddr = PhysAddr(pml4.entries[pml4Index].physAddress shl 12)
     pdpt = cast[PDPTable](p2v(pdptPhysAddr))
   else:
-    pdpt = new PDPTable
-    let pdptPhysAddr = v2p(cast[uint64](pdpt.entries.addr))
-    pml4.entries[pml4Index].physAddress = pdptPhysAddr shr 12
+    let pdptPhysAddr = pmalloc(1).get # TODO: handle allocation failure
+    pdpt = cast[PDPTable](p2v(pdptPhysAddr))
+    pml4.entries[pml4Index].physAddress = pdptPhysAddr.uint64 shr 12
     pml4.entries[pml4Index].present = 1
 
   pml4.entries[pml4Index].write = access
@@ -296,12 +301,12 @@ proc mapPage*(
 
   # Page Directory Pointer Table
   if pdpt.entries[pdptIndex].present == 1:
-    let pdPhysAddr = cast[uint64](pdpt.entries[pdptIndex].physAddress) shl 12
+    let pdPhysAddr = PhysAddr(pdpt.entries[pdptIndex].physAddress shl 12)
     pd = cast[PDTable](p2v(pdPhysAddr))
   else:
-    pd = new PDTable
-    let pdPhysAddr = v2p(cast[uint64](pd.entries.addr))
-    pdpt.entries[pdptIndex].physAddress = pdPhysAddr shr 12
+    let pdPhysAddr = pmalloc(1).get # TODO: handle allocation failure
+    pd = cast[PDTable](p2v(pdPhysAddr))
+    pdpt.entries[pdptIndex].physAddress = pdPhysAddr.uint64 shr 12
     pdpt.entries[pdptIndex].present = 1
 
   pdpt.entries[pdptIndex].write = access
@@ -309,22 +314,23 @@ proc mapPage*(
 
   # Page Directory
   if pd.entries[pdIndex].present == 1:
-    let ptPhysAddr = cast[uint64](pd.entries[pdIndex].physAddress) shl 12
+    let ptPhysAddr = PhysAddr(pd.entries[pdIndex].physAddress shl 12)
     pt = cast[PTable](p2v(ptPhysAddr))
   else:
-    pt = new PTable
-    let ptPhysAddr = v2p(cast[uint64](pt.entries.addr))
-    pd.entries[pdIndex].physAddress = ptPhysAddr shr 12
+    let ptPhysAddr = pmalloc(1).get # TODO: handle allocation failure
+    pt = cast[PTable](p2v(ptPhysAddr))
+    pd.entries[pdIndex].physAddress = ptPhysAddr.uint64 shr 12
     pd.entries[pdIndex].present = 1
 
   pd.entries[pdIndex].write = access
   pd.entries[pdIndex].user = mode
 
   # Page Table
-  pt.entries[ptIndex].physAddress = physAddr shr 12
+  pt.entries[ptIndex].physAddress = physAddr.uint64 shr 12
   pt.entries[ptIndex].write = access
   pt.entries[ptIndex].user = mode
   pt.entries[ptIndex].present = 1
+
 ```
 
 The caller needs to pass a `PML4Table` (the root of the page tables), which they are responsible for allocating. At every level of the table hierarchy, we check if the entry is present. If it is, we use the physical address stored in the entry to get the virtual address of the next table. If it isn't, we allocate a new physical memory frame and store its address in the entry (and set the `present` bit in the entry to `1`). We also update the `write` and `user` bits at every level, so that the page is accessible in the way that the caller requested.
@@ -332,9 +338,9 @@ The caller needs to pass a `PML4Table` (the root of the page tables), which they
 In addition to mapping a single page, we'll occasionally need to map a range of pages. We'll also need to identity-map pages in some cases. Let's add procs for these as well.
 
 ```nim
-# src/boot/paging.nim
+# src/boot/vmm.nim
 
-proc mapPages*(
+proc mapRegion*(
   pml4: PML4Table,
   virtAddr: VirtAddr,
   physAddr: PhysAddr,
@@ -345,14 +351,14 @@ proc mapPages*(
   for i in 0 ..< pageCount:
     mapPage(pml4, virtAddr +! i * PageSize, physAddr +! i * PageSize, pageAccess, pageMode)
 
-proc identityMapPages*(
+proc identityMapRegion*(
   pml4: PML4Table,
   physAddr: PhysAddr,
   pageCount: uint64,
   pageAccess: PageAccess,
   pageMode: PageMode,
 ) =
-  mapPages(pml4, physAddr.VirtAddr, physAddr, pageCount, pageAccess, pageMode)
+  mapRegion(pml4, physAddr.VirtAddr, physAddr, pageCount, pageAccess, pageMode)
 ```
 
 OK, we should have everything we need to set up the page tables. In the next section we'll look into modifying the bootloader to load the kernel into the higher half of the address space.

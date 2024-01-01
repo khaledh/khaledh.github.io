@@ -179,7 +179,7 @@ proc KernelMainInner(
   debugln "kernel: Fusion Kernel"
 
   debug "kernel: Initializing GDT "
-  initGdt()
+  gdtInit()
   debugln "[success]"
 
   debug "kernel: Initializing IDT "

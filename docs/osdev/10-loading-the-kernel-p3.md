@@ -95,15 +95,13 @@ proc convertUefiMemoryMap(
   uefiMemoryMap: ptr UncheckedArray[EfiMemoryDescriptor],
   uefiMemoryMapSize: uint,
   uefiMemoryMapDescriptorSize: uint,
-): MemoryMap =
+): seq[MemoryMapEntry] =
   let uefiNumMemoryMapEntries = uefiMemoryMapSize div uefiMemoryMapDescriptorSize
-  var memoryMap = newSeq[MemoryMapEntry]()
 
   for i in 0 ..< uefiNumMemoryMapEntries:
     let uefiEntry = cast[ptr EfiMemoryDescriptor](
       cast[uint64](uefiMemoryMap) + i * uefiMemoryMapDescriptorSize
     )
-
     let memoryType =
       if uefiEntry.type in FreeMemoryTypes:
         Free
@@ -115,16 +113,11 @@ proc convertUefiMemoryMap(
         KernelStack
       else:
         Reserved
-
-    memoryMap.add(MemoryMapEntry(
+    result.add(MemoryMapEntry(
       type: memoryType,
       start: uefiEntry.physicalStart,
       nframes: uefiEntry.numberOfPages
     ))
-
-  result.entries = cast[ptr UncheckedArray[MemoryMapEntry]](memoryMap[0].addr)
-  result.len = memoryMap.len.uint
-
 ```
 
 In order to pass the memory map to the kernel, it may seem that we can just pass a `BootInfo` instance to the kernel entry point. But keep in mind that the boot memory map is currently allocated both on the stack and the heap (the `entries` array) of the bootloader. We don't want the kernel to depend on memory in the bootloader, as we'll consider this memory as available once we're in the kernel. So, what we can do is use the UEFI `AllocatePool` method to allocate a single page of memory, use it to initialize a `BootInfo` instance, and pass its address to the kernel. We'll use memory type `OsvKernelData` for this memory, since it's memory that will be used by the kernel.
@@ -163,19 +156,21 @@ proc EfiMainInner(imgHandle: EfiHandle, sysTable: ptr EFiSystemTable): EfiStatus
 
   # ======= NO MORE UEFI BOOT SERVICES =======
 
-  let bootMemoryMap = convertUefiMemoryMap(memoryMap, memoryMapSize, memoryMapDescriptorSize)
+  let physMemoryMap = convertUefiMemoryMap(memoryMap, memoryMapSize, memoryMapDescriptorSize)
 
   var bootInfo = cast[ptr BootInfo](bootInfoBase)
-  bootInfo.physicalMemoryMap.len = bootMemoryMap.len
+
+  # copy physical memory map entries to boot info
+  bootInfo.physicalMemoryMap.len = physMemoryMap.len.uint
   bootInfo.physicalMemoryMap.entries =
     cast[ptr UncheckedArray[MemoryMapEntry]](bootInfoBase + sizeof(BootInfo).uint64)
-  for i in 0 ..< bootMemoryMap.len:
-    bootInfo.physicalMemoryMap.entries[i] = bootMemoryMap.entries[i]
+  for i in 0 ..< physMemoryMap.len:
+    bootInfo.physicalMemoryMap.entries[i] = physMemoryMap[i]
 ```
 
 What we're doing here is treating the start of the boot info page as a `BootInfo` instance. On line 12 & 13, we're pointing the `entries` field of the boot info memory map to the memory right after the boot info instance (instead of to some arbitrary heap memory). The last part just copies the entries from the original memory map to the boot info memory map.
 
-## Pass memory map to kernel
+## Pass BootInfo to kernel
 
 We're now ready to pass our memory map the kernel. We'll change the signature of the `KernelMain` proc to take a `ptr BootInfo`. Let's change the `KernelMain` proc signature, and print the memory map length to the debug console to verify that we're getting the correct info.
 

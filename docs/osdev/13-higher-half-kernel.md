@@ -1,6 +1,6 @@
 # Higher Half Kernel
 
-The kernel is currently linked at address `0x100000`, not at the higher half of the address space. The UEFI environment does have paging enabled, but we need to build our own page tables, and map the kernel at the higher half of the address space. This needs to be done in the bootloader, before we jump to the kernel (since we'll change the kernel to be linked at the higher half). Once we're in the kernel, we can set up different page tables that fit our needs (although we'll still need to map the kernel at the higher half of the address space).
+The kernel is currently linked at address `0x100000`, not at the higher half of the address space. The UEFI environment does have paging enabled, but we need to build our own page tables, and map the kernel at the higher half of the address space. This needs to be done in the bootloader, before we jump to the kernel (since we'll change the kernel to be linked at the higher half). Once we're in the kernel, we can set up different page tables that fit our needs.
 
 ## Linking the kernel
 
@@ -59,111 +59,370 @@ ffff800000102810 ffff800000102810       9b     1                 nimFrame
 ffff8000001028b0 ffff8000001028b0       25    16         .../fusion/build/@mmain.nim.c.o:(.ltext.nimErrorFlag)
 ```
 
-Looks good. Next, we'll look at how to set up paging in the bootloader.
+Looks good. Before we start setting up paging, let's add a few utility procs to prepare the `BootInfo` structure with the physical memory map and the virtual memory map.
 
-## Bootloader paging setup
+## Preparing BootInfo
 
-We know we need to map the kernel to the higher half. But since we're going to be changing the paging structures in the bootloader, we'll need to identity-map the bootloader image itself. The reason is that the bootloader code is currently running from the bootloader image, which is mapped to the lower half of the address space. If we change the page tables, the bootloader code will no longer be accessible, and we'll get a page fault. Keep in mind also that the bootloader stack is also mapped to the lower half of the address space, so we'll need to identity-map that as well. So here's a list of things we need to map:
+We need to pass a few things to the kernel, including:
 
-- The bootloader image (identity-mapped)
-- The bootloader stack (identity-mapped)
-- The memory map (identity-mapped)
-- The kernel image (identity-mapped)
-- The kernel image (mapped to the higher half)
+- The physical memory map
+- The virtual memory map
+- The virtual address where physical memory is mapped
 
-Most of the above mappings are easy, except for the bootloader stack (which will continue to be the kernel stack as we transfer control to it). There's no easy way in the UEFI environment to get the memory region allocated for the stack of the currently loaded image. So what we're going to do is manually get the current stack address, and scan the memory map to find the memory region that contains the stack. Let's add a proc do this.
+We already have a `convertUefiMemoryMap` proc that converts the UEFI memory map to our own format. Let's add a proc to create a virtual memory map as well, which will contain the virtual address space regions that we'll map.
 
 ```nim
 # src/boot/bootx64.nim
 ...
 
-proc getStackRegion(
-  memoryMap: ptr EfiMemoryDescriptor,
-  memoryMapSize: uint64,
-  memoryMapDescriptorSize: uint64
-): tuple[stackBase: uint64, stackPages: uint64] =
-  # get stack pointer
-  var rsp: uint64
-  asm """
-    mov %0, rsp
-    :"=r"(`rsp`)
-  """
+const
+  KernelPhysicalBase = 0x10_0000'u64
+  KernelVirtualBase = 0xFFFF_8000_0000_0000'u64 + KernelPhysicalBase
 
-  # scan memory map until we find the stack region
-  var stackBase: uint64
-  var stackPages: uint64
-  let numMemoryMapEntries = memoryMapSize div memoryMapDescriptorSize
-  for i in 0 ..< numMemoryMapEntries:
-    let entry = cast[ptr EfiMemoryDescriptor](cast[uint64](memoryMap) + i * memoryMapDescriptorSize)
-    if rsp > entry.physicalStart and rsp < entry.physicalStart + entry.numberOfPages * PageSize:
-      stackBase = entry.physicalStart
-      stackPages = entry.numberOfPages
-      break
+  KernelStackVirtualBase = 0xFFFF_8001_0000_0000'u64 # KernelVirtualBase + 4 GiB
+  KernelStackSize = 16 * 1024'u64
+  KernelStackPages = KernelStackSize div PageSize
 
-  return (stackBase, stackPages)
+  BootInfoVirtualBase = KernelStackVirtualBase + KernelStackSize # after kernel stack
+
+  PhysicalMemoryVirtualBase = 0xFFFF_8002_0000_0000'u64 # KernelVirtualBase + 8 GiB
+
+...
+
+proc createVirtualMemoryMap(
+  kernelImagePages: uint64,
+  physMemoryPages: uint64,
+): seq[MemoryMapEntry] =
+
+  result.add(MemoryMapEntry(
+    type: KernelCode,
+    start: KernelVirtualBase,
+    nframes: kernelImagePages
+  ))
+  result.add(MemoryMapEntry(
+    type: KernelStack,
+    start: KernelStackVirtualBase,
+    nframes: KernelStackPages
+  ))
+  result.add(MemoryMapEntry(
+    type: KernelData,
+    start: BootInfoVirtualBase,
+    nframes: 1
+  ))
+  result.add(MemoryMapEntry(
+    type: KernelData,
+    start: PhysicalMemoryVirtualBase,
+    nframes: physMemoryPages
+  ))
 ```
 
-Now let's setup paging at the end of the `EfiMainInner` proc.
+Now, let's add a proc to prepare the `BootInfo` structure itself.
 
-```nim{4-6,14-43}
+```nim
 # src/boot/bootx64.nim
 ...
 
-const
-  KernelPhysicalBase = 0x100000'u64
-  KernelVirtualBase = 0xFFFF800000100000'u64
+proc createBootInfo(
+  bootInfoBase: uint64,
+  kernelImagePages: uint64,
+  physMemoryPages: uint64,
+  physMemoryMap: seq[MemoryMapEntry],
+  virtMemoryMap: seq[MemoryMapEntry],
+): ptr BootInfo =
+  var bootInfo = cast[ptr BootInfo](bootInfoBase)
+  bootInfo.physicalMemoryVirtualBase = PhysicalMemoryVirtualBase
 
+  # copy physical memory map entries to boot info
+  bootInfo.physicalMemoryMap.len = physMemoryMap.len.uint
+  bootInfo.physicalMemoryMap.entries =
+    cast[ptr UncheckedArray[MemoryMapEntry]](bootInfoBase + sizeof(BootInfo).uint64)
+  for i in 0 ..< physMemoryMap.len:
+    bootInfo.physicalMemoryMap.entries[i] = physMemoryMap[i]
+  let physMemoryMapSize = physMemoryMap.len.uint64 * sizeof(MemoryMapEntry).uint64
+
+  # copy virtual memory map entries to boot info
+  bootInfo.virtualMemoryMap.len = virtMemoryMap.len.uint
+  bootInfo.virtualMemoryMap.entries =
+    cast[ptr UncheckedArray[MemoryMapEntry]](bootInfoBase + sizeof(BootInfo).uint64 + physMemoryMapSize)
+  for i in 0 ..< virtMemoryMap.len:
+    bootInfo.virtualMemoryMap.entries[i] = virtMemoryMap[i]
+  
+  result = bootInfo
+```
+
+Finally, we'll call these procs from `EfiMainInner`. We'll also get the `maxPhysAddr` (which is the highest usable physical address) and use it to calculate the number of physical memory pages.
+
+```nim
+# src/boot/bootx64.nim
+...
 
 proc EfiMainInner(imgHandle: EfiHandle, sysTable: ptr EFiSystemTable): EfiStatus =
   ...
 
   # ======= NO MORE UEFI BOOT SERVICES =======
 
-  debugln "boot: Creating page table"
-  # initialize a throw-away page table to map the kernel
+  let physMemoryMap = convertUefiMemoryMap(memoryMap, memoryMapSize, memoryMapDescriptorSize)
+
+  # get max free physical memory address
+  var maxPhysAddr: PhysAddr
+  for i in 0 ..< physMemoryMap.len:
+    if physMemoryMap[i].type == Free:
+      maxPhysAddr = physMemoryMap[i].start.PhysAddr +! physMemoryMap[i].nframes * PageSize
+
+  let physMemoryPages: uint64 = maxPhysAddr.uint64 div PageSize
+
+  let virtMemoryMap = createVirtualMemoryMap(kernelImagePages, physMemoryPages)
+
+  debugln &"boot: Preparing BootInfo"
+  let bootInfo = createBootInfo(
+    bootInfoBase,
+    kernelImagePages,
+    physMemoryPages,
+    physMemoryMap,
+    virtMemoryMap,
+  )
+```
+
+## Bootloader paging setup
+
+We know we need to map the kernel to the higher half. But since we're going to be changing the paging structures in the bootloader, we'll need to identity-map the bootloader image itself. The reason is that the bootloader code is currently running from the bootloader image, which is mapped to the lower half of the address space. If we change the page tables, the bootloader code will no longer be accessible, and we'll get a page fault. Here's a list of things we need to map:
+
+- The bootloader image (identity-mapped)
+- The boot info structure
+- The kernel image
+- The kernel stack
+- All physical memory
+
+We'll create a new page table structure and map all of the above regions (including physical memory), and install it before jumping to the kernel. Let's create a new proc to do the mapping.
+
+```nim
+# src/boot/bootx64.nim
+...
+import kernel/pmm
+import kernel/vmm
+...
+
+proc createPageTable(
+  bootloaderBase: uint64,
+  bootloaderPages: uint64,
+  kernelImageBase: uint64,
+  kernelImagePages: uint64,
+  kernelStackBase: uint64,
+  kernelStackPages: uint64,
+  bootInfoBase: uint64,
+  bootInfoPages: uint64,
+  physMemoryPages: uint64,
+): PML4Table =
+  proc bootAlloc(nframes: uint64): Option[PhysAddr] =
+    let p = new PTable
+    result = some(PhysAddr(cast[uint64](p.entries.addr)))
+
+  vmInit(physMemoryVirtualBase = 0'u64, physAlloc = bootAlloc)
+
+  debugln &"boot: Creating new page tables"
   var pml4 = new PML4Table
 
   # identity-map bootloader image
-  let bootloaderBase = cast[uint64](loadedImage.imageBase)
-  let bootloaderPages = (loadedImage.imageSize.uint + 0xFFF) div 0x1000.uint
-  debugln &"boot: Identity-mapping bootloader image: base={bootloaderBase:#x}, pages={bootloaderPages}"
-  identityMapPages(pml4, bootloaderBase, bootloaderPages.uint64, paReadWrite, pmSupervisor)
+  debugln &"""boot:   {"Identity-mapping bootloader\:":<30} base={bootloaderBase:#010x}, pages={bootloaderPages}"""
+  identityMapRegion(pml4, bootloaderBase.PhysAddr, bootloaderPages.uint64, paReadWrite, pmSupervisor)
 
-  # identity-map bootloader stack
-  let (stackBase, stackPages) = getStackRegion(memoryMap, memoryMapSize, memoryMapDescriptorSize)
-  debugln &"boot: Identity-mapping stack: base={stackBase:#x}, pages={stackPages}"
-  identityMapPages(pml4, stackBase, stackPages, paReadWrite, pmSupervisor)
-
-  # identity-map memory map
-  let memoryMapPages = (memoryMapSize + 0xFFF) div 0x1000.uint
-  debugln &"boot: Identity-mapping memory map: base={cast[uint64](memoryMap):#x}, pages={memoryMapPages}"
-  identityMapPages(pml4, cast[uint64](memoryMap), memoryMapPages, paReadWrite, pmSupervisor)
-
-  # identity-map kernel
-  debugln &"boot: Identity-mapping kernel: base={KernelPhysicalBase:#x}, pages={kernelPages}"
-  identityMapPages(pml4, KernelPhysicalBase, kernelPages, paReadWrite, pmSupervisor)
+  # identity-map boot info
+  debugln &"""boot:   {"Identity-mapping BootInfo\:":<30} base={bootInfoBase:#010x}, pages={bootInfoPages}"""
+  identityMapRegion(pml4, bootInfoBase.PhysAddr, bootInfoPages, paReadWrite, pmSupervisor)
 
   # map kernel to higher half
-  debugln &"boot: Mapping kernel to higher half: base={KernelVirtualBase}, pages={kernelPages}"
-  mapPages(pml4, KernelVirtualBase, KernelPhysicalBase, kernelPages, paReadWrite, pmSupervisor)
+  debugln &"""boot:   {"Mapping kernel to higher half\:":<30} base={KernelVirtualBase:#010x}, pages={kernelImagePages}"""
+  mapRegion(pml4, KernelVirtualBase.VirtAddr, kernelImageBase.PhysAddr, kernelImagePages, paReadWrite, pmSupervisor)
 
-  debugln "boot: Installing page table"
-  installPageTable(pml4)
+  # map kernel stack
+  debugln &"""boot:   {"Mapping kernel stack\:":<30} base={KernelStackVirtualBase:#010x}, pages={kernelStackPages}"""
+  mapRegion(pml4, KernelStackVirtualBase.VirtAddr, kernelStackBase.PhysAddr, kernelStackPages, paReadWrite, pmSupervisor)
+
+  # map all physical memory; assume 128 MiB of physical memory
+  debugln &"""boot:   {"Mapping physical memory\:":<30} base={PhysicalMemoryVirtualBase:#010x}, pages={physMemoryPages}"""
+  mapRegion(pml4, PhysicalMemoryVirtualBase.VirtAddr, 0.PhysAddr, physMemoryPages, paReadWrite, pmSupervisor)
+
+  result = pml4
+```
+
+Notice the inner proc `bootAlloc`. This is a temporary proc that we'll use to allocate physical memory for the page tables (it doesn't matter that we allocate a `PTable`, since all page tables have the same size; we just wanted an aligned page). It works because the UEFI environment is identity-mapped, so allocating using the `new` operator will return a physical address of a page that we can use for the page tables. In the kernel, we'll rely on the physical memory manager to allocate physical memory for the page tables.
+
+Now, let's put everything together in `EfiMainInner`. Notice that we added an assembly instruction to load the new page tables into the `cr3` register. This is the register that holds the physical address of the PML4 table.
+
+```nim
+# src/boot/bootx64.nim
+...
+
+proc EfiMainInner(imgHandle: EfiHandle, sysTable: ptr EFiSystemTable): EfiStatus =
+  ...
+
+  let physMemoryMap = convertUefiMemoryMap(memoryMap, memoryMapSize, memoryMapDescriptorSize)
+
+  # get max free physical memory address
+  var maxPhysAddr: PhysAddr
+  for i in 0 ..< physMemoryMap.len:
+    if physMemoryMap[i].type == Free:
+      maxPhysAddr = physMemoryMap[i].start.PhysAddr +! physMemoryMap[i].nframes * PageSize
+
+  let physMemoryPages: uint64 = maxPhysAddr.uint64 div PageSize
+
+  let virtMemoryMap = createVirtualMemoryMap(kernelImagePages, physMemoryPages)
+
+  debugln &"boot: Preparing BootInfo"
+  let bootInfo = createBootInfo(
+    bootInfoBase,
+    kernelImagePages,
+    physMemoryPages,
+    physMemoryMap,
+    virtMemoryMap,
+  )
+
+  let bootloaderPages = (loadedImage.imageSize.uint + 0xFFF) div 0x1000.uint
+
+  let pml4 = createPageTable(
+    cast[uint64](loadedImage.imageBase),
+    bootloaderPages,
+    cast[uint64](kernelImageBase),
+    kernelImagePages,
+    kernelStackBase,
+    kernelStackPages,
+    bootInfoBase,
+    1, # bootInfoPages
+    physMemoryPages,
+  )
 
   # jump to kernel
-  debugln "boot: Jumping to kernel"
-  var kernelMain = cast[KernelEntryPoint](KernelVirtualBase)
-  kernelMain(memoryMap, memoryMapSize, memoryMapDescriptorSize)
+  let kernelStackTop = KernelStackVirtualBase + KernelStackSize
+  let cr3 = cast[uint64](pml4)
+  debugln &"boot: Jumping to kernel at {cast[uint64](KernelVirtualBase):#010x}"
+  asm """
+    mov rdi, %0  # bootInfo
+    mov cr3, %2  # PML4
+    mov rsp, %1  # kernel stack top
+    jmp %3       # kernel entry point
+    :
+    : "r"(`bootInfoBase`),
+      "r"(`kernelStackTop`),
+      "r"(`cr3`),
+      "r"(`KernelVirtualBase`)
+  """
 
   # we should never get here
   quit()
 ```
 
-We should be good to go. Let's try it out.
+## Updating the PMM
 
-![Kernel - Higher Half](kernel-higherhalf.png)
+Now that physical memory is not identity-mapped anymore, we need to update the physical memory manager to know about the new virtual address of physical memory.
 
-Great! We've entered the kernel, which is now running at the higher half of the address space. This is another big milestone.
+```nim{6,9-10,13,16}
+# src/kernel/pmm.nim
+
+var
+  head: ptr PMNode
+  maxPhysAddr: PhysAddr # exclusive
+  physicalMemoryVirtualBase: uint64
+  reservedRegions: seq[PMRegion]
+
+proc pmInit*(memoryMap: MemoryMap, physMemoryVirtualBase: uint64) =
+  physicalMemoryVirtualBase = physMemoryVirtualBase
+
+proc toPhysAddr(p: ptr PMNode): PhysAddr {.inline.} =
+  result = PhysAddr(cast[uint64](p) - physicalMemoryVirtualBase)
+
+proc toPMNodePtr(p: PhysAddr): ptr PMNode {.inline.} =
+  result = cast[ptr PMNode](cast[uint64](p) + physicalMemoryVirtualBase)
+```
+
+We just offset the physical address by the virtual address of physical memory. We should be ready to try everything out now.
+
+## Print memory maps
+
+Let's switch to the kernel and add a couple of procs to print the physical and virtual memory maps.
+
+```nim
+# src/kernel/main.nim
+
+proc printFreeRegions() =
+  debug &"""   {"Start":>16}"""
+  debug &"""   {"Start (KB)":>12}"""
+  debug &"""   {"Size (KB)":>11}"""
+  debug &"""   {"#Pages":>9}"""
+  debugln ""
+  var totalFreePages: uint64 = 0
+  for (start, nframes) in pmFreeRegions():
+    debug &"   {cast[uint64](start):>#16x}"
+    debug &"   {cast[uint64](start) div 1024:>#12}"
+    debug &"   {nframes * 4:>#11}"
+    debug &"   {nframes:>#9}"
+    debugln ""
+    totalFreePages += nframes
+  debugln &"kernel: Total free: {totalFreePages * 4} KiB ({totalFreePages * 4 div 1024} MiB)"
+
+proc printVMRegions(memoryMap: MemoryMap) =
+  debug &"""   {"Start":>20}"""
+  debug &"""   {"Type":12}"""
+  debug &"""   {"VM Size (KB)":>12}"""
+  debug &"""   {"#Pages":>9}"""
+  debugln ""
+  for i in 0 ..< memoryMap.len:
+    let entry = memoryMap.entries[i]
+    debug &"   {entry.start:>#20x}"
+    debug &"   {entry.type:#12}"
+    debug &"   {entry.nframes * 4:>#12}"
+    debug &"   {entry.nframes:>#9}"
+    debugln ""
+
+...
+
+proc KernelMainInner(bootInfo: ptr BootInfo) =
+  debugln ""
+  debugln "kernel: Fusion Kernel"
+
+  debug "kernel: Initializing physical memory manager "
+  pmInit(bootInfo.physicalMemoryMap, bootInfo.physicalMemoryVirtualBase)
+  debugln "[success]"
+
+  debugln "kernel: Physical memory free regions "
+  printFreeRegions()
+
+  debugln "kernel: Virtual memory regions "
+  printVMRegions(bootInfo.virtualMemoryMap)
+```
+
+Let's compile and run the kernel. If everything goes well, we should see the following output:
+
+```sh-session
+boot: Preparing BootInfo
+boot: Creating new page tables
+boot:   Identity-mapping bootloader:   base=0x06237000, pages=290
+boot:   Identity-mapping BootInfo:     base=0x0636d000, pages=1
+boot:   Mapping kernel to higher half: base=0xffff800000100000, pages=288
+boot:   Mapping kernel stack:          base=0xffff800100000000, pages=4
+boot:   Mapping physical memory:       base=0xffff800200000000, pages=32500
+boot: Jumping to kernel at 0xffff800000100000
+
+kernel: Fusion Kernel
+kernel: Initializing physical memory manager [success]
+kernel: Physical memory free regions
+              Start     Start (KB)     Size (KB)      #Pages
+                0x0              0           640         160
+           0x220000           2176          6016        1504
+           0x808000           8224            12           3
+           0x80c000           8240            16           4
+           0x900000           9216         92596       23149
+          0x6372000         101832         17900        4475
+          0x77ff000         122876          7124        1781
+kernel: Total free: 124304 KiB (121 MiB)
+kernel: Virtual memory regions
+                  Start   Type          VM Size (KB)      #Pages
+     0xffff800000100000   KernelCode            1152         288
+     0xffff800100000000   KernelStack             16           4
+     0xffff800100004000   KernelData               4           1
+     0xffff800200000000   KernelData          130000       32500
+```
+
+Great! Our kernel is now running at the higher half of the address space. This is another big milestone.
 
 There are many things we can tackle next, but one important thing we need to take care of before we add more code is handling CPU exceptions. The reason is that sooner or later our kernel will crash, and we won't know why. Handling CPU exceptions gives us a way to print a debug message and halt the CPU, so we can see what went wrong.
 

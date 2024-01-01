@@ -260,12 +260,12 @@ let
 
 ## Loading the GDT
 
-Finally, we can now define an `initGdt` proc that loads the GDT descriptor into the GDTR register using the `lgdt` instruction. We'll also load the segment selectors for the kernel code and data segments into the segment registers.
+Finally, we can now define an `gdtInit` proc that loads the GDT descriptor into the GDTR register using the `lgdt` instruction. We'll also load the segment selectors for the kernel code and data segments into the segment registers.
 
 ```nim
 # src/kernel/gdt.nim
 
-proc initGdt*() {.asmNoStackFrame.} =
+proc gdtInit*() {.asmNoStackFrame.} =
   # Ideally we would use a far jump here to reload the CS register, but support
   # for 64-bit far jumps (`JMP m16:64`) is not supported by the LLVM integrated
   # assembler. It's also only supported by Intel processors, not AMD. So we use
@@ -300,24 +300,30 @@ proc initGdt*() {.asmNoStackFrame.} =
 
 The comment explains why we're using a far return instead of a far jump. The `retfq` instruction is a far return, which pops the instruction pointer and the code segment selector from the stack and jumps to the `1:` label. It's as if the CPU continued execution right after the `retfq` instruction, but with the new code segment selector. The rest of the code reloads the other segment registers with the data segment selector. (The last `:` constraint tell the compiler that the `asm` block clobbers the `rax` register.)
 
-Now we're ready to call `initGdt` from `src/kernel/main.nim`:
+Now we're ready to call `gdtInit` from `src/kernel/main.nim`:
 
-```nim{14-16}
+```nim{3,20-22}
 # src/kernel/main.nim
 
 import gdt
 ...
 
-proc KernelMainInner(
-  memoryMap: ptr UncheckedArray[EfiMemoryDescriptor],
-  memoryMapSize: uint,
-  memoryMapDescriptorSize: uint,
-) =
+proc KernelMainInner(bootInfo: ptr BootInfo) =
   debugln ""
   debugln "kernel: Fusion Kernel"
 
+  debug "kernel: Initializing physical memory manager "
+  pmInit(bootInfo.physicalMemoryMap, bootInfo.physicalMemoryVirtualBase)
+  debugln "[success]"
+
+  debugln "kernel: Physical memory free regions "
+  printFreeRegions()
+
+  debugln "kernel: Virtual memory regions "
+  printVMRegions(bootInfo.virtualMemoryMap)
+
   debug "kernel: Initializing GDT "
-  initGdt()
+  gdtInit()
   debugln "[success]"
 
   quit()
@@ -325,14 +331,81 @@ proc KernelMainInner(
 
 Let's compile and run.
 
-![Kernel - Init GDT](kernel-init-gdt.png)
+```text
+boot: Preparing BootInfo
+boot: Creating new page tables
+boot:   Identity-mapping bootloader:   base=0x06237000, pages=290
+boot:   Identity-mapping BootInfo:     base=0x0636d000, pages=1
+boot:   Mapping kernel to higher half: base=0xffff800000100000, pages=288
+boot:   Mapping kernel stack:          base=0xffff800100000000, pages=4
+boot:   Mapping physical memory:       base=0xffff800200000000, pages=32500
+boot: Jumping to kernel at 0xffff800000100000
+
+kernel: Fusion Kernel
+kernel: Initializing physical memory manager [success]
+kernel: Physical memory free regions
+              Start     Start (KB)     Size (KB)      #Pages
+                0x0              0           640         160
+           0x220000           2176          6016        1504
+           0x808000           8224            12           3
+           0x80c000           8240            16           4
+           0x900000           9216         92596       23149
+          0x6372000         101832         17900        4475
+          0x77ff000         122876          7124        1781
+kernel: Total free: 124304 KiB (121 MiB)
+kernel: Virtual memory regions
+                  Start   Type           VM Size (KB)      #Pages
+     0xffff800000100000   KernelCode             1152         288
+     0xffff800100000000   KernelStack              16           4
+     0xffff800100004000   KernelData                4           1
+     0xffff800200000000   KernelData           130000       32500
+kernel: Initializing GDT [success]
+```
 
 Phew! We have a working GDT. Let's double check the CPU registers using the QEMU monitor command `info registers` (I temporarily replaced the `-debugcon stdio` flag with the `-monitor stdio` flag in the `justfile` to make it easier to access the QEMU monitor through the terminal):
 
-![Kernel - CPU Registers](kernel-cpu-registers.png)
+```sh-session{10-15,18}
+QEMU 8.2.0 monitor - type 'help' for more information
+(qemu) info registers
 
-This looks good. The `CS` register contains the kernel code segment selector `0x08`, and the other segment registers contain the data segment selector `0x18`. The `GDT` register seems to contain the address of the GDT descriptor (the address seems legit), and the limit is `0x27`, which is the size of the GDT in bytes minus 1 (5 entires * 8 bytes per entry - 1).
+CPU#0
+RAX=ffff800000114d80 RBX=0000000000000000 RCX=ffff800100003f10 RDX=ffff800100003f58
+RSI=000000000000000a RDI=0000000000000000 RBP=ffff800100003f48 RSP=ffff800100003f00
+R8 =ffff800100003c10 R9 =0000000007ea5e48 R10=000000000636d001 R11=0000000000000004
+R12=0000000000000000 R13=0000000006bb1588 R14=0000000000000000 R15=0000000007ebf1e0
+RIP=ffff800000114d82 RFL=00000006 [-----P-] CPL=0 II=0 A20=1 SMM=0 HLT=1
+ES =001b 0000000000000000 000fffff 000ff300 DPL=3 DS   [-WA]
+CS =0008 0000000000000000 000fffff 002f9a00 DPL=0 CS64 [-R-]
+SS =0000 0000000000000000 00000000 00000000
+DS =001b 0000000000000000 000fffff 000ff300 DPL=3 DS   [-WA]
+FS =001b 0000000000000000 000fffff 000ff300 DPL=3 DS   [-WA]
+GS =001b 0000000000000000 000fffff 000ff300 DPL=3 DS   [-WA]
+LDT=0000 0000000000000000 0000ffff 00008200 DPL=0 LDT
+TR =0000 0000000000000000 0000ffff 00008b00 DPL=0 TSS64-busy
+GDT=     ffff80000021ebe0 0000001f
+IDT=     ffff80000021ec00 00000fff
+CR0=80010033 CR2=0000000000000000 CR3=000000000625b000 CR4=00000668
+DR0=0000000000000000 DR1=0000000000000000 DR2=0000000000000000 DR3=0000000000000000
+DR6=00000000ffff0ff0 DR7=0000000000000400
+EFER=0000000000000d00
+FCW=037f FSW=0000 [ST=0] FTW=00 MXCSR=00001f80
+FPR0=0000000000000000 0000 FPR1=0000000000000000 0000
+FPR2=0000000000000000 0000 FPR3=0000000000000000 0000
+FPR4=0000000000000000 0000 FPR5=0000000000000000 0000
+FPR6=0000000000000000 0000 FPR7=0000000000000000 0000
+XMM00=00000000062552f8 0000000000000018 XMM01=0000000000000000 0000000000000000
+XMM02=0000000000000000 0000000000000000 XMM03=0000000000000000 0000000000000000
+XMM04=0000000000000000 0000000000000000 XMM05=0000000000000000 0000000000000000
+XMM06=0000000000000000 0000000000000000 XMM07=0000000000000000 0000000000000000
+XMM08=0000000000000000 0000000000000000 XMM09=0000000000000000 0000000000000000
+XMM10=0000000000000000 0000000000000000 XMM11=0000000000000000 0000000000000000
+XMM12=0000000000000000 0000000000000000 XMM13=0000000000000000 0000000000000000
+XMM14=0000000000000000 0000000000000000 XMM15=0000000000000000 0000000000000000
+(qemu)
+```
 
-For now we'll be using only the kernel code and data segments. We'll come back to the user code and data segments when we implement user mode. We'll also come back to the GDT when we implement multitasking, because we'll need to add a new segment descriptor for the task state segment (TSS), which is required by the CPU when switching from user mode to kernel mode (e.g. when making a system call or when an interrupt occurs).
+This looks good. The `CS` register contains the kernel code segment selector `0x08`, and the other segment registers contain the data segment selector `0x1b` (i.e. offset `0x18` | RPL `0x3`). The `SS` is set to NULL as expected. The `GDT` register seems to contain the address of the GDT descriptor (the address seems legit), and the limit is `0x1f`, which is the size of the GDT in bytes minus 1 (4 entires * 8 bytes per entry - 1).
+
+For now we'll be using only the kernel code and data segments. We'll come back to the user code segments when we implement user mode. We'll also come back to the GDT when we implement multitasking, because we'll need to add a new segment descriptor for the task state segment (TSS), which is required by the CPU when switching from user mode to kernel mode (e.g. when making a system call or when an interrupt occurs).
 
 We'll now move to implementing the interrupt descriptor table (IDT) to handle CPU exceptions (and later hardware and software interrupts).

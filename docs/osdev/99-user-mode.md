@@ -196,12 +196,12 @@ proc mapPage*(
   pt.entries[ptIndex].present = 1
 ```
 
-We'll also need to update the `mapPages` proc to use the new `mapPage` proc.
+We'll also need to update the `mapRegion` proc to use the new `mapPage` proc.
 
 ```nim{10-11,14}
 # src/kernel/paging.nim
 
-proc mapPages*(
+proc mapRegion*(
   pml4: PML4Table,
   virtAddr: uint64,
   physAddr: uint64,
