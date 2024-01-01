@@ -131,7 +131,7 @@ Interrupt procedures are not normal procedures; there's a catch. When an interru
     │                  │
     ├──────────────────┤
 ```
-▼
+
 Notice that some CPU exceptions push an error code onto the stack. For others, the error code is not pushed. So we have to be careful when defining the different interrupt handlers.
 
 Given this information, we can't just define a normal procedure as an interrupt handler; we have to tell the compiler to generate it differently. Fortunately, the C compiler has a special attribute called `interrupt` that can be used to define interrupt handlers. It generates appropriate function entry/exit code so that it can be used directly as an interrupt service routine. We can use the `codegenDecl` pragma to add this attribute to our interrupt handler signature.
@@ -142,8 +142,8 @@ Let's define a proof of concept interrupt handler that prints a debug message.
 # src/kernel/idt.nim
 ...
 
-proc isr00(frame: pointer) {.cdecl, codegenDecl: "__attribute__ ((interrupt)) $# $#$#".} =
-  debugln "Hello from isr00"
+proc isr100(frame: pointer) {.cdecl, codegenDecl: "__attribute__ ((interrupt)) $# $#$#".} =
+  debugln "Hello from isr100"
 ```
 
 Let's install this handler in the IDT. We'll use the `newInterruptGate` helper function we defined earlier to create a new interrupt gate, and then we'll assign it to the appropriate entry in the IDT. We'll also load the IDT into the LDTR register using the `lidt` instruction.
@@ -152,8 +152,8 @@ Let's install this handler in the IDT. We'll use the `newInterruptGate` helper f
 # src/kernel/idt.nim
 ...
 
-proc initIdt*():
-  idtEntries[100] = newInterruptGate(isr00)
+proc idtInit*():
+  idtEntries[100] = newInterruptGate(isr100)
 
   asm """
     lidt %0
@@ -164,26 +164,24 @@ proc initIdt*():
 
 I installed the handler at interrupt vector 100. This is just an arbitrary choice for testing. Let's now test it out by raising an interrupt using the `int` instruction.
 
-```nim{18-24}
+```nim{16-22}
 # src/kernel/main.nim
 
 import idt
 ...
 
-proc KernelMainInner(
-  memoryMap: ptr UncheckedArray[EfiMemoryDescriptor],
-  memoryMapSize: uint,
-  memoryMapDescriptorSize: uint,
-) =
+proc KernelMainInner(bootInfo: ptr BootInfo) =
   debugln ""
   debugln "kernel: Fusion Kernel"
+
+  ...
 
   debug "kernel: Initializing GDT "
   gdtInit()
   debugln "[success]"
 
   debug "kernel: Initializing IDT "
-  initIdt()
+  idtInit()
   debugln "[success]"
 
   debugln "kernel: Invoking interrupt"
@@ -195,7 +193,14 @@ proc KernelMainInner(
 
 If we run the kernel now, we should see the debug message printed to the terminal.
 
-![Kernel - Interrupt Handler](kernel-interrupt-handler.png)
+```text
+kernel: Fusion Kernel
+...
+kernel: Initializing IDT [success]
+kernel: Invoking interrupt
+Hello from isr100
+kernel: Returned from interrupt
+```
 
 Great! We have a working interrupt handler. Now we're ready to define interrupt handlers for CPU exceptions.
 
@@ -258,7 +263,7 @@ Let's start by defining an exception handler for the divide error exception. Bec
 ```nim
 # src/kernel/idt.nim
 
-proc divideErrorHandler(frame: pointer) {.cdecl, codegenDecl: "__attribute__ ((interrupt)) $# $#$#".} =
+proc cpuDivideErrorHandler(frame: pointer) {.cdecl, codegenDecl: "__attribute__ ((interrupt)) $# $#$#".} =
   debugln "CPU Exception: Divide Error [#DE]"
   debugln ""
   debugln getStackTrace()
@@ -279,23 +284,19 @@ Now we can install the handler in the IDT.
 ```nim{4}
 # src/kernel/idt.nim
 
-proc initIdt*():
+proc idtInit*():
   installHandler(0, divideErrorHandler)
   ...
 ```
 
 Let's try it out by raising a divide error exception.
 
-```nim{12-16}
+```nim{8-12}
 # src/kernel/main.nim
 
 import idt
 
-proc KernelMainInner(
-  memoryMap: ptr UncheckedArray[EfiMemoryDescriptor],
-  memoryMapSize: uint,
-  memoryMapDescriptorSize: uint,
-) =
+proc KernelMainInner(bootInfo: ptr BootInfo) =
   ...
   debugln "kernel: Invoking interrupt"
   asm """
@@ -309,7 +310,19 @@ proc KernelMainInner(
 
 When we run the kernel, we should see the debug message and the stack trace printed to the terminal.
 
-![Kernel - Divide Error](kernel-divide-error.png)
+```text
+kernel: Fusion Kernel
+...
+kernel: Initializing IDT [success]
+kernel: Invoking interrupt
+
+CPU Exception: Divide Error
+
+Traceback (most recent call last)
+/Users/khaledhammouda/src/github.com/khaledh/fusion/src/kernel/main.nim(58) KernelMain
+/Users/khaledhammouda/src/github.com/khaledh/fusion/src/kernel/main.nim(87) KernelMainInner
+/Users/khaledhammouda/src/github.com/khaledh/fusion/src/kernel/idt.nim(68) cpuDivideErrorHandler
+```
 
 Great! Our exception handler is working, and we can see the stack trace (since the interrupt is using the same stack). Now we can define handlers for the remaining CPU exceptions. But it would be tedious to write almost the same code for each handler. So let's use a Nim template to generate the handlers for us.
 
@@ -352,7 +365,7 @@ Now we can install the handlers in the IDT.
 # src/kernel/idt.nim
 ...
 
-proc initIdt*() =
+proc idtInit*() =
   installHandler(0, cpuDivideErrorHandler)
   installHandler(1, cpuDebugErrorHandler)
   installHandler(2, cpuNmiInterruptHandler)
@@ -382,6 +395,31 @@ proc initIdt*() =
   """
 ```
 
+## Page Fault Handler
+
+One particular interrupt handler that we need to customize a bit is the **Page Fault** handler. When this exception is raised, the CPU stores the address that caused the page fault in the `CR2` register. At some point we'll use this address to allocate a new page and map it to the address that caused the page fault. But for now, let's just print the address and quit.
+
+```nim
+# src/kernel/idt.nim
+
+# remove this line from before:
+#   createHandler(cpuPageFaultHandler, "Page Fault")
+
+proc cpuPageFaultHandler*(frame: pointer) {.cdecl, codegenDecl: "__attribute__ ((interrupt)) $# $#$#".} =
+  debugln ""
+  debugln "CPU Exception: Page Fault"
+  # get the faulting address
+  var cr2: uint64
+  asm """
+    mov %0, cr2
+    : "=r"(`cr2`)
+  """
+  debugln &"    Faulting address: {cr2:#018x}"
+  debugln ""
+  debugln getStackTrace()
+  quit()
+```
+
 Let's try it out by raising a page fault exception.
 
 ```nim{8-9}
@@ -400,8 +438,47 @@ proc KernelMainInner(...) =
 
 And when we run the kernel, we should see the page fault error message.
 
-![Kernel - Page Fault](kernel-page-fault.png)
+```text
+kernel: Fusion Kernel
+kernel: Initializing IDT [success]
+kernel: Invoking interrupt
 
-Beautiful! We now have a safety net for CPU exceptions. If we mess up something in the kernel, we should get a debug message instead of a random hang or reboot. We will come back to properly implement some of these handlers later, especially the page fault handler.
+CPU Exception: Page Fault
+    Faulting address: 0x00000000deadbeef
 
-In the next sesction we'll try to execute a function in user mode.
+Traceback (most recent call last)
+/Users/khaledhammouda/src/github.com/khaledh/fusion/src/kernel/main.nim(58) KernelMain
+/Users/khaledhammouda/src/github.com/khaledh/fusion/src/kernel/main.nim(88) KernelMainInner
+/Users/khaledhammouda/src/github.com/khaledh/fusion/src/kernel/idt.nim(57) pageFaultHandler
+```
+
+Beautiful! The handler is working, and we know which address caused the page fault. One thing we can test also is double faults. We can try this by commenting out the installation of the page fault handler, and then causing a page fault. The CPU will then raise a double fault exception, because it can't find an interrupt handler during another exception (the page fault).
+
+```nim
+# src/kernel/idt.nim
+
+proc idtInit*() =
+  ...
+  # installHandler(14, cpuPageFaultHandler)
+  ...
+```
+
+If we run the kernel now, we should see the double fault error message.
+
+```text
+kernel: Fusion Kernel
+...
+kernel: Initializing IDT [success]
+kernel: Invoking interrupt
+
+CPU Exception: Double Fault
+
+Traceback (most recent call last)
+/Users/khaledhammouda/src/github.com/khaledh/fusion/src/kernel/main.nim(58) KernelMain
+/Users/khaledhammouda/src/github.com/khaledh/fusion/src/kernel/main.nim(88) KernelMainInner
+/Users/khaledhammouda/src/github.com/khaledh/fusion/src/kernel/idt.nim(65) cpuDoubleFaultHandler
+```
+
+Amazing! We now have a safety net for CPU exceptions. If we mess up something in the kernel, we should get a debug message instead of a random hang or reboot. We will come back to properly implement some of these handlers later, especially the page fault handler.
+
+Let's now turn our attention to user mode. In the next section, we'll see how we can switch to user mode, while still allowing interrupts to occur.
