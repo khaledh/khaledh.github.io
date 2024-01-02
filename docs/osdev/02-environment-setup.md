@@ -6,13 +6,13 @@ In this section, we'll set up our development environment. We'll be using **Nim*
 
 First, we need to install the **Nim compiler**. An easy way to install Nim is through the **choosenim** installer, so let's install that first:
 
-```plaintext
+```sh-session
 $ curl https://nim-lang.org/choosenim/init.sh -sSf | sh
 ```
 
 Then, we can install the latest stable version of Nim:
 
-```plaintext
+```sh-session
 $ choosenim stable
 Downloading Nim 2.0.0 from nim-lang.org
 ...
@@ -26,7 +26,7 @@ Nim Compiler Version 2.0.0 [Linux: amd64]
 
 Now that we have Nim installed, we need to install the **LLVM** toolchain. We'll use **clang** and **lld** to cross-compile to a UEFI environment.
 
-```plaintext
+```sh-session
 $ sudo pacman -S clang lld
 ...
 
@@ -42,7 +42,7 @@ LLD 18.0.0 (compatible with GNU linkers)
 
 Next, let's install **QEMU** so that we can test our OS:
 
-```plaintext
+```sh-session
 $ sudo pacman -S qemu-desktop
 ...
 
@@ -55,13 +55,13 @@ QEMU emulator version 8.1.3
 
 Now that we have our environment set up, we can create our project. We'll start by creating a new directory for our project:
 
-```plaintext
+```sh-session
 $ mkdir fusion && cd fusion
 ```
 
 Next, we'll create a new **nimble** project with binary package type:
 
-```plaintext
+```sh-session
 $ nimble init
 ...
     Prompt: Package type?
@@ -76,7 +76,7 @@ $ nimble init
 
 Let's also create a `build` directory for our build artifacts and add it to `.gitignore`:
 
-```plaintext
+```sh-session
 $ mkdir build
 $ echo build >> .gitignore
 ```
