@@ -29,7 +29,7 @@ If we try to compile and link the kernel, we'll get a bunch of relocation errors
 
 ```sh-session
 $ just kernel
-ld.lld: error: /Users/khaledhammouda/src/github.com/khaledh/fusion/build/@mmain.nim.c.o:(function KernelMainInner__main_u7: .text.KernelMainInner__main_u7+0x232): relocation R_X86_64_32S out of range: -140737488267184 is not in [-2147483648, 2147483647]; references section '.rodata'
+ld.lld: error: .../fusion/build/@mmain.nim.c.o:(function KernelMainInner__main_u7: .text.KernelMainInner__main_u7+0x232): relocation R_X86_64_32S out of range: -140737488267184 is not in [-2147483648, 2147483647]; references section '.rodata'
 >>> referenced by @mmain.nim.c
 ...
 ```
@@ -311,9 +311,9 @@ proc EfiMainInner(imgHandle: EfiHandle, sysTable: ptr EFiSystemTable): EfiStatus
   quit()
 ```
 
-## Updating the PMM
+## Initializing the PMM and VMM
 
-Now that physical memory is not identity-mapped anymore, we need to update the physical memory manager to know about the new virtual address of physical memory.
+Now that physical memory is not identity-mapped anymore, we need to update the PMM to know about the new virtual address of physical memory.
 
 ```nim{6,9-10,13,16}
 # src/kernel/pmm.nim
@@ -336,12 +336,41 @@ proc toPMNodePtr(p: PhysAddr): ptr PMNode {.inline.} =
 
 We just offset the physical address by the virtual address of physical memory. We should be ready to try everything out now.
 
-## Print memory maps
-
-Let's switch to the kernel and add a couple of procs to print the physical and virtual memory maps.
+The VMM already takes a parameter for it, which we set to `0` in the bootloader (since physical memory is identity-mapped there). We just need to pass it from the kernel. Let's initialize both the PMM and the VMM with this parameter.
 
 ```nim
 # src/kernel/main.nim
+
+proc KernelMainInner(bootInfo: ptr BootInfo) =
+  debugln ""
+  debugln "kernel: Fusion Kernel"
+
+  debug "kernel: Initializing physical memory manager "
+  pmInit(bootInfo.physicalMemoryMap, bootInfo.physicalMemoryVirtualBase)
+  debugln "[success]"
+
+  debug "kernel: Initializing virtual memory manager "
+  vmInit(bootInfo.physicalMemoryVirtualBase, pmm.pmAlloc)
+  debugln "[success]"
+```
+
+Let's try to compile and run the kernel. We should see the following output:
+
+```sh-session
+kernel: Fusion Kernel
+kernel: Initializing physical memory manager [success]
+kernel: Initializing virtual memory manager [success]
+```
+
+Looks good.
+
+## Print memory maps
+
+Let's add a couple of procs to print the physical and virtual memory maps.
+
+```nim{4-32,48-52}
+# src/kernel/main.nim
+...
 
 proc printFreeRegions() =
   debug &"""   {"Start":>16}"""
@@ -383,43 +412,41 @@ proc KernelMainInner(bootInfo: ptr BootInfo) =
   pmInit(bootInfo.physicalMemoryMap, bootInfo.physicalMemoryVirtualBase)
   debugln "[success]"
 
+  debug "kernel: Initializing virtual memory manager "
+  vmInit(bootInfo.physicalMemoryVirtualBase, pmm.pmAlloc)
+  debugln "[success]"
+
   debugln "kernel: Physical memory free regions "
   printFreeRegions()
 
   debugln "kernel: Virtual memory regions "
   printVMRegions(bootInfo.virtualMemoryMap)
+  ...
 ```
 
 Let's compile and run the kernel. If everything goes well, we should see the following output:
 
 ```sh-session
-boot: Preparing BootInfo
-boot: Creating new page tables
-boot:   Identity-mapping bootloader:   base=0x06237000, pages=290
-boot:   Identity-mapping BootInfo:     base=0x0636d000, pages=1
-boot:   Mapping kernel to higher half: base=0xffff800000100000, pages=288
-boot:   Mapping kernel stack:          base=0xffff800100000000, pages=4
-boot:   Mapping physical memory:       base=0xffff800200000000, pages=32500
-boot: Jumping to kernel at 0xffff800000100000
-
 kernel: Fusion Kernel
 kernel: Initializing physical memory manager [success]
+kernel: Initializing virtual memory manager [success]
 kernel: Physical memory free regions
               Start     Start (KB)     Size (KB)      #Pages
                 0x0              0           640         160
-           0x220000           2176          6016        1504
+           0x222000           2184          6008        1502
            0x808000           8224            12           3
            0x80c000           8240            16           4
-           0x900000           9216         92596       23149
+           0x900000           9216         90276       22569
+          0x6235000         100564          1248         312
           0x6372000         101832         17900        4475
           0x77ff000         122876          7124        1781
-kernel: Total free: 124304 KiB (121 MiB)
+kernel: Total free: 123224 KiB (120 MiB)
 kernel: Virtual memory regions
-                  Start   Type          VM Size (KB)      #Pages
-     0xffff800000100000   KernelCode            1152         288
-     0xffff800100000000   KernelStack             16           4
-     0xffff800100004000   KernelData               4           1
-     0xffff800200000000   KernelData          130000       32500
+                  Start   Type           VM Size (KB)      #Pages
+     0xffff800000100000   KernelCode             1160         290
+     0xffff800100000000   KernelStack              16           4
+     0xffff800100004000   KernelData                4           1
+     0xffff800200000000   KernelData           130000       32500
 ```
 
 Great! Our kernel is now running at the higher half of the address space. This is another big milestone.

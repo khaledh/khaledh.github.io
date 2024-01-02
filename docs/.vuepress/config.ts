@@ -27,7 +27,7 @@ export default defineUserConfig({
       '/osdev/13-higher-half-kernel.md',
       '/osdev/14-memory-segments.md',
       '/osdev/15-interrupts.md',
-      '/osdev/99-user-mode.md',
+      '/osdev/16-user-mode.md',
     ],
     contributors: false,
   }),

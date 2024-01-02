@@ -371,7 +371,7 @@ $ head -n 10 build/kernel.map
      VMA              LMA     Size Align Out     In      Symbol
        0                0   100000     1 . = 0x100000
   100000           100000     b82b    16 .text
-  100000           100000      9c3    16         /Users/khaledhammouda/src/github.com/khaledh/fusion/build/@m..@s..@s..@s..@s..@s..@s.choosenim@stoolchains@snim-2.0.0@slib@ssystem@sexceptions.nim.c.o:(.text)
+  100000           100000      9c3    16         .../fusion/build/@m..@s..@s..@s..@s..@s..@s.choosenim@stoolchains@snim-2.0.0@slib@ssystem@sexceptions.nim.c.o:(.text)
   100000           100000       3b     1                 rttiDestroy__systemZexceptions_u56
   100040           100040       38     1                 eqtrace___system_u4516
   100080           100080       3b     1                 rttiDestroy__systemZexceptions_u60
