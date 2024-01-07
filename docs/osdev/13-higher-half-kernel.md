@@ -202,6 +202,10 @@ import kernel/pmm
 import kernel/vmm
 ...
 
+type
+  AlignedPage = object
+    data {.align(PageSize).}: array[PageSize, uint8]
+
 proc createPageTable(
   bootloaderBase: uint64,
   bootloaderPages: uint64,
@@ -212,15 +216,15 @@ proc createPageTable(
   bootInfoBase: uint64,
   bootInfoPages: uint64,
   physMemoryPages: uint64,
-): PML4Table =
+): ptr PML4Table =
+
   proc bootAlloc(nframes: uint64): Option[PhysAddr] =
-    let p = new PTable
-    result = some(PhysAddr(cast[uint64](p.entries.addr)))
+    result = some(cast[PhysAddr](new AlignedPage))
 
   vmInit(physMemoryVirtualBase = 0'u64, physAlloc = bootAlloc)
 
   debugln &"boot: Creating new page tables"
-  var pml4 = new PML4Table
+  var pml4 = cast[ptr PML4Table](bootAlloc(1).get)
 
   # identity-map bootloader image
   debugln &"""boot:   {"Identity-mapping bootloader\:":<30} base={bootloaderBase:#010x}, pages={bootloaderPages}"""
@@ -245,7 +249,7 @@ proc createPageTable(
   result = pml4
 ```
 
-Notice the inner proc `bootAlloc`. This is a temporary proc that we'll use to allocate physical memory for the page tables (it doesn't matter that we allocate a `PTable`, since all page tables have the same size; we just wanted an aligned page). It works because the UEFI environment is identity-mapped, so allocating using the `new` operator will return a physical address of a page that we can use for the page tables. In the kernel, we'll rely on the physical memory manager to allocate physical memory for the page tables.
+Notice the `AlignedPage` type and the inner proc`bootAlloc`. This is a temporary proc that we'll use to allow the VMM to allocate physical memory for the page tables (the pages must be aligned to 4 KiB, hence the `AlignedPage` type). It works because the UEFI environment is identity-mapped, so allocating using the `new` operator will return an address of a page that we can use for the page tables. In the kernel, we'll rely on the physical memory manager to allocate physical memory for the page tables.
 
 Now, let's put everything together in `EfiMainInner`. Notice that we added an assembly instruction to load the new page tables into the `cr3` register. This is the register that holds the physical address of the PML4 table.
 
@@ -313,9 +317,9 @@ proc EfiMainInner(imgHandle: EfiHandle, sysTable: ptr EFiSystemTable): EfiStatus
 
 ## Initializing the PMM and VMM
 
-Now that physical memory is not identity-mapped anymore, we need to update the PMM to know about the new virtual address of physical memory.
+Now that physical memory is not identity-mapped anymore, we need to update the PMM to know about the new virtual address of physical memory. To access a `PMNode` as a physical address, we subtract the physical memory virtual base address from the pointer. To access a physical address as a `PMNode`, we add the physical memory virtual base address to the address.
 
-```nim{6,9-10,13,16}
+```nim{6,9-10,14,17}
 # src/kernel/pmm.nim
 
 var
@@ -324,8 +328,9 @@ var
   physicalMemoryVirtualBase: uint64
   reservedRegions: seq[PMRegion]
 
-proc pmInit*(memoryMap: MemoryMap, physMemoryVirtualBase: uint64) =
+proc pmInit*(physMemoryVirtualBase: uint64, memoryMap: MemoryMap) =
   physicalMemoryVirtualBase = physMemoryVirtualBase
+  ...
 
 proc toPhysAddr(p: ptr PMNode): PhysAddr {.inline.} =
   result = PhysAddr(cast[uint64](p) - physicalMemoryVirtualBase)
@@ -334,11 +339,9 @@ proc toPMNodePtr(p: PhysAddr): ptr PMNode {.inline.} =
   result = cast[ptr PMNode](cast[uint64](p) + physicalMemoryVirtualBase)
 ```
 
-We just offset the physical address by the virtual address of physical memory. We should be ready to try everything out now.
+The VMM already takes a parameter for the physical memory virtual base (in the bootloader we set it to `0`, since physical memory is identity-mapped there). We just need to pass it from the kernel. Let's initialize both the PMM and the VMM with this parameter.
 
-The VMM already takes a parameter for it, which we set to `0` in the bootloader (since physical memory is identity-mapped there). We just need to pass it from the kernel. Let's initialize both the PMM and the VMM with this parameter.
-
-```nim
+```nim{7-13}
 # src/kernel/main.nim
 
 proc KernelMainInner(bootInfo: ptr BootInfo) =
@@ -346,7 +349,7 @@ proc KernelMainInner(bootInfo: ptr BootInfo) =
   debugln "kernel: Fusion Kernel"
 
   debug "kernel: Initializing physical memory manager "
-  pmInit(bootInfo.physicalMemoryMap, bootInfo.physicalMemoryVirtualBase)
+  pmInit(bootInfo.physicalMemoryVirtualBase, bootInfo.physicalMemoryMap)
   debugln "[success]"
 
   debug "kernel: Initializing virtual memory manager "
@@ -409,7 +412,7 @@ proc KernelMainInner(bootInfo: ptr BootInfo) =
   debugln "kernel: Fusion Kernel"
 
   debug "kernel: Initializing physical memory manager "
-  pmInit(bootInfo.physicalMemoryMap, bootInfo.physicalMemoryVirtualBase)
+  pmInit(bootInfo.physicalMemoryVirtualBase, bootInfo.physicalMemoryMap)
   debugln "[success]"
 
   debug "kernel: Initializing virtual memory manager "

@@ -38,6 +38,8 @@ Now let's move the existing modules into their respective directories. Let's als
 Let's move the following part of the `nim.cfg` file into the `nim.cfg` file in the `boot` directory:
 
 ```properties
+# src/boot/nim.cfg
+
 --passc:"-target x86_64-unknown-windows"
 --passc:"-ffreestanding"
 
@@ -46,6 +48,15 @@ Let's move the following part of the `nim.cfg` file into the `nim.cfg` file in t
 --passl:"-nostdlib"
 --passl:"-Wl,-entry:EfiMain"
 --passl:"-Wl,-subsystem:efi_application"
+```
+
+Let's also tell Nim to add the `src` directory to its search path, so that we can import modules from `boot`, `common`, and `kernel` without using relative paths. We'll put this in the top-level `nim.cfg` file:
+
+```properties
+# nim.cfg
+...
+
+--path:src
 ```
 
 We'll work on what to use in the kernel's `nim.cfg` file later.

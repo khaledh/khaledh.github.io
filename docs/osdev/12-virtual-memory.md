@@ -163,19 +163,19 @@ type
     xd* {.bitsize: 1.}: uint64           # bit     63
 
   # Page Map Level 4 Table
-  PML4Table* = ref object
+  PML4Table* = object
     entries* {.align(PageSize).}: array[512, PML4Entry]
 
   # Page Directory Pointer Table
-  PDPTable* = ref object
+  PDPTable* = object
     entries* {.align(PageSize).}: array[512, PDPTEntry]
 
   # Page Directory
-  PDTable* = ref object
+  PDTable* = object
     entries* {.align(PageSize).}: array[512, PDEntry]
 
   # Page Table
-  PTable* = ref object
+  PTable* = object
     entries* {.align(PageSize).}: array[512, PTEntry]
 
   PageAccess* = enum
@@ -185,17 +185,21 @@ type
   PageMode* = enum
     pmSupervisor = 0
     pmUser = 1
+
+proc `[]`*(pml4: ptr PML4Table; index: uint64): var PML4Entry {.inline.} = pml4.entries[index]
+proc `[]`*(pdpt: ptr PDPTable; index: uint64): var PDPTEntry {.inline.} = pdpt.entries[index]
+proc `[]`*(pd: ptr PDTable; index: uint64): var PDEntry {.inline.} = pd.entries[index]
+proc `[]`*(pt: ptr PTable; index: uint64): var PTEntry {.inline.} = pt.entries[index]
 ```
 
 ::: tip Note
 Ideally we wouldn't need to define an `entries` array field within each object, and we could just define the tables like so:
   
   ```nim
-  PML4Array* {.align(PageSize).} = array[512, PML4Entry]
-  PML4Table* = ref PML4Array
+  PML4Table* {.align(PageSize).} = array[512, PML4Entry]
   ```
 
-Then we could access the table by indexing directly into its variable, e.g. `pml4[i]`, instead of `pml4.entries[i]`. Unfortunately Nim doesn't support type-level alginment (yet). See this [RFC](https://github.com/nim-lang/RFCs/issues/545).
+Then we could access the table by indexing directly into its variable, e.g. `pml4[i]`, instead of `pml4.entries[i]`. Unfortunately Nim doesn't support type-level alginment (yet). See this [RFC](https://github.com/nim-lang/RFCs/issues/545). So, as a workaround, I defined index operators for each table type, which just forward the indexing to the `entries` field.
 :::
 
 ## Accessing page tables
@@ -204,8 +208,8 @@ OK, we have the page table structures defined. But before we start using them, w
 
 - We allocate a `PML4Table` instance (call it `pml4`).
 - We allocate a `PDPTable` instance.
-- We modify `pml4.entries[0].physAddress` to point to the physical address of the `PDPTable` instance.
-- At some later point, we want to modify that `PDPTable` instance. But how do we get its virtual address? All we have is its physical address through `pml4.entries[0].physAddress`.
+- We modify `pml4[0].physAddress` to point to the physical address of the `PDPTable` instance.
+- At some later point, we want to modify that `PDPTable` instance. But how do we get its virtual address? All we have is its physical address through `pml4[0].physAddress`.
 
 We need a way to reverse map a physical address to a virtual address. Here are some solutions:
 
@@ -226,9 +230,40 @@ We'll go with the third option (mapping the entire physical memory at a known vi
 
 ## Mapping pages
 
-Mapping pages will require allocating physical memory frames to hold the page tables themselves. In the kernel, we'll use the physical memory manager to allocate these frames. However, we'll also need to create page tables in the bootloader to map a few regions before we jump to the kernel. So instead of letting the VMM use the PMM implicitly, we'll pass our VMM a callback that it can use to allocate physical memory frames. This will allow us to use the VMM from both the kernel and from the bootloader
+Mapping pages will require allocating physical memory frames to hold the page tables themselves. In the kernel, we'll use the physical memory manager to allocate these frames. However, we'll also need to create page tables in the bootloader to map a few regions before we jump to the kernel. So instead of letting the VMM use the PMM implicitly, we'll pass our VMM a callback that it can use to allocate physical memory frames. This will allow us to use the VMM from both the kernel and the bootloader.
 
-Before we implement mapping of pages, let's add a few utility procs that will make our lives easier.
+Let's define a couple of types and a `vmInit` proc that initializes the VMM.
+
+```nim
+# src/boot/vmm.nim
+
+type
+  VirtAddr* = distinct uint64
+  PhysAlloc* = proc (nframes: uint64): Option[PhysAddr]
+
+var
+  physicalMemoryVirtualBase: uint64
+  pmalloc: PhysAlloc
+
+proc vmInit*(physMemoryVirtualBase: uint64, physAlloc: PhysAlloc) =
+  physicalMemoryVirtualBase = physMemoryVirtualBase
+  pmalloc = physAlloc
+```
+
+Let's also add a couple of templates for pointer arithmetic on virtual addresses, which will make our code more readable.
+
+```nim
+# src/boot/vmm.nim
+...
+
+template `+!`*(p: VirtAddr, offset: uint64): VirtAddr =
+  VirtAddr(cast[uint64](p) + offset)
+
+template `-!`*(p: VirtAddr, offset: uint64): VirtAddr =
+  VirtAddr(cast[uint64](p) - offset)
+```
+
+We'll also need two procs that map virtual addresses to physical addresses and vice versa. We'll call them `p2v` and `v2p`. The `p2v` proc is simple: it just adds the virtual memory base to the physical address. The `v2p` proc is more complex. It needs to traverse the page tables to find the physical address that corresponds to the virtual address. In order to do this, it needs to know the current active page table, so we'll add a `getActivePML4` proc that returns a pointer to the active PML4 table. We'll also add a `setActivePML4` proc that sets the active PML4 table. (The `{.experimental: "codeReordering".}` pragma is optional, but it lets us use procs before they are defined, thus avoiding the need to forward-declare them.)
 
 ```nim
 # src/boot/vmm.nim
@@ -236,104 +271,119 @@ Before we implement mapping of pages, let's add a few utility procs that will ma
 import common/pagetables
 import pmm  # only needed for PhysAddr
 
-type
-  VirtAddr* = distinct uint64
-  PhysAlloc* = proc (nframes: uint64): Option[PhysAddr]
-
-var
-  physicalMemoryOffset: uint64
-  pmalloc: PhysAlloc
-
-proc vmInit*(physMemoryOffset: uint64, physAlloc: PhysAlloc) =
-  physicalMemoryOffset = physMemoryOffset
-  pmalloc = physAlloc
-
-template `+!`*(p: VirtAddr, offset: uint64): VirtAddr =
-  VirtAddr(cast[uint64](p) + offset)
-
-template `-!`*(p: VirtAddr, offset: uint64): VirtAddr =
-  VirtAddr(cast[uint64](p) - offset)
-
-proc v2p*(virt: VirtAddr): PhysAddr =
-  result = cast[PhysAddr](virt -! physicalMemoryOffset)
+{.experimental: "codeReordering".}
 
 proc p2v*(phys: PhysAddr): VirtAddr =
-  result = cast[VirtAddr](phys +! physicalMemoryOffset)
+  result = cast[VirtAddr](phys +! physicalMemoryVirtualBase)
+
+proc v2p*(virt: VirtAddr): Option[PhysAddr] =
+  let pml4 = getActivePML4()
+
+  var pml4Index = (virt.uint64 shr 39) and 0x1FF
+  var pdptIndex = (virt.uint64 shr 30) and 0x1FF
+  var pdIndex = (virt.uint64 shr 21) and 0x1FF
+  var ptIndex = (virt.uint64 shr 12) and 0x1FF
+
+  if pml4.entries[pml4Index].present == 0:
+    result = none(PhysAddr)
+    return
+
+  let pdptPhysAddr = PhysAddr(pml4.entries[pml4Index].physAddress shl 12)
+  let pdpt = cast[ptr PDPTable](p2v(pdptPhysAddr))
+
+  if pdpt.entries[pdptIndex].present == 0:
+    result = none(PhysAddr)
+    return
+
+  let pdPhysAddr = PhysAddr(pdpt.entries[pdptIndex].physAddress shl 12)
+  let pd = cast[ptr PDTable](p2v(pdPhysAddr))
+
+  if pd.entries[pdIndex].present == 0:
+    result = none(PhysAddr)
+    return
+
+  let ptPhysAddr = PhysAddr(pd.entries[pdIndex].physAddress shl 12)
+  let pt = cast[ptr PTable](p2v(ptPhysAddr))
+
+  if pt.entries[ptIndex].present == 0:
+    result = none(PhysAddr)
+    return
+
+  result = some PhysAddr(pt.entries[ptIndex].physAddress shl 12)
+
+proc getActivePML4*(): ptr PML4Table =
+  var cr3: uint64
+  asm """
+    mov %0, cr3
+    : "=r"(`cr3`)
+  """
+  result = cast[ptr PML4Table](p2v(cr3.PhysAddr))
+
+proc setActivePML4*(pml4: ptr PML4Table) =
+  var cr3 = v2p(cast[VirtAddr](pml4)).get
+  asm """
+    mov cr3, %0
+    :
+    : "r"(`cr3`)
+  """
 ```
 
-We can now write a function to map a virtual page to a physical page. We'll extract 4 index values from the virtual address, and use them to insert (or update) the appropriate entries in the page tables.
+We can now write a function to map a virtual page to a physical page. We'll extract 4 index values from the virtual address, and use them to insert (or update) the appropriate entries in the page tables. To avoid repeating a lot of the code, I created a `getOrCreateEntry` generic proc, which will return an entry if it exists in the parent table, or allocate a new page (for the child table) if it doesn't and sets the appropriate entry in the parent table.
 
 ```nim
 # src/boot/vmm.nim
 ...
 
-proc mapPage*(
-  pml4: PML4Table,
+proc getOrCreateEntry[TP, TC](parent: ptr TP, index: uint64): ptr TC =
+  var physAddr: PhysAddr
+  if parent[index].present == 1:
+    physAddr = PhysAddr(parent[index].physAddress shl 12)
+  else:
+    physAddr = pmalloc(1).get # TODO: handle allocation failure
+    parent[index].physAddress = physAddr.uint64 shr 12
+    parent[index].present = 1
+  result = cast[ptr TC](p2v(physAddr))
+
+proc mapPage(
+  pml4: ptr PML4Table,
   virtAddr: VirtAddr,
   physAddr: PhysAddr,
   pageAccess: PageAccess,
   pageMode: PageMode,
 ) =
-  var pml4Index = (virtAddr.uint64 shr 39) and 0x1FF
-  var pdptIndex = (virtAddr.uint64 shr 30) and 0x1FF
-  var pdIndex = (virtAddr.uint64 shr 21) and 0x1FF
-  var ptIndex = (virtAddr.uint64 shr 12) and 0x1FF
+  let pml4Index = (virtAddr.uint64 shr 39) and 0x1FF
+  let pdptIndex = (virtAddr.uint64 shr 30) and 0x1FF
+  let pdIndex = (virtAddr.uint64 shr 21) and 0x1FF
+  let ptIndex = (virtAddr.uint64 shr 12) and 0x1FF
 
   let access = cast[uint64](pageAccess)
   let mode = cast[uint64](pageMode)
 
-  var pdpt: PDPTable
-  var pd: PDTable
-  var pt: PTable
-
   # Page Map Level 4 Table
-  if pml4.entries[pml4Index].present == 1:
-    let pdptPhysAddr = PhysAddr(pml4.entries[pml4Index].physAddress shl 12)
-    pdpt = cast[PDPTable](p2v(pdptPhysAddr))
-  else:
-    let pdptPhysAddr = pmalloc(1).get # TODO: handle allocation failure
-    pdpt = cast[PDPTable](p2v(pdptPhysAddr))
-    pml4.entries[pml4Index].physAddress = pdptPhysAddr.uint64 shr 12
-    pml4.entries[pml4Index].present = 1
-
-  pml4.entries[pml4Index].write = access
-  pml4.entries[pml4Index].user = mode
+  pml4[pml4Index].write = access
+  pml4[pml4Index].user = mode
+  var pdpt = getOrCreateEntry[PML4Table, PDPTable](pml4, pml4Index)
 
   # Page Directory Pointer Table
-  if pdpt.entries[pdptIndex].present == 1:
-    let pdPhysAddr = PhysAddr(pdpt.entries[pdptIndex].physAddress shl 12)
-    pd = cast[PDTable](p2v(pdPhysAddr))
-  else:
-    let pdPhysAddr = pmalloc(1).get # TODO: handle allocation failure
-    pd = cast[PDTable](p2v(pdPhysAddr))
-    pdpt.entries[pdptIndex].physAddress = pdPhysAddr.uint64 shr 12
-    pdpt.entries[pdptIndex].present = 1
-
-  pdpt.entries[pdptIndex].write = access
-  pdpt.entries[pdptIndex].user = mode
+  pdpt[pdptIndex].write = access
+  pdpt[pdptIndex].user = mode
+  var pd = getOrCreateEntry[PDPTable, PDTable](pdpt, pdptIndex)
 
   # Page Directory
-  if pd.entries[pdIndex].present == 1:
-    let ptPhysAddr = PhysAddr(pd.entries[pdIndex].physAddress shl 12)
-    pt = cast[PTable](p2v(ptPhysAddr))
-  else:
-    let ptPhysAddr = pmalloc(1).get # TODO: handle allocation failure
-    pt = cast[PTable](p2v(ptPhysAddr))
-    pd.entries[pdIndex].physAddress = ptPhysAddr.uint64 shr 12
-    pd.entries[pdIndex].present = 1
-
-  pd.entries[pdIndex].write = access
-  pd.entries[pdIndex].user = mode
+  pd[pdIndex].write = access
+  pd[pdIndex].user = mode
+  var pt = getOrCreateEntry[PDTable, PTable](pd, pdIndex)
 
   # Page Table
-  pt.entries[ptIndex].physAddress = physAddr.uint64 shr 12
-  pt.entries[ptIndex].write = access
-  pt.entries[ptIndex].user = mode
-  pt.entries[ptIndex].present = 1
-
+  pt[ptIndex].physAddress = physAddr.uint64 shr 12
+  pt[ptIndex].present = 1
+  pt[ptIndex].write = access
+  pt[ptIndex].user = mode
 ```
 
-The caller needs to pass a `PML4Table` (the root of the page tables), which they are responsible for allocating. At every level of the table hierarchy, we check if the entry is present. If it is, we use the physical address stored in the entry to get the virtual address of the next table. If it isn't, we allocate a new physical memory frame and store its address in the entry (and set the `present` bit in the entry to `1`). We also update the `write` and `user` bits at every level, so that the page is accessible in the way that the caller requested.
+> Notice the power of Nim generics here, which is structurally typed. The `getOrCreateEntry` proc accesses fields of the `TP` generic type (the parent table type), and the compiler will make sure that the fields exist in the object that is passed to the proc. We don't have to provide type constraints on the generic types, and we don't have to use inheritance or interfaces.
+
+The caller needs to pass a pointer to `PML4Table` (the root of the page tables), which they are responsible for allocating. At every level of the table hierarchy, we check if the entry is present. If it is, we use the physical address stored in the entry to get the virtual address of the next table. If it isn't, we allocate a new physical memory frame and store its address in the entry (and set the `present` bit in the entry to `1`). We also update the `write` and `user` bits at every level, so that the page is accessible in the way that the caller requested.
 
 In addition to mapping a single page, we'll occasionally need to map a range of pages. We'll also need to identity-map pages in some cases. Let's add procs for these as well.
 
@@ -341,7 +391,7 @@ In addition to mapping a single page, we'll occasionally need to map a range of 
 # src/boot/vmm.nim
 
 proc mapRegion*(
-  pml4: PML4Table,
+  pml4: ptr PML4Table,
   virtAddr: VirtAddr,
   physAddr: PhysAddr,
   pageCount: uint64,
@@ -352,7 +402,7 @@ proc mapRegion*(
     mapPage(pml4, virtAddr +! i * PageSize, physAddr +! i * PageSize, pageAccess, pageMode)
 
 proc identityMapRegion*(
-  pml4: PML4Table,
+  pml4: ptr PML4Table,
   physAddr: PhysAddr,
   pageCount: uint64,
   pageAccess: PageAccess,

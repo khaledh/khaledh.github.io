@@ -28,23 +28,21 @@ An important thing to note is that, since this stack frame is at the bottom of t
 
 ## Preparing for User Mode
 
-So far, the virtual memory mapping we have is for kernel space only. We need to create a different mapping for user space so that the user program can access it. This includes mapping of the user code, data, and stack regions, as well as the kernel space (which is protected since it's marked as supervisor only).
+So far, the virtual memory mapping we have is for kernel space only. We need to create a different mapping for user space so that the user program can access it. This includes mapping of the user code, data, and stack regions, as well as the kernel space (which is protected since it's marked as supervisor only). Mapping the kernel space in the user page table is necessary, since interrupts and system calls cause the CPU to jump to kernel code without switching page tables.
 
-Since we don't have the ability in the kernel to access disks and filesystems yet, we won't be load the user program from disk. What we can do is build the user program separately, and copy it alongside the kernel image, and let the bootloader load it for us.
-
-So here's the plan to get user mode working:
+Since we don't have the ability in the kernel to access disks and filesystems yet, we won't be load the user program from disk. What we can do is build the user program separately, and copy it alongside the kernel image, and let the bootloader load it for us. So here's the plan to get user mode working:
 
 1. Create a program that we want to run in user mode.
 2. Build the program and copy it to the `efi\fusion` directory (next to the kernel image).
 3. In the bootloader, load the user program into memory, and pass its physical address and size to the kernel.
-4. Create a 4 KiB static array for the user stack.
+4. Allocate memory for the user stack.
 5. Create a new page table for user space.
 6. Map the user code and stack regions to user space.
-7. Copy the kernel paging entries to the user page table.
-8. Craft an interrupt stack frame that will switch to user mode. Place it at the bottom of the user stack (i.e. the top of the mapped page).
-9. Change the `rsp` register to point to the top of the interrupt stack frame (i.e. to where `RIP` is stored).
-10. Load the user page table into the `cr3` register.
-11. Use the `iretq` instruction to switch to user mode.
+7. Copy the kernel space page table entries to the user page table.
+8. Craft an interrupt stack frame that will switch to user mode. Place it at the bottom of the user stack (i.e. the top of the mapped stack region).
+9. Change the `rsp` register to point to the top of the interrupt stack frame (i.e. the last pushed value).
+10. Load the user page table physical address into the `cr3` register.
+11. Use the `iretq` instruction to pop the interrupt stack frame and switch to user mode.
 
 ## User Program
 
@@ -52,19 +50,23 @@ Let's start by creating a new module in `src/user/utask.nim` for the user code, 
 
 ```nim
 # src/user/utask.nim
+
 {.used.}
 
 proc UserMain() =
-  while true:
-    asm "pause"
+  asm """
+  .loop:
+    pause
+    jmp .loop
+  """
 ```
 
 The function will just execute the `pause` instruction in a loop. The `pause` instruction is a hint to the CPU that the code is in a spin loop, allowing it to greatly reduce the processor's power consumption.
 
-Let's create a linker script to define the layout of the user code and data sections. It's very similar to the kernel linnker script, except we link the user program at a virtual address in user space, instead of kernel space.
+Let's create a linker script to define the layout of the user code and data sections. It's very similar to the kernel linker script, except we link the user program at a virtual address in user space, instead of kernel space (it doesn't matter where in user space, as long as it's mapped).
 
 ```ld
-# src/user/utask.ld
+/* src/user/utask.ld */
 
 SECTIONS
 {
@@ -172,7 +174,7 @@ proc loadImage(
   memoryType: EfiMemoryType,
   loadAddress: Option[EfiPhysicalAddress] = none(EfiPhysicalAddress),
 ): tuple[base: EfiPhysicalAddress, pages: uint64] =
-  # open the kernel file
+  # open the image file
   var file: ptr EfiFileProtocol
 
   consoleOut "boot: Opening image: "
@@ -213,7 +215,7 @@ proc loadImage(
   consoleOut "boot: Reading image into memory"
   checkStatus file.read(file, cast[ptr uint](addr fileInfo.fileSize), cast[pointer](imageBase))
 
-  # close the kernel file
+  # close the image file
   consoleOut "boot: Closing image file"
   checkStatus file.close(file)
 
@@ -396,4 +398,178 @@ It seems like it's working. The user image is loaded at some address allocated b
 
 ## User Page Table
 
-Now, let's create a new `PML4Table` for the user page table.
+Now, let's create a new `PML4Table` for the user page table. We'll copy the kernel page table entries to the user page table, and map the user code and stack regions to user space.
+
+```nim
+# src/kernel/main.nim
+...
+
+const
+  UserImageVirtualBase = 0x0000000040000000
+  UserStackVirtualBase = 0x0000000050000000
+
+...
+
+proc KernelMainInner(bootInfo: ptr BootInfo) =
+  debugln ""
+  debugln "kernel: Fusion Kernel"
+
+  ...
+
+  debugln "kernel: Initializing user page table"
+  var upml4 = cast[ptr PML4Table](new PML4Table)
+
+  debugln "kernel:   Copying kernel space user page table"
+  var kpml4 = getActivePML4()
+  for i in 256 ..< 512:
+    upml4.entries[i] = kpml4.entries[i]
+
+  debugln &"kernel:   Mapping user image ({UserImageVirtualBase} -> {bootInfo.userImagePhysicalBase:#x})"
+  mapRegion(
+    pml4 = upml4,
+    virtAddr = UserImageVirtualBase.VirtAddr,
+    physAddr = bootInfo.userImagePhysicalBase.PhysAddr,
+    pageCount = bootInfo.userImagePages,
+    pageAccess = paReadWrite,
+    pageMode = pmUser,
+  )
+
+  # allocate and map user stack
+  let userStackPhysAddr = pmAlloc(1).get
+  debugln &"kernel:   Mapping user stack ({UserStackVirtualBase:#x} -> {userStackPhysAddr.uint64:#x})"
+  mapRegion(
+    pml4 = upml4,
+    virtAddr = UserStackVirtualBase.VirtAddr,
+    physAddr = userStackPhysAddr,
+    pageCount = 1,
+    pageAccess = paReadWrite,
+    pageMode = pmUser,
+  )
+```
+
+This should be straightforward. A few things to note:
+
+- We don't physically copy the kernel page table structures to the user page table. We just set the PML4 entries to point to the same page table structures as the kernel page table. This makes the kernel space portion of the user page table dynamic, so that if we change the kernel page table, the user page table will automatically reflect the changes (unless we map new PML4 entries in the kernel page table, which we won't do for now).
+- We're setting the `pageMode` to `pmUser` for the user code and stack regions.
+- We allocate one page for the user stack, and map it to the virtual address `0x50000000`, so the stack region will be `0x50000000` to `0x50001000` (end address is exclusive).
+
+## Interrupt Stack Frame
+
+Now, in order to switch to user mode, we'll create an interrupt stack frame, as if the user program had just been interrupted. We'll populate five entries at the bottom of the stack: `RIP`, `CS`, `RFLAGS`, `RSP`, and `SS`.
+
+```nim
+# src/kernel/main.nim
+...
+
+proc KernelMainInner(bootInfo: ptr BootInfo) =
+  ...
+
+  debugln "kernel: Creating interrupt stack frame"
+  let userStackBottom = UserStackVirtualBase + PageSize
+  let userStackPtr = cast[ptr array[512, uint64]](p2v(userStackPhysAddr))
+  userStackPtr[^1] = cast[uint64](DataSegmentSelector) # SS
+  userStackPtr[^2] = cast[uint64](userStackBottom) # RSP
+  userStackPtr[^3] = cast[uint64](0x202) # RFLAGS
+  userStackPtr[^4] = cast[uint64](UserCodeSegmentSelector) # CS
+  userStackPtr[^5] = cast[uint64](UserImageVirtualBase) # RIP
+  debugln &"            SS: {userStackPtr[^1]:#x}"
+  debugln &"           RSP: {userStackPtr[^2]:#x}"
+  debugln &"        RFLAGS: {userStackPtr[^3]:#x}"
+  debugln &"            CS: {userStackPtr[^4]:#x}"
+  debugln &"           RIP: {userStackPtr[^5]:#x}"
+
+  let rsp = cast[uint64](userStackBottom - 5 * 8)
+```
+
+Stack terminology can be confusing. The stack grows downwards, so the bottom of the stack is the highest address. This is why we set `userStackBottom` to the _end_ of the stack region. Now, in order to manipulate the stack region from the kernel, we reverse map the stack's physical address to a virtual address, and cast it to a pointer to an array of 512 `uint64` values (remember that `UserStackVirtualBase` is valid only in the user page table, not the kernel page table). We then populate the five entries at the bottom of the stack, and set `rsp` to point to the last entry. This simulates pushing the interrupt stack frame on the stack.
+
+## Switching to User Mode
+
+We're finally ready to switch to user mode. We'll activate the user page table, set the `rsp` register to point to the interrupt stack frame, and use the `iretq` instruction to switch to user mode.
+
+```nim
+# src/kernel/main.nim
+
+proc KernelMainInner(bootInfo: ptr BootInfo) =
+  ...
+
+  debugln "kernel: Switching to user mode"
+  setActivePML4(upml4)
+  asm """
+    mov rsp, %0
+    mov rbp, rsp
+    iretq
+    :
+    : "r"(`rsp`)
+  """
+```
+
+If we did everything correctly, we should see the following output:
+
+```text
+kernel: Fusion Kernel
+...
+kernel: Initializing user page table
+kernel:   Copying kernel space user page table
+kernel:   Mapping user image (1073741824 -> 0x6129000)
+kernel:   Mapping user stack (0x50000000 -> 0x3000)
+kernel: Creating interrupt stack frame
+            SS: 0x1b
+           RSP: 0x50001000
+        RFLAGS: 0x202
+            CS: 0x13
+           RIP: 0x40000000
+kernel: Switching to user mode
+```
+
+How do we know we're in user mode? Well, we can't really tell from the output, so let's use QEMU's monitor to check the CPU registers.
+
+```sh-session{8,10}
+(qemu) info registers
+
+CPU#0
+RAX=0000000000000000 RBX=0000000000000000 RCX=0000000050000fc8 RDX=0000000000000000
+RSI=0000000000000001 RDI=0000000050000fc8 RBP=0000000050000ff8 RSP=0000000050000fc8
+R8 =ffff800100003c30 R9 =0000000000000001 R10=000000000636d001 R11=0000000000000004
+R12=0000000000000000 R13=0000000006bb1588 R14=0000000000000000 R15=0000000007ebf1e0
+RIP=000000004000004c RFL=00000206 [-----P-] CPL=3 II=0 A20=1 SMM=0 HLT=0
+ES =001b 0000000000000000 000fffff 000ff300 DPL=3 DS   [-WA]
+CS =0013 0000000000000000 000fffff 002ffa00 DPL=3 CS64 [-R-]
+SS =001b 0000000000000000 000fffff 000ff300 DPL=3 DS   [-WA]
+DS =001b 0000000000000000 000fffff 000ff300 DPL=3 DS   [-WA]
+FS =001b 0000000000000000 000fffff 000ff300 DPL=3 DS   [-WA]
+GS =001b 0000000000000000 000fffff 000ff300 DPL=3 DS   [-WA]
+LDT=0000 0000000000000000 0000ffff 00008200 DPL=0 LDT
+TR =0000 0000000000000000 0000ffff 00008b00 DPL=0 TSS64-busy
+GDT=     ffff800000226290 0000001f
+IDT=     ffff8000002262b0 00000fff
+...
+```
+
+We can see that `CPL=3`, which means we're in user mode! The `CS` register is `0x13`, which is the user code segment selector (`0x10` with `RPL=3`). The `RIP` register is `0x4000004c`, which is several instructions into the `UserMain` function. Let's try to disassemble the code at the entry point.
+
+```sh-session{18-19}
+(qemu) x /15i 0x40000000
+0x40000000:  55                       pushq    %rbp
+0x40000001:  48 89 e5                 movq     %rsp, %rbp
+0x40000004:  48 83 ec 30              subq     $0x30, %rsp
+0x40000008:  48 b8 8b a6 00 40 00 00  movabsq  $0x4000a68b, %rax
+0x40000010:  00 00
+0x40000012:  48 89 45 d8              movq     %rax, -0x28(%rbp)
+0x40000016:  48 b8 7d a5 00 40 00 00  movabsq  $0x4000a57d, %rax
+0x4000001e:  00 00
+0x40000020:  48 89 45 e8              movq     %rax, -0x18(%rbp)
+0x40000024:  48 c7 45 e0 00 00 00 00  movq     $0, -0x20(%rbp)
+0x4000002c:  66 c7 45 f0 00 00        movw     $0, -0x10(%rbp)
+0x40000032:  48 b8 70 00 00 40 00 00  movabsq  $0x40000070, %rax
+0x4000003a:  00 00
+0x4000003c:  48 8d 7d d0              leaq     -0x30(%rbp), %rdi
+0x40000040:  ff d0                    callq    *%rax
+0x40000042:  48 c7 45 e0 06 00 00 00  movq     $6, -0x20(%rbp)
+0x4000004a:  f3 90                    pause
+0x4000004c:  e9 f9 ff ff ff           jmp      0x4000004a
+```
+
+Looks like we're executing the `UserMain` function! Notice that the last two instructions are a `pause` instruction and a jump to the `pause` instruction. This is the loop we created in the `UserMain` function. We can also see that the `RIP` register is set to `0x4000004c`, which is the address of the `jmp` instruction. Everything seems to be working as expected.
+
+This is another big milestone! We now have a minimal user mode environment. It's not very useful yet, but we'll build on it in the next section. We should look into system calls next, but before we do that, we need to allow the CPU to switch back to kernel mode. This requires something called the Task State Segment (TSS), which we'll cover in the next section.

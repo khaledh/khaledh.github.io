@@ -312,15 +312,7 @@ proc KernelMainInner(bootInfo: ptr BootInfo) =
   debugln ""
   debugln "kernel: Fusion Kernel"
 
-  debug "kernel: Initializing physical memory manager "
-  pmInit(bootInfo.physicalMemoryMap, bootInfo.physicalMemoryVirtualBase)
-  debugln "[success]"
-
-  debugln "kernel: Physical memory free regions "
-  printFreeRegions()
-
-  debugln "kernel: Virtual memory regions "
-  printVMRegions(bootInfo.virtualMemoryMap)
+  ...
 
   debug "kernel: Initializing GDT "
   gdtInit()
@@ -404,7 +396,7 @@ XMM14=0000000000000000 0000000000000000 XMM15=0000000000000000 0000000000000000
 (qemu)
 ```
 
-This looks good. The `CS` register contains the kernel code segment selector `0x08`, and the other segment registers contain the data segment selector `0x1b` (i.e. offset `0x18` | RPL `0x3`). The `SS` is set to NULL as expected. The `GDT` register seems to contain the address of the GDT descriptor (the address seems legit), and the limit is `0x1f`, which is the size of the GDT in bytes minus 1 (4 entires * 8 bytes per entry - 1).
+This looks good. The `CS` register contains the kernel code segment selector `0x08`, and its DPL=0.The other segment registers contain the data segment selector `0x1b` (i.e. offset `0x18` | RPL `0x3`), and their DPL=3. The `SS` is set to NULL as expected. The `GDT` register seems to contain the address of the GDT descriptor (the address seems legit), and the limit is `0x1f`, which is the size of the GDT in bytes minus 1 (4 entires * 8 bytes per entry - 1).
 
 For now we'll be using only the kernel code and data segments. We'll come back to the user code segments when we implement user mode. We'll also come back to the GDT when we implement multitasking, because we'll need to add a new segment descriptor for the task state segment (TSS), which is required by the CPU when switching from user mode to kernel mode (e.g. when making a system call or when an interrupt occurs).
 
