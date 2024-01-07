@@ -28,6 +28,7 @@ export default defineUserConfig({
       '/osdev/14-memory-segments.md',
       '/osdev/15-interrupts.md',
       '/osdev/16-user-mode.md',
+      '/osdev/17-tss.md',
     ],
     contributors: false,
   }),
