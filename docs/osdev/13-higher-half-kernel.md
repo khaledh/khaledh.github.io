@@ -221,6 +221,7 @@ proc createPageTable(
   proc bootAlloc(nframes: uint64): Option[PhysAddr] =
     result = some(cast[PhysAddr](new AlignedPage))
 
+  # initialize vmm using identity-mapped physical memory
   vmInit(physMemoryVirtualBase = 0'u64, physAlloc = bootAlloc)
 
   debugln &"boot: Creating new page tables"

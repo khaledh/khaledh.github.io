@@ -134,6 +134,24 @@ proc KernelMain() {.exportc.} =
 
 Similar to what we did in the bootloader, we import `libc` and `malloc` since we're compiling for a freestanding environment. Now let's see how we can compile this minimal kernel.
 
+## C compiler options
+
+Compiling a kernel is not the same as compiling a regular application. The C compiler has some default behaviour that will cause problems for us.
+
+The first one is the way it saves and restores registers during function calls. By default, the compiler saves an extensive set of registers, including the SSE registers. This is not necessary for our kernel, since we're using only integer instructions and registers. This can be turned off using the `-mgeneral-regs-only` switch.
+
+The other one is so-called red zone. Normally, the compiler allocates a stack frame for each function call. This stack frame is used to store local variables and function arguments. This is done by subtracting the necessary space from the `rsp` register. However, when the compiler detects that a function is a leaf function, i.e. it doesn't call any other functions, it does not allocate a stack frame (i.e. it doesn't subtract from `rsp`). Instead, it uses the 128 bytes below `rsp` as a scratch space for local variables. This is called the red zone, a performance optimization to avoid the overhead of allocating a stack frame. This is not a problem for regular applications, but for a kernel, if an interrupt is triggered while we're in kernel mode, the CPU will use the same stack, and will overwrite the red zone. This corrupts the state of the kernel, and can be exteremely difficult to debug. To avoid this, we'll disable the red zone using the `-mno-red-zone` switch.
+
+Let's add these switches to the compiler arguments in the kernel's `nim.cfg`:
+
+```properties
+# src/kernel/nim.cfg
+...
+
+--passc:"-mgeneral-regs-only"
+--passc:"-mno-red-zone"
+```
+
 ## Linking the kernel
 
 Our goal is to build a raw binary kernel image. We can do this by passing the `--oformat=binary` switch to the linker. But before we do this, we have to understand how the bootloader will load the kernel image into memory and jump to the entry point.
