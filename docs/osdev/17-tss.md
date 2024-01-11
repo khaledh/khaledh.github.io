@@ -223,6 +223,8 @@ One way to test this is to have the user task try to execute a privileged instru
 ...
 
 proc UserMain*() {.exportc.} =
+  NimMain()
+
   asm "hlt"
 ```
 
@@ -255,6 +257,8 @@ As expected, the CPU switched to kernel mode and executed the General Protection
 ...
 
 proc UserMain*() {.exportc.} =
+  NimMain()
+
   # access illegal memory
   var x = cast[ptr int](0xdeadbeef)
   x[] = 42
@@ -281,6 +285,8 @@ Great! OK, one more way. Let's try to access an address within kernel space. Thi
 # src/user/utask.nim
 
 proc UserMain*() {.exportc.} =
+  NimMain()
+
   # access kernel memory
   var x = cast[ptr int](0xFFFF800000100000)  # kernel entry point
   x[] = 42
@@ -328,6 +334,8 @@ Let's execute the `int` instruction from user mode.
 # src/user/utask.nim
 
 proc UserMain*() {.exportc.} =
+  NimMain()
+
   asm "int 100"
 ```
 

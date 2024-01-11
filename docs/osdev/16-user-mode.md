@@ -53,7 +53,11 @@ Let's start by creating a new module in `src/user/utask.nim` for the user code, 
 
 {.used.}
 
+proc NimMain() {.importc.}
+
 proc UserMain() =
+  NimMain()
+
   asm """
   .loop:
     pause

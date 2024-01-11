@@ -29,6 +29,7 @@ export default defineUserConfig({
       '/osdev/15-interrupts.md',
       '/osdev/16-user-mode.md',
       '/osdev/17-tss.md',
+      '/osdev/18-system-calls.md',
     ],
     contributors: false,
   }),
