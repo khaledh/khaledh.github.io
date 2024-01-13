@@ -168,7 +168,7 @@ Indeed, the value of `rip - 2` is the same as the address of `syscallEntry`.
 
 Now, let's check the CPU registers.
 
-```text
+```text{3-5,9-10}
 (qemu) info registers
 CPU#0
 RAX=ffff800000327540 RBX=ffff800000327548 RCX=0000000040000067 RDX=000000004000add8
@@ -219,7 +219,7 @@ Let's run it and see where we stop.
 
 We're now executing the `pause` loop in `UserMain`, so we're back in user mode. Let's check the registers.
 
-```text
+```text{3,7,9-10}
 (qemu) info registers
 CPU#0
 RAX=0000000000005050 RBX=0000000000000000 RCX=0000000040000067 RDX=000000004000add8
@@ -243,8 +243,382 @@ We can see that `rip` is back in user space, and `CS` and `SS` are set to user c
 
 ## Switching Stacks
 
-TODO
+As I mentioned earlier, the CPU doesn't switch stacks for us when executing `syscall`. We need to switch to a kernel stack ourselves. We'll use the same stack we use for interrupts, the one we stored its address in `tss.rsp0`. We'll also need to save the user `rsp` somewhere so we can restore it later. We'll define two global variables for this in the `syscalls` module.
+
+```nim
+# src/kernel/syscalls.nim
+
+var
+  kernelStackAddr: uint64
+  userRsp: uint64
+...
+
+proc syscallInit*(kernelStack: uint64) =
+  kernelStackAddr = kernelStack
+  ...
+```
+
+Let's pass the kernel stack address to `syscallInit` from `main.nim`.
+
+```nim{15-17}
+# src/kernel/main.nim
+
+import syscalls
+
+proc KernelMainInner(bootInfo: ptr BootInfo) =
+  debugln ""
+  debugln "kernel: Fusion Kernel"
+
+  ...
+
+  # create a kernel switch stack and set tss.rsp0
+  debugln "kernel: Creating kernel switch stack"
+  ...
+
+  debug "kernel: Initializing Syscalls "
+  syscallInit(tss.rsp0)
+  debugln "[success]"
+
+  ...
+```
+
+Now, let's modify `syscallEntry` to switch to the kernel stack and save the user `rsp`. We'll also push `rcx` and `r11` (user `rip` and `rflags`, respectively) on the kernel stack and restore them before calling `sysretq` to return to user mode.
+
+```nim{5-11,15-20,23-24}
+# src/kernel/syscalls.nim
+
+proc syscallEntry() {.asmNoStackFrame.} =
+  asm """
+    # switch to kernel stack
+    mov %0, rsp
+    mov rsp, %1
+
+    # save user rip and rflags    
+    push rcx
+    push r11
+
+    # TODO: dispatch system call
+
+    # restore user rip and rflags
+    pop r11
+    pop rcx
+
+    # switch to user stack
+    mov rsp, %0
+
+    sysretq
+    : "+r"(`userRsp`)
+    : "m"(`kernelStackAddr`)
+    : "rcx", "r11"
+  """
+```
+
+Right now, we're not doing much to handle the system call itself. We're just switching stacks, and saving and restoring the user `rip` and `rflags`. In order to do something useful, we need to define a system call handler and a way to pass arguments to it.
 
 ## System Call Handler
 
-TODO
+Let's now define the actual system call handler. We'll define a `SyscallArgs` type to hold the system call number and arguments, and implement a `syscall` proc that takes a pointer to `SyscallArgs` and returns a `uint64` as the return value.
+
+```nim
+# src/kernel/syscalls.nim
+
+type
+  SyscallArgs* = object
+    num: uint64
+    arg1, arg2, arg3, arg4, arg5: uint64
+
+...
+
+proc syscall*(args: ptr SyscallArgs): uint64 {.exportc.} =
+  debugln &"syscall: num={args.num}"
+  result = 0x5050  # dummy return value
+```
+
+Notice that we're using the `exportc` pragma to export the `syscall` proc, since we'll be calling it from assembly code.
+
+Now, let's modify `syscallEntry` to call `syscall` with the system call number and arguments. We'll create the `SyscallArgs` object on the kernel stack by pushing the appropriate registers, and pass its address to `syscall`.
+
+```nim{13-30}
+# src/kernel/syscalls.nim
+...
+
+proc syscallEntry() {.asmNoStackFrame.} =
+  asm """
+    # switch to kernel stack
+    mov %0, rsp
+    mov rsp, %1
+
+    push r11  # user rflags
+    push rcx  # user rip
+
+    # create SyscallArgs on stack
+    push r9
+    push r8
+    push rcx
+    push rdx
+    push rsi
+    push rdi
+
+    mov rdi, rsp  # address of SyscallArgs
+    call syscall
+
+    # restore registers
+    pop rdi
+    pop rsi
+    pop rdx
+    pop rcx
+    pop r8
+    pop r9
+
+    # prepare for sysret
+    pop rcx  # rip
+    pop r11  # rflags
+
+    # switch to user stack
+    mov rsp, %0
+
+    sysretq
+    : "+r"(`userRsp`)
+    : "m"(`kernelStackAddr`)
+    : "rcx", "r11", "rdi", "rsi", "rdx", "rcx", "r8", "r9", "rax"
+  """
+```
+
+Notice that on the last line we're telling the compiler that `syscallEntry` clobbers the indicated registers. Otherwise, the compiler might try to use them for other purposes.
+
+Let's try this out. We still have the user program passing `1`, so we should see that printed by `syscall`, and the dummy return value `0x5050` should be in `rax` when we return to user mode.
+
+```text
+kernel: Initializing Syscalls [success]
+kernel: Switching to user mode
+syscall: num=1
+```
+
+Great! The `syscall` proc was called and received the correct syscall number. Let's look at the `rax` register to see if it contains the dummy return value.
+
+```text{3}
+(qemu) info registers
+CPU#0
+RAX=0000000000005050 RBX=ffff800000327220 RCX=0000000040000074 RDX=000000004000ade8
+RSI=0000000000000001 RDI=0000000000000001 RBP=0000000050000ff8 RSP=0000000050000fc8
+R8 =ffff800100003c00 R9 =0000000000000000 R10=0000000050000fc8 R11=0000000000000202
+R12=0000000000000000 R13=0000000006bb1588 R14=0000000000000000 R15=0000000007ebf1e0
+RIP=0000000040000076 RFL=00000202 [-------] CPL=3 II=0 A20=1 SMM=0 HLT=0
+ES =0013 0000000000000000 000fffff 000ff300 DPL=3 DS   [-WA]
+CS =001b 0000000000000000 ffffffff 00a0fb00 DPL=3 CS64 [-RA]
+SS =0013 0000000000000000 ffffffff 00c0f300 DPL=3 DS   [-WA]
+...
+```
+
+Indeed, `rax` contains `0x5050`, and from the `rip`, `cs`, and `ss` register values we can see that we're back in user mode. So everything is working as expected.
+
+## System Call Table
+
+Over time, we'll have more system calls, so we'll need a way to dispatch them. One way to do this is store the system call handlers in a table indexed by the system call number. Let's create that table.
+
+```nim{4,8-10,12-13,19-21}
+# src/kernel/syscalls.nim
+
+type
+  SyscallHandler* = proc (args: ptr SyscallArgs): uint64 {.cdecl.}
+  SyscallArgs = object
+    num: uint64
+    arg1, arg2, arg3, arg4, arg5: uint64
+  SyscallError* = enum
+    None
+    InvalidSyscall
+
+var
+  syscallTable: array[256, SyscallHandler]
+
+...
+
+proc syscall*(args: ptr SyscallArgs): uint64 {.exportc.} =
+  debugln &"syscall: num={args.num}"
+  if args.num > syscallTable.high.uint64 or syscallTable[args.num] == nil:
+    return InvalidSyscall.uint64
+  result = syscallTable[args.num](args)
+```
+
+Now, let's define a system call to output a string to the debug console. The system call will take one argumet: a pointer to a `string` object containing the string to output. We'll register the system call handler in `syscallInit`.
+
+```nim
+# src/kernel/syscalls.nim
+...
+
+proc print*(args: ptr SyscallArgs): uint64 {.cdecl.} =
+  debugln "syscall: print"
+  let s = cast[ptr string](args.arg1)
+  debugln s[]
+  result = 0
+
+proc syscallInit*(kernelStack: uint64) =
+  ...
+  syscallTable[1] = print
+  ...
+```
+
+Let's try to invoke this system call from our user program.
+
+```nim{4-6,12,20-21}
+# src/user/utask.nim
+...
+
+let
+  msg = "user: Hello from user mode!"
+  pmsg = msg.addr
+
+proc UserMain*() {.exportc.} =
+  NimMain()
+
+  asm """
+    mov rdi, 1
+    mov rsi, %0
+    syscall
+
+  .loop:
+    pause
+    jmp .loop
+    :
+    : "r"(`pmsg`)
+    : "rdi", "rsi"
+  """
+```
+
+We're passing the system call number `1` in `rdi`, and the address of the string in `rsi`. Let's run it and see what happens.
+
+```text
+kernel: Initializing Syscalls [success]
+kernel: Switching to user mode
+syscall: num=1
+syscall: print
+user: Hello from user mode!
+```
+
+Great! We can now ask the kernel to print a string for us. This is our first kernel service provided through a system call!
+
+## Argument Validation
+
+There's one important piece missing though. Arguments to system calls have to be validated thoroughly. We can't just blindly trust the user program to pass valid arguments. We already did this for the system call number. But what about the string pointer? The user can pass any pointer value, so it's imperative that we validate it before dereferencing it. In this case, we'll keep it simple and make sure that the pointer is within the user address space. We can check if it's mapped, but that's going to be expensive. Instead, we'll just check if it's within the user address space range, and if it isn't mapped, we'll let the page fault handler deal with it.
+
+Here's the modified `print` system call.
+
+```nim{9-10,17-19}
+# src/kernel/syscalls.nim
+
+type
+  SyscallError* = enum
+    None
+    InvalidSyscall
+    InvalidArg
+
+const
+  UserAddrSpaceEnd* = 0x00007FFFFFFFFFFF
+
+...
+
+proc print*(args: ptr SyscallArgs): uint64 {.cdecl.} =
+  debugln "syscall: print"
+
+  if args.arg1 > UserAddrSpaceEnd:
+    debugln "syscall: print: Invalid pointer"
+    return InvalidArg.uint64
+
+  let s = cast[ptr string](args.arg1)
+  debugln s[]
+
+  result = 0
+```
+
+Let's try it out by passing an address in kernel space to the system call.
+
+```nim{5}
+# src/user/utask.nim
+
+let
+  msg = "user: Hello from user mode!"
+  pmsg = 0xffff800000100000  # kernel space address
+
+...
+```
+
+If we run this, we should see the error message printed by the kernel.
+
+```text
+kernel: Initializing Syscalls [success]
+kernel: Switching to user mode
+syscall: num=1
+syscall: print
+syscall: print: Invalid pointer
+```
+
+Awesome! Our argument validation works as expected.
+
+## The `exit` System Call
+
+Before we leave this section, let's add one more system call: `exit`. This system call will take one argument: the exit code. Keep in mind that we don't have a scheduler yet; our kernel transferred control to the user program, the user program called a system call to print a message, and will exit user mode in one thread of execution. So, without other tasks to switch to at the moment, we'll just halt the CPU when the user program exits.
+
+```nim
+# src/kernel/syscalls.nim
+
+proc exit*(args: ptr SyscallArgs): uint64 {.cdecl.} =
+  debugln &"syscall: exit: code={args.arg1}"
+  asm """
+    cli
+    hlt
+  """
+```
+
+We'll give the `exit` system call the number 1 instead of `print`, and we'll make print system call number 2.
+
+```nim{12-13,17}
+# src/kernel/syscalls.nim
+...
+
+proc syscallInit*(kernelStack: uint64) =
+  ...
+  syscallTable[1] = exit
+  syscallTable[2] = print
+  ...
+```
+
+Now, let's modify the user program to call `exit` after printing the message.
+
+```nim{8-9,13-16}
+# src/user/utask.nim
+...
+
+proc UserMain*() {.exportc.} =
+  NimMain()
+
+  asm """
+    # call print
+    mov rdi, 2
+    mov rsi, %0
+    syscall
+
+    # call exit
+    mov rdi, 1
+    mov rsi, 0
+    syscall
+    :
+    : "r"(`pmsg`)
+    : "rdi", "rsi"
+  """
+```
+
+Let's run it and see what happens.
+
+```text
+kernel: Initializing Syscalls [success]
+kernel: Switching to user mode
+syscall: num=2
+syscall: print
+user: Hello from user mode!
+syscall: num=1
+syscall: exit: code=0
+```
+
+Looks good! The `exit` system call was called and received the correct exit code, and the kernel halted the CPU.
+
+This is another big milestone. We now have a working system call interface, and we can invoke kernel services from user mode.
