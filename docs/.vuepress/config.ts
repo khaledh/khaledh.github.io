@@ -30,6 +30,7 @@ export default defineUserConfig({
       '/osdev/16-user-mode.md',
       '/osdev/17-tss.md',
       '/osdev/18-system-calls.md',
+      '/osdev/19-tasks.md',
     ],
     contributors: false,
   }),

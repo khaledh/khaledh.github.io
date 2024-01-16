@@ -500,8 +500,8 @@ proc KernelMainInner(bootInfo: ptr BootInfo) =
   debugln "kernel: Switching to user mode"
   setActivePML4(upml4)
   asm """
+    mov rbp, 0
     mov rsp, %0
-    mov rbp, rsp
     iretq
     :
     : "r"(`rsp`)

@@ -607,7 +607,7 @@ proc UserMain*() {.exportc.} =
   """
 ```
 
-Let's run it and see what happens.
+Notice that I removed the infinite loop, as as the `exit` syscall does not return. Let's run it and see what happens.
 
 ```text
 kernel: Initializing Syscalls [success]
@@ -621,4 +621,4 @@ syscall: exit: code=0
 
 Looks good! The `exit` system call was called and received the correct exit code, and the kernel halted the CPU.
 
-This is another big milestone. We now have a working system call interface, and we can invoke kernel services from user mode.
+This is another big milestone. We now have a working system call interface, and we can invoke kernel services from user mode. In the next section, we'll look into encapsulating user task related context in a `Task` object.
