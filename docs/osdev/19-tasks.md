@@ -16,6 +16,7 @@ type
   TaskStack* = object
     data*: ptr uint8
     size*: uint64
+    bottom*: uint64
 
   Task* = ref object
     id*: uint64
@@ -26,12 +27,9 @@ type
 
 var
   nextId*: uint64 = 0
-
-proc bottom*(s: TaskStack): uint64 =
-  result = cast[uint64](s.data) + s.size
 ```
 
-Each task has a unique `id`, a pointer to its page table, and two stacks: one for user mode and one for kernel mode. The `rsp` field is where the user stack pointer is stored when the task is executing in kernel mode (e.g. when executing a system call). We also define a `TaskStack` type to encapsulate the stack pointer and size. The `bottom` proc is a convenience function to get the bottom of the stack (i.e. the address just beyond the end of the stack). The `nextId` variable will be used to assign unique IDs to each task.
+Each task has a unique `id`, a pointer to its page table, and two stacks: one for user mode and one for kernel mode. The `rsp` field is where the user stack pointer is stored when the task is executing in kernel mode (e.g. when executing a system call). We also define a `TaskStack` type to encapsulate the stack address, size, and the bottom of the stack (i.e. the address just beyond the end of the stack). The `nextId` variable will be used to assign unique IDs to each task.
 
 Before we can start creating tasks, we need a way to allocate virtual memory within an address space. Let's add a few things to the virtual memory manager to support this.
 
@@ -151,10 +149,18 @@ Creating a task involves the following steps:
 6. Creating an interrupt stack frame on the kernel stack (for switching to user mode)
 7. Setting the `rsp` field to the interrupt stack frame
 
-This seems like a lot of steps, but it's not too bad. Let's add a `createTask` proc to the `tasks` module to do all this.
+This seems like a lot of steps, but it's not too bad. Let's add a `createTask` proc to the `tasks` module to do all this. We'll also add a `createStack` helper proc to allocate a stack in a particular address space.
 
 ```nim
 # src/kernel/tasks.nim
+
+proc createStack*(space: var VMAddressSpace, npages: uint64, mode: PageMode): TaskStack =
+  let stackPtr = vmalloc(space, npages, paReadWrite, mode)
+  if stackPtr.isNone:
+    raise newException(Exception, "tasks: Failed to allocate stack")
+  result.data = cast[ptr UncheckedArray[uint64]](stackPtr.get)
+  result.size = npages * PageSize
+  result.bottom = cast[uint64](result.data) + result.size
 
 proc createTask*(
   imageVirtAddr: VirtAddr,
@@ -173,7 +179,7 @@ proc createTask*(
     pml4: cast[ptr PML4Table](new PML4Table)
   )
 
-  # map user image
+  # map task image
   mapRegion(
     pml4 = uspace.pml4,
     virtAddr = imageVirtAddr,
@@ -188,29 +194,9 @@ proc createTask*(
   for i in 256 ..< 512:
     uspace.pml4.entries[i] = kpml4.entries[i]
 
-  # create user stack
-  let ustackRegion = vmalloc(uspace, 1, paReadWrite, pmUser)
-  if ustackRegion.isNone:
-    raise newException(Exception, "tasks: Failed to allocate user stack")
-  let ustack = TaskStack(
-    data: cast[ptr UncheckedArray[uint64]](ustackRegion.get),
-    size: 1 * PageSize
-  )
-
-  # create kernel stack
-  let kstackRegion = vmalloc(kspace, 1, paReadWrite, pmSupervisor)
-  if kstackRegion.isNone:
-    raise newException(Exception, "tasks: Failed to allocate kernel stack")
-  let kstack = TaskStack(
-    data: cast[ptr UncheckedArray[uint64]](kstackRegion.get),
-    size: 1 * PageSize
-  )
-
-  # get kernel-mapped virtual address of user stack
-  let ustackPhysAddr = v2p(cast[VirtAddr](ustack.data), uspace.pml4)
-  if ustackPhysAddr.isNone:
-    raise newException(Exception, "tasks: Failed to get physical address of user stack")
-  let ustackPtr = cast[ptr UncheckedArray[uint64]](p2v(ustackPhysAddr.get))
+  # create user and kernel stacks
+  let ustack = createStack(uspace, 1, pmUser)
+  let kstack = createStack(kspace, 1, pmSupervisor)
 
   # create interrupt stack frame on the kernel stack
   var index = kstack.size div 8
@@ -227,7 +213,7 @@ proc createTask*(
   result.rsp = cast[uint64](kstack.data[index - 5].addr)
 ```
 
-Most of this code is not new, we just put it together in one place. The only new thing is calling `vmalloc` to allocate the user stack and kernel stack (which in turn allocates the backing physical memory). We no longer need to create global arrays to statically allocate the stacks. Notice also that the kernel stack is allocated in the kernel space, not the user space, and is marked as supervisor-only.
+Most of this code is not new, we just put it together in one place. The only new thing is calling `vmalloc` to allocate the user stack and kernel stack (which in turn allocates the backing physical memory). We no longer need to create global arrays to statically allocate the stacks.
 
 ## Switching to a task
 
@@ -294,3 +280,106 @@ syscall: exit: code=0
 ```
 
 Great! It's nice to be able to encapsulate all the task information in a `Task` object, and to be able to create a task and switch to it with just a few lines of code.
+
+There's one thing that I still don't like, which is that we initialize the system calls with the kernel stack of the task. The system call entry point should be able to switch to the current task's kernel stack on its own, without relying on a global variable for the kernel stack. Once we start having multiple tasks, we have to be able to switch to the kernel stack of the current task.
+
+## Tracking the current task
+
+We can solve this problem by tracking the current task in a global variable. Let's add a `currentTask` variable to the `tasks` module, and set it in the `switchTo` proc. One thing we'll do differently here is that we'll add the `exportc` pragma to this variable, so that we can access it from inline assembly later.
+
+```nim
+# src/kernel/tasks.nim
+
+var
+  currentTask* {.exportc.}: Task
+
+proc switchTo*(task: var Task) {.noreturn.} =
+  currentTask = task
+  ...
+```
+
+Now, we can change the system call entry point to switch to the current task's kernel stack.
+
+```nim{9,23-24}
+# src/kernel/syscalls.nim
+
+import tasks
+...
+
+var
+  syscallTable: array[256, SyscallHandler]
+  tss {.importc.}: TaskStateSegment
+  currentTask {.importc.}: Task
+
+proc syscallEntry() {.asmNoStackFrame.} =
+  asm """
+    # switch to kernel stack
+    mov %0, rsp
+    mov rsp, %1
+
+    ...
+
+    # switch to user stack
+    mov rsp, %0
+
+    sysretq
+    : "+r"(`currentTask`->rsp)
+    : "m"(`currentTask`->kstack.bottom)
+    : "rcx", "r11", "rdi", "rsi", "rdx", "rcx", "r8", "r9", "rax"
+  """
+```
+
+We can now remove the argument to `syscallInit`.
+
+```nim
+# src/kernel/syscalls.nim
+...
+
+proc syscallInit*() =
+  ...
+```
+
+And make the corresponding change in `KernelMainInner`. Also, since we don't need the kernel stack to initialize system calls anymore, we can move the call to `syscallInit` before creating the task.
+
+```nim
+# src/kernel/main.nim
+
+proc KernelMainInner(bootInfo: ptr BootInfo) =
+  ...
+
+  debug "kernel: Initializing Syscalls "
+  syscallInit()
+  debugln "[success]"
+
+  debugln "kernel: Creating user task"
+  var task = createTask(
+    imageVirtAddr = UserImageVirtualBase.VirtAddr,
+    imagePhysAddr = bootInfo.userImagePhysicalBase.PhysAddr,
+    imagePageCount = bootInfo.userImagePages,
+    entryPoint = UserImageVirtualBase.VirtAddr
+  )
+
+  debugln "kernel: Switching to user mode"
+  switchTo(task)
+
+  ...
+```
+
+Much simpler. Let's try it out.
+
+```text
+kernel: Initializing GDT [success]
+kernel: Initializing IDT [success]
+kernel: Initializing Syscalls [success]
+kernel: Creating user task
+kernel: Switching to user mode
+syscall: num=2
+syscall: print
+user: Hello from user mode!
+syscall: num=1
+syscall: exit: code=0
+```
+
+All good! We're in a much better place than we were before.
+
+In the next section, we'll take an initial stab at multitasking by running two copies of the user task. We're not ready for preemptive multitasking yet, so we'll implement a form of cooperative multitasking first.
