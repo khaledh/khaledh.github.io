@@ -31,6 +31,7 @@ export default defineUserConfig({
       '/osdev/17-tss.md',
       '/osdev/18-system-calls.md',
       '/osdev/19-tasks.md',
+      '/osdev/20-pie.md',
     ],
     contributors: false,
   }),

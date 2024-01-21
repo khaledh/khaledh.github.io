@@ -382,4 +382,4 @@ syscall: exit: code=0
 
 All good! We're in a much better place than we were before.
 
-In the next section, we'll take an initial stab at multitasking by running two copies of the user task. We're not ready for preemptive multitasking yet, so we'll implement a form of cooperative multitasking first.
+Ideally, we should now be able to create multiple tasks and switch between them. But, since we're creating a single address space OS, we need to be able to load tasks at different virtual addresses. So far, we've been using a fixed virtual address for the user task; i.e. the task image is not relocatable. This means we have to link every user program at a different virtual address, which is not ideal. Traditional operating systems use a separate address space for each task, so linking the task image at a fixed virtual address is not a problem. In our case, we need to make the task image relocatable, so that we can load it at an arbitrary virtual address. That's what we'll do next.
