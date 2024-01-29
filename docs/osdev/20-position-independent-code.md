@@ -1,8 +1,8 @@
-# Position Independent Executable (PIE)
+# Position Independent Code
 
-Fusion is a single address space OS, which means that all tasks share the same address space. This requires the ability to load task images at arbitrary addresses (depending on the available virtual memory). Currently, when we compile and link a task, the linker will generate a binary that is not position independent. We need to change this and use position independent executables (PIE).
+Fusion is a single address space OS, which means that all tasks share the same address space. This requires the ability to load task images at arbitrary addresses (depending on the available virtual memory). Currently, when we compile and link a task, the linker will generate a binary that is not position independent; it has to be loaded at a pre-determined address. We need to change this and use position independent code (PIC) object files and position independent executables (PIE) instead.
 
-## What is PIE and PIC?
+## What is PIC and PIE?
 
 A PIE is a binary that can be loaded at any address in memory. This is achieved by using relative addressing instead of absolute addressing. For example, instead of using the absolute address of a function, the compiler uses the offset from the current instruction pointer. This is called position independent code (PIC), and is typically used for shared libraries, since they can be loaded at any address in the process address space. To generate PIC object files, we need to use the `-fPIC` compiler flag. A PIE can be generated using the `--pie` linker flag, assuming that all object files are PIC.
 
@@ -619,7 +619,6 @@ It works! The message from the user task is printed correctly. We can see that t
 
 const
   UserImageVirtualBase = 0x80000000
-  UserStackVirtualBase = 0x90000000
 ```
 
 ```sh-session
