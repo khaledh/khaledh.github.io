@@ -54,10 +54,23 @@ type
 
 Notice that I also defined a `VMRegion` type to represent a contiguous region of virtual memory. Notice also that I defined two fields `minAddress` and `maxAddress` in `VMAddressSpace` to track the minimum and maximum addresses in the address space. This will make it easy to confine the address space to the lower half (for user space) or upper half (for kernel space) of the virtual address space.
 
+Let's make a slight modification to the `Task` type to use the new `VMAddressSpace` type instead of a pointer to a `PML4Table`.
+
+```nim{3}
+  Task* = ref object
+    id*: uint64
+    space*: VMAddressSpace
+    ustack*: TaskStack
+    kstack*: TaskStack
+    rsp*: uint64
+```
+
 Let's now add a proc to allocate virtual memory in an address space.
 
 ```nim
 # src/kernel/vmm.nim
+import std/algorithm
+...
 
 proc vmalloc*(
   space: var VMAddressSpace,
@@ -79,10 +92,13 @@ proc vmalloc*(
   # add the region to the address space
   space.regions.add VMRegion(start: virtAddr, npages: pageCount)
 
+  # sort the regions by start address
+  space.regions = space.regions.sortedByIt(it.start)
+
   result = some virtAddr
 ```
 
-The `vmalloc` proc finds a free region in the address space, allocates physical memory, and maps it into the address space. It returns the virtual address of the allocated region.
+The `vmalloc` proc finds a free region in the address space, allocates physical memory, and maps it into the address space. It returns the virtual address of the allocated region. We then sort the regions by start address, so that we can easily find a free region in the future. (Ideally, the standard library should provide a sorted container that we can use here, but for now, we'll just sort the regions manually after adding a new one.)
 
 We also need a way to add existing VM regions to an address space. We'll need this to add the existing kernel VM regions (code/data and stack) to its address space.
 

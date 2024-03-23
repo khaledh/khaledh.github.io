@@ -636,6 +636,67 @@ syscall: exit: code=0
 
 It still works! Notice that the `arg1.p` value is now `0x80009d00` instead of `0x40009d00`, which proves that we can now load the user task at any address.
 
+## Dynamic virtual memory allocation
+
+So far we've been telling the kernel where to load the user task, but we want to be able to load tasks at any available address. The VMM keeps track of the available virtual memory, so we can leverage that to dynamically allocate virtual memory for the user task. Let's remove the `imageVirtAddr` argument from the `createTask` proc, and use the VMM to allocate the virtual memory for the user task.
+
+```nim
+# src/kernel/tasks.nim
+...
+
+proc createTask*(
+  imagePhysAddr: PhysAddr,
+  imagePageCount: uint64,
+): Task =
+  ...
+
+  # allocate user image vm region
+  let imageVirtAddrOpt = vmalloc(uspace, imagePageCount, paReadWrite, pmUser)
+  if imageVirtAddrOpt.isNone:
+    raise newException(Exception, "tasks: Failed to allocate VM region for user image")
+  let imageVirtAddr = imageVirtAddrOpt.get
+
+  # map user image
+  ...
+```
+
+Now, let's modify the `KernelMain` proc to use the new `createTask` proc.
+
+```nim
+# src/kernel/main.nim
+
+# const
+#   UserImageVirtualBase = 0x80000000  <-- remove this
+
+proc KernelMain(bootInfo: ptr BootInfo) {.exportc.} =
+  ...
+
+  debugln "kernel: Creating user task"
+  var task = createTask(
+    imagePhysAddr = bootInfo.userImagePhysicalBase.PhysAddr,
+    imagePageCount = bootInfo.userImagePages,
+  )
+
+  ...
+```
+
+If we compile and run the kernel, we should see the same output as before, with the user task being loaded at a different address.
+
+```sh-session
+kernel: Creating user task
+kernel: Applying relocations to user image
+kernel: Switching to user mode
+syscall: num=2
+syscall: print (arg1=0x415678)
+syscall: print: arg1[0]=21
+syscall: print: arg1[1]=0x2150e0
+Hello from user mode!
+syscall: num=1
+syscall: exit: code=0
+```
+
+It works! The user task is now loaded at a different address that was dynamically allocated, and the message is printed correctly.
+
 This is another milestone; this means we can now load PIE tasks at any address, depending on the available virtual memory, and they all share the same address space. Keep in mind that we still need to have protection between tasks, so each task will still have its own page table mappings, but we won't have to rely on pre-arranging shared memory pages for inter-task communication. We'll get to that in a later section once we start tackling capabilities.
 
 In the next section, we'll try to get two copies of the user task running at the same time, and try to switch between them using cooperative multitasking (we'll get to preemptive multitasking later).

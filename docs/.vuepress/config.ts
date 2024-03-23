@@ -33,6 +33,7 @@ export default defineUserConfig({
       '/osdev/19-tasks.md',
       '/osdev/20-position-independent-code.md',
       '/osdev/21-coop-multitasking.md',
+      '/osdev/22-system-library.md',
     ],
     contributors: false,
   }),

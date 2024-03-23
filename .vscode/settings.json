@@ -1,3 +1,6 @@
 {
-  "workbench.colorTheme": "IDEA like light Theme"
+  "workbench.colorTheme": "IDEA like light Theme",
+  "cSpell.words": [
+    "debugln"
+  ]
 }
