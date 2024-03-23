@@ -1,0 +1,1 @@
+const e=JSON.parse('{"key":"v-db18af34","path":"/osdev/22-system-library.html","title":"System Library","lang":"en-US","frontmatter":{},"headers":[{"level":2,"title":"Writing the Library","slug":"writing-the-library","link":"#writing-the-library","children":[]}],"git":{"updatedTime":1711189349000},"filePathRelative":"osdev/22-system-library.md","excerpt":""}');export{e as data};
