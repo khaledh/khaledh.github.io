@@ -1,0 +1,69 @@
+/* Please visit the URL below for more information: */
+/*   https://shd101wyy.github.io/markdown-preview-enhanced/#/customize-css */
+
+.markdown-preview.markdown-preview {
+
+  h1 {
+    font-size: 2em;
+  }
+
+  h2 {
+    font-size: 1.6em;
+  }
+
+  h3 {
+    font-size: 1.4em;
+  }
+
+  line-height: 1.4;
+
+  :root {
+    // --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen,
+    //   Ubuntu, Cantarell, "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif;
+    --font-family-code: "JetBrains Mono", "Andale Mono", "Monaco", monospace;
+  }
+
+  p pre,
+  p code,
+  pre code,
+  .highlight-lines {
+    // font-family: var(--font-family-code);
+    // color: var(--c-text-lighter);
+    // padding: 0.25rem 0.5rem;
+    // margin: 0;
+    font-size: 9.5pt !important;
+    // background-color: var(--c-bg-light);
+    // border-radius: 3px;
+    // overflow-wrap: break-word;
+    // transition: background-color var(--t-color);
+  }
+
+  code[class*=language-],
+  pre[class*=language-] {
+    // color: #ccc;
+    // background: none;
+    // font-family: var(--font-family-code);
+    font-size: 9.5pt !important;
+    // text-align: left;
+    // white-space: pre;
+    // word-spacing: normal;
+    // word-break: normal;
+    // word-wrap: normal;
+    // line-height: 1.5;
+    // -moz-tab-size: 4;
+    // -o-tab-size: 4;
+    // tab-size: 4;
+    // -webkit-hyphens: none;
+    // hyphens: none;
+  }
+
+  div[class*=language-].line-numbers-mode .line-numbers .line-number::before {
+    font-size: 9.5pt;
+    line-height: 0.6;
+  }
+
+  div[class*=language-].line-numbers-mode .line-numbers {
+    font-size: 9.5pt;
+    line-height: 1.375;
+  }
+}
