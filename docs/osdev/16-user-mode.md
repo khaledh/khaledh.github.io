@@ -5,7 +5,7 @@ Running programs in user mode is one of the most important features of an operat
 The main way to switch to user mode is to manually create an interrupt stack frame, as if the user program had just been interrupted by an interrupt. It should look like this:
 
 ```text
-         User Stack
+            Stack
                      ┌──── stack bottom
     ┌────────────────▼─┐
     │        SS        │ +32  ◄── Data segment selector
@@ -22,13 +22,13 @@ The main way to switch to user mode is to manually create an interrupt stack fra
     ├──────────────────┤
 ```
 
-Then we can use the `iretq` instruction to switch to user mode. The `iretq` instruction pops the stack frame, loads the `SS` and `RSP` registers to switch to the user stack, loads the `RFLAGS` register, and loads the `CS` and `RIP` registers to switch to the user code entry point. The `RFLAGS` value should have the IF flag set to 1, which enables interrupts. This is important because we want to be able to switch back to kernel mode later.
+Then we can use the `iretq` instruction to switch to user mode. The `iretq` instruction pops the stack frame, loads the `SS` and `RSP` registers to switch to the user stack, loads the `RFLAGS` register, and loads the `CS` and `RIP` registers to switch to the user code entry point. The `RFLAGS` value should have the IF flag set to 1, which enables interrupts. This is important, because it allows the kernel to take control back from the user program when an interrupt occurs.
 
-An important thing to note is that, since this stack frame is at the bottom of the user stack (i.e. highest address in the page where the stack is mapped), if the user program returns from the entry point, a page fault will occur, since the area above the stack is unmapped. As mentioned earlier, the only way to return to kernel mode is through a system call or an interrupt. So for the purpose of this section, we'll just create a user function that never returns.
+An important thing to note is that, since this stack frame is at the bottom of the stack (i.e. highest address in the page where the stack is mapped), if the user program returns from the entry point, a page fault will occur, since the area above the stack is unmapped. As mentioned earlier, the only way to return to kernel mode is through a system call or an interrupt. So, for the purpose of this section, we'll just create a user program that never returns (until we implement system calls).
 
 ## Preparing for User Mode
 
-So far, the virtual memory mapping we have is for kernel space only. We need to create a different mapping for user space so that the user program can access it. This includes mapping of the user code, data, and stack regions, as well as the kernel space (which is protected since it's marked as supervisor only). Mapping the kernel space in the user page table is necessary, since interrupts and system calls cause the CPU to jump to kernel code without switching page tables.
+So far, the virtual memory mapping we have is for kernel space only. We need to create a different mapping for user space so that the user program can access it. This includes mapping of the user code, data, and stack regions, as well as the kernel space (which is protected since it's marked as supervisor only). Mapping the kernel space in the user page table is necessary, since interrupts and system calls cause the CPU to jump to kernel code without switching page tables. Also, many system calls will need access to data in user space.
 
 Since we don't have the ability in the kernel to access disks and filesystems yet, we won't be load the user program from disk. What we can do is build the user program separately, and copy it alongside the kernel image, and let the bootloader load it for us. So here's the plan to get user mode working:
 
