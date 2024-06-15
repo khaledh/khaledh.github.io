@@ -103,7 +103,9 @@ proc main(): int {.exportc.} =
 
 The `{.exportc.}` pragma tells the Nim compiler to export the function name as is, without any mangling. We do this because we need to pass the entry point name to the linker, and we don't want the compiler to mangle it.
 
-Before we port this to Nim, we need to understand that Nim itself supports multiple targets. There are three arguments that influence the compilation/linking to a specific target:
+Before we port this to Nim, we need to understand that Nim itself supports multiple targets. There
+are three arguments that influence the compilation/linking to a specific target:
+
 - `--cpu`(architecture), which defaults to the host architecture (in my case this is `amd64`, i.e. x86\_64)
 - `--os`(operating system), which defaults to the host operating system (in my case this is `linux`)
 - `--cc`(backend compiler), which defaults to `gcc` (on Windows it relies on MinGW, which is a port of GCC to Windows)

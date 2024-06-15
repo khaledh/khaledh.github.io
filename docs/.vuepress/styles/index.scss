@@ -52,6 +52,16 @@ div[class*=language-].line-numbers-mode .line-numbers {
   line-height: 1.375;
 }
 
+p {
+  line-height: 1.5;
+}
+
+dd {
+  margin-block-start: 0.6em;
+  margin-block-end: 1em;
+  line-height: 1.5;
+}
+
 :root {
   // --c-brand: #3eaf7c;
   // --c-brand-light: #4abf8a;
@@ -118,6 +128,6 @@ div[class*=language-].line-numbers-mode .line-numbers {
   // --navbar-padding-h: 1.5rem;
   // --sidebar-width: 20rem;
   // --sidebar-width-mobile: calc(var(--sidebar-width) * 0.82);
-  --content-width: 880px;
+  --content-width: 820px;
   // --homepage-width: 960px;
 }

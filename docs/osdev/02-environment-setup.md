@@ -4,21 +4,22 @@ In this section, we'll set up our development environment. We'll be using **Nim*
 
 ## Nim compiler
 
-First, we need to install the **Nim compiler**. An easy way to install Nim is through the **choosenim** installer, so let's install that first:
+First, we need to install the **Nim compiler**. An easy way to install Nim is through the
+**choosenim** installer (or you can install it using your system's package manager), so let's install that first:
 
 ```sh-session
-$ curl https://nim-lang.org/choosenim/init.sh -sSf | sh
+curl https://nim-lang.org/choosenim/init.sh -sSf | sh
 ```
 
 Then, we can install the latest stable version of Nim:
 
 ```sh-session
 $ choosenim stable
-Downloading Nim 2.0.0 from nim-lang.org
+Downloading Nim 2.0.4 from nim-lang.org
 ...
 
 $ nim -v
-Nim Compiler Version 2.0.0 [Linux: amd64]
+Nim Compiler Version 2.0.4 [Linux: amd64]
 ...
 ```
 
@@ -56,7 +57,7 @@ QEMU emulator version 8.1.3
 Now that we have our environment set up, we can create our project. We'll start by creating a new directory for our project:
 
 ```sh-session
-$ mkdir fusion && cd fusion
+mkdir fusion && cd fusion
 ```
 
 Next, we'll create a new **nimble** project with binary package type:
@@ -77,8 +78,8 @@ $ nimble init
 Let's also create a `build` directory for our build artifacts and add it to `.gitignore`:
 
 ```sh-session
-$ mkdir build
-$ echo build >> .gitignore
+mkdir build
+echo build >> .gitignore
 ```
 
 Now that we have our project set up, let's move on to setting up our build to target the UEFI environment.

@@ -1,4 +1,4 @@
-# ELF Loader
+# ELF Loader (Part 1)
 
 So far we used a flat binary format for our user task. But it's becoming more difficult as we have
 to manually specify the layout of the binary using a linker script, and arrange the sections in a
@@ -20,16 +20,13 @@ can load the file into memory and run it. The parts of the ELF format that are r
 and the offsets of the other sections.
 
 **Program Header Table**
-: Contains a list of segments to be loaded into memory.
+: Contains a list of segments to be loaded into memory. Each segment can contain one or more sections.
 
 **Section Header Table**
 : Contains a list of sections, which are used for debugging and linking.
 
 **Sections**
 : Contains the actual code and data of the program.
-
-**Segments**
-: Contains information about how the sections should be loaded into memory.
 
 **Symbol Table**
 : Contains information about the symbols in the program.
@@ -39,6 +36,105 @@ and the offsets of the other sections.
 
 **Relocation Table**
 : Contains information about the relocations to be applied to the program.
+
+## Building an ELF binary
+
+Let's modify our user program to build an ELF binary instead of a flat binary. We previously used a
+linker script to have control over the binary layout, such that the kernel could load the binary in
+a straightforward way. To produce an ELF binary, we'll simply remove the linker script and let the
+compiler and linker generate a default ELF binary.
+
+```sh-session
+$ rm src/user/linker.ld
+$ just user
+$ file build/user/utask.bin
+build/user/utask.bin: ELF 64-bit LSB pie executable, x86-64, version 1 (SYSV), static-pie linked, not stripped
+```
+
+Looks good. Let's inspect the ELF binary using `readelf`.
+
+```sh-session
+$ readelf -eW build/user/utask.bin
+ELF Header:
+  Magic:   7f 45 4c 46 02 01 01 00 00 00 00 00 00 00 00 00 
+  Class:                             ELF64
+  Data:                              2's complement, little endian
+  Version:                           1 (current)
+  OS/ABI:                            UNIX - System V
+  ABI Version:                       0
+  Type:                              DYN (Position-Independent Executable file)
+  Machine:                           Advanced Micro Devices X86-64
+  Version:                           0x1
+  Entry point address:               0xf5f0
+  Start of program headers:          64 (bytes into file)
+  Start of section headers:          78256 (bytes into file)
+  Flags:                             0x0
+  Size of this header:               64 (bytes)
+  Size of program headers:           56 (bytes)
+  Number of program headers:         8
+  Size of section headers:           64 (bytes)
+  Number of section headers:         18
+  Section header string table index: 16
+
+Section Headers:
+  [Nr] Name              Type            Address          Off    Size   ES Flg Lk Inf Al
+  [ 0]                   NULL            0000000000000000 000000 000000 00      0   0  0
+  [ 1] .dynsym           DYNSYM          0000000000000200 000200 000018 18   A  4   1  8
+  [ 2] .gnu.hash         GNU_HASH        0000000000000218 000218 00001c 00   A  1   0  8
+  [ 3] .hash             HASH            0000000000000234 000234 000010 04   A  1   0  4
+  [ 4] .dynstr           STRTAB          0000000000000244 000244 000001 00   A  0   0  1
+  [ 5] .rela.dyn         RELA            0000000000000248 000248 000498 18   A  1   0  8
+  [ 6] .rodata           PROGBITS        00000000000006e0 0006e0 000ea8 00 AMS  0   0 16
+  [ 7] .text             PROGBITS        0000000000002590 001590 00d712 00  AX  0   0 16
+  [ 8] .data.rel.ro      PROGBITS        0000000000010cb0 00ecb0 000270 00  WA  0   0 16
+  [ 9] .dynamic          DYNAMIC         0000000000010f20 00ef20 0000d0 10  WA  4   0  8
+  [10] .got              PROGBITS        0000000000010ff0 00eff0 000000 00  WA  0   0  8
+  [11] .relro_padding    NOBITS          0000000000010ff0 00eff0 000010 00  WA  0   0  1
+  [12] .data             PROGBITS        0000000000011ff0 00eff0 000118 00  WA  0   0  8
+  [13] .bss              NOBITS          0000000000012110 00f108 200490 00  WA  0   0 16
+  [14] .comment          PROGBITS        0000000000000000 00f108 00003e 01  MS  0   0  1
+  [15] .symtab           SYMTAB          0000000000000000 00f148 001f38 18     17 332  8
+  [16] .shstrtab         STRTAB          0000000000000000 011080 000091 00      0   0  1
+  [17] .strtab           STRTAB          0000000000000000 011111 002099 00      0   0  1
+Key to Flags:
+  W (write), A (alloc), X (execute), M (merge), S (strings), I (info),
+  L (link order), O (extra OS processing required), G (group), T (TLS),
+  C (compressed), x (unknown), o (OS specific), E (exclude),
+  D (mbind), l (large), p (processor specific)
+
+Program Headers:
+  Type           Offset   VirtAddr           PhysAddr           FileSiz  MemSiz   Flg Align
+  PHDR           0x000040 0x0000000000000040 0x0000000000000040 0x0001c0 0x0001c0 R   0x8
+  LOAD           0x000000 0x0000000000000000 0x0000000000000000 0x001588 0x001588 R   0x1000
+  LOAD           0x001590 0x0000000000002590 0x0000000000002590 0x00d712 0x00d712 R E 0x1000
+  LOAD           0x00ecb0 0x0000000000010cb0 0x0000000000010cb0 0x000340 0x000350 RW  0x1000
+  LOAD           0x00eff0 0x0000000000011ff0 0x0000000000011ff0 0x000118 0x2005b0 RW  0x1000
+  DYNAMIC        0x00ef20 0x0000000000010f20 0x0000000000010f20 0x0000d0 0x0000d0 RW  0x8
+  GNU_RELRO      0x00ecb0 0x0000000000010cb0 0x0000000000010cb0 0x000340 0x000350 R   0x1
+  GNU_STACK      0x000000 0x0000000000000000 0x0000000000000000 0x000000 0x000000 RW  0
+
+ Section to Segment mapping:
+  Segment Sections...
+   00     
+   01     .dynsym .gnu.hash .hash .dynstr .rela.dyn .rodata 
+   02     .text 
+   03     .data.rel.ro .dynamic .relro_padding 
+   04     .data .bss 
+   05     .dynamic 
+   06     .data.rel.ro .dynamic .relro_padding 
+   07     
+```
+
+We can see there are many sections and serveral segments. The last part shows how the sections are
+mapped to the segments. We are mainly interested in the segments of type `LOAD`, which are the ones
+to be loaded into memory. We also need the `DYNAMIC` segment for applying relocations. The nice
+thing here is that we don't need to worry about which section is code, data, or bss. The segments
+include a flags field that tells us the permissions of the segment (read, write, execute). We'll use
+this information to set the correct permissions on the virtual memory regions.
+
+Notice also that the `VirtAddr` of some segments doesn't necessarily start on a page boundary.
+However, their `Align` field tells us that the first page of the segment should be aligned to a page
+boundary (I'm making a simplifying assumption here that `Align` values are always equal to x86-64's page size, i.e. 4KiB). Thus, a segment's start page is the segment's `VirtAddr` rounded down to the nearest page boundary.
 
 ## ELF Reader
 
@@ -209,9 +305,8 @@ type
     SymTabShndx = (18, "SYMTAB_SHNDX")
 ```
 
-Sections are mostly relevant to the linker, not the loader (which deals with segments).
-Nevertheless, we'll need to read the section headers to find the `DYNAMIC` section that contains the
-relocation information.
+Sections are mostly relevant to the linker, not the loader (which deals with segments). I'm just
+including it for the sake of completeness.
 
 Now, let's add a proc to initialize an `ElfImage` object from a pointer to the ELF image in memory.
 We'll validate some assumptions about the ELF image (e.g. the magic number, the architecture, etc.)
@@ -274,3 +369,6 @@ iterator sections(image: ElfImage): tuple[i: uint16, sh: ptr ElfSectionHeader] =
     let sh = cast[ptr ElfSectionHeader](header +! (shoff + shentsize * i))
     yield (i, sh)
 ```
+
+That's it for the ELF reader. In the next part, we'll use this module to load the loadable segments
+of an ELF file into memory, apply relocations, and jump to the entry point.
