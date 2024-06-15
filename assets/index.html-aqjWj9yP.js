@@ -1,0 +1,1 @@
+import{_ as e,o as t,c as o,a as n}from"./app-IpIrRMej.js";const s={},a=n("p",null,"This is both a documentation and a tutorial for building a simple operating system, Fusion OS, from scratch in Nim.",-1),i=[a];function c(r,_){return t(),o("div",null,i)}const d=e(s,[["render",c],["__file","index.html.vue"]]);export{d as default};

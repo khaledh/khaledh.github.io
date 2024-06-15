@@ -1,0 +1,1 @@
+const e=JSON.parse('{"key":"v-5eb4adc1","path":"/osdev/22-elf-loader-p2.html","title":"ELF Loader (Part 2)","lang":"en-US","frontmatter":{},"headers":[{"level":2,"title":"Loading ELF","slug":"loading-elf","link":"#loading-elf","children":[]}],"git":{"updatedTime":1718482175000},"filePathRelative":"osdev/22-elf-loader-p2.md","excerpt":""}');export{e as data};

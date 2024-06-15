@@ -1,0 +1,1 @@
+const e=JSON.parse('{"key":"v-e4eae252","path":"/osdev/","title":"Fusion OS","lang":"en-US","frontmatter":{"title":"Fusion OS"},"headers":[],"git":{"updatedTime":1703090448000},"filePathRelative":"osdev/README.md","excerpt":""}');export{e as data};
