@@ -119,7 +119,7 @@ proc EfiMain(imgHandle: EfiHandle, sysTable: ptr EFiSystemTable): EfiStatus {.ex
 
 When we compile and load this in QEMU, we see the message printed to the screen, as expected.
 
-![Bootloader Hello World](bootloader-hello-world.png)
+![Bootloader Hello World](images/bootloader-hello-world.png)
 
 Let's make it easier to create a wide string by adding a `W` prefix operator to `string`:
 
@@ -242,7 +242,7 @@ proc EfiMain(imgHandle: EfiHandle, sysTable: ptr EFiSystemTable): EfiStatus {.ex
 
 When we compile and load this in QEMU, we see the exception message and stack trace printed to the screen, but it looks like the newlines are not being printed correctly.
 
-![Catching Exceptions 1](catching-exceptions-1.png)
+![Catching Exceptions 1](images/catching-exceptions-1.png)
 
 The problem is that Nim uses LF as the newline character, but UEFI expects CRLF. We can fix this by modifying the `fwrite` procedure to split the string into lines, and print a CR after each line.
 
@@ -259,7 +259,7 @@ proc fwrite(buf: const_pointer, size: csize_t, count: csize_t, stream: File): cs
   return count
 ```
 
-![Catching Exceptions 2](catching-exceptions-2.png)
+![Catching Exceptions 2](images/catching-exceptions-2.png)
 
 Much better! We just have to keep in mind that stack traces are available only in debug builds (which is the default). If we compile in release mode, we won't see the stack trace. But this is great! We now have a way to print to the screen and catch and display unhandled exceptions (so we're not flying blind).
 

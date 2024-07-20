@@ -119,7 +119,7 @@ $ qemu-system-x86_64 \
 
 We're greeted with the TianoCore splash screen, and then we are dropped into the UEFI boot menu:
 
-![UEFI Menu](uefi-menu.png)
+![UEFI Menu](images/uefi-menu.png)
 
 The spec says that upon boot, the firmware should try the available boot options (e.g. DVD-ROM, HDD, etc.) stored in _Boot####_ variables, in an order also stored in a variable called _BootOrder_. In the case of OVMF, the default boot order is DVD-ROM, HDD, and then the UEFI shell. If a boot option returns `EFI_SUCCESS`, the firmware is expected to present a boot manager menu to the user. This is exactly what we're seeing here, since our bootloader returns `EFI_SUCCESS` from the entry point.
 
@@ -142,11 +142,11 @@ proc EfiMain(imgHandle: EfiHandle, sysTable: ptr EFiSystemTable): EfiStatus {.ex
 
 If we compile and run the bootloader again, we're greeted with the UEFI shell, as expected (since it's the next boot option):
 
-![UEFI Shell](uefi-shell.png)
+![UEFI Shell](images/uefi-shell.png)
 
 Let's use the UEFI shell to run our bootloader manually and check its exit code using the `set lasterror` command, to make sure that it's working as expected. The UEFI shell has a `map` command that lists the available filesystems. By default, the shell already runs this command on startup, so we can see that the virtual FAT filesystem is mounted as `fs0`. We can use the `fs0:` prefix to run our bootloader:
 
-![Checking bootloader](checking-bootloader.png)
+![Checking bootloader](images/checking-bootloader.png)
 
 As expected, the bootloader returns `1` as its exit code. Great! Now we have a working bootloader (if you can call it that). In the next section, we'll implement text output using the UEFI console so that we can print messages to the screen. But before we do that, let's add a build tool to our project so that we don't have to repeat the same commands over and over again.
 

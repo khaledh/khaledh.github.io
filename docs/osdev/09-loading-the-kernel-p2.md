@@ -123,7 +123,7 @@ proc EfiMainInner(imgHandle: EfiHandle, sysTable: ptr EFiSystemTable): EfiStatus
   checkStatus rootDir.close(rootDir)
 ```
 
-![Boot - Close files](boot-closefiles.png)
+![Boot - Close files](images/boot-closefiles.png)
 
 ## Get memory map
 
@@ -206,7 +206,7 @@ proc EfiMainInner(imgHandle: EfiHandle, sysTable: ptr EFiSystemTable): EfiStatus
   )
 ```
 
-![Boot - Get memory map](boot-getmemorymap.png)
+![Boot - Get memory map](images/boot-getmemorymap.png)
 
 ## Exit boot services
 
@@ -240,7 +240,7 @@ proc EfiMainInner(imgHandle: EfiHandle, sysTable: ptr EFiSystemTable): EfiStatus
 
 If we compile and run now, we are faced with the following error:
 
-![Boot - Exit boot services error](boot-exitbootserviceserror.png)
+![Boot - Exit boot services error](images/boot-exitbootserviceserror.png)
 
 Status code 2 is `EfiInvalidParameter`, which means that the `mapKey` we passed to `exitBootServices` is invalid. How can the `mapKey` be invalid if we just got it from `getMemoryMap`? This took me a while to figure out, but it turns out that merely printing to the console (or any other boot service call) may allocate memory, which changes the memory map. So basically we have to call `exitBootServices` immediately after getting the memory map, without calling any other boot service function in between. So, unfortunately, we'll have to give up printing to the console from that point on, until we transfer control to the kernel.
 
@@ -281,6 +281,6 @@ proc EfiMainInner(imgHandle: EfiHandle, sysTable: ptr EFiSystemTable): EfiStatus
 
 This time the call to `exitBootServices` should succeed, but we won't see a `[success]` message in the console. We'll know that it succeeded if no error messages are printed.
 
-![Boot - Exit boot services](boot-exitbootservices.png)
+![Boot - Exit boot services](images/boot-exitbootservices.png)
 
 Great! We're done with the UEFI Boot Services. Now we're ready to jump to the kernel image. We'll do this in the next section.

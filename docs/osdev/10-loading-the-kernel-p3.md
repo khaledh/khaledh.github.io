@@ -40,7 +40,7 @@ proc EfiMainInner(imgHandle: EfiHandle, sysTable: ptr EFiSystemTable): EfiStatus
 
 If we compile and run now, we should see the following output in the terminal (not in the QEMU window, since the kernel is printing to the QEMU debug console):
 
-![Kernel - Hello world](kernel-helloworld.png)
+![Kernel - Hello world](images/kernel-helloworld.png)
 
 Great! Our kernel is running! This is a big milestone. But we're not done with the bootloader handover yet. We still need to pass the memory map from the bootloader to the kernel (and later a few other things). We'll use this memory map later to implement a physical memory manager in the kernel.
 
@@ -215,7 +215,7 @@ proc EfiMainInner(imgHandle: EfiHandle, sysTable: ptr EFiSystemTable): EfiStatus
 
 Let's compile and run:
 
-![Kernel - Wrong memory map length](kernel-wrong-memory-map-len.png)
+![Kernel - Wrong memory map length](images/kernel-wrong-memory-map-len.png)
 
 Well, that didn't work as expected. We're getting a memory map length of `0`. This one actually took me a long while to figure out. The problem, it turns out, is a difference in the calling convention between the bootloader and the kernel.
 
@@ -250,7 +250,7 @@ proc EfiMainInner(imgHandle: EfiHandle, sysTable: ptr EFiSystemTable): EfiStatus
 
 Let's compile and run:
 
-![Kernel - Correct memory map length](kernel-correct-memory-map-len.png)
+![Kernel - Correct memory map length](images/kernel-correct-memory-map-len.png)
 
 Success! This time we're getting the correct memory map length.
 
@@ -390,7 +390,7 @@ proc KernelMainInner(bootInfo: BootInfo) =
 
 We should see the following output in the debug console:
 
-![Kernel - Exception handling](kernel-exceptionhandling.png)
+![Kernel - Exception handling](images/kernel-exceptionhandling.png)
 
 Great! We're in a great place now. We can now switch our focus to the kernel, assuming full control of the system.
 

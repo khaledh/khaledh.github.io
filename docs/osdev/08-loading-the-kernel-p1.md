@@ -194,7 +194,7 @@ proc EfiMainInner(imgHandle: EfiHandle, sysTable: ptr EFiSystemTable): EfiStatus
 
 Let's compile and run everything using `just run`. We should see the following output (The colored output is for nice visuals only. I didn't show it in the code above; I'm leaving it as an exercise for the reader):
 
-![Boot - LoadedImage](boot-loadedimage.png)
+![Boot - LoadedImage](images/boot-loadedimage.png)
 
 ## File system
 
@@ -232,7 +232,7 @@ proc EfiMainInner(imgHandle: EfiHandle, sysTable: ptr EFiSystemTable): EfiStatus
 
 If we compile and run we should see the following output:
 
-![Alt text](boot-simplefilesystem.png)
+![Alt text](images/boot-simplefilesystem.png)
 
 ## Root directory
 
@@ -353,7 +353,7 @@ proc EfiMainInner(imgHandle: EfiHandle, sysTable: ptr EFiSystemTable): EfiStatus
 
 This should also compile and run successfully.
 
-![Boot - Open kernel file](boot-openkernelfile.png)
+![Boot - Open kernel file](images/boot-openkernelfile.png)
 
 Let's now get the size of the kernel file. To do so, we'll need to define the `getInfo` function of the `EfiFileProtocol`. We'll also need to define `EfiFileInfoGuid`.
 
@@ -397,6 +397,6 @@ proc EfiMainInner(imgHandle: EfiHandle, sysTable: ptr EFiSystemTable): EfiStatus
 
 If all goes well, we should see the kernel file size in the output:
 
-![Boot - Kernel file size](boot-kernelfilesize.png)
+![Boot - Kernel file size](images/boot-kernelfilesize.png)
 
 Great! The kernel image size is what we expect (around 1.1 MiB). In the next section we'll continue to allocate memory for the kernel image and read it into memory.
