@@ -1,0 +1,1 @@
+const e=JSON.parse('{"key":"v-8daa1a0e","path":"/","title":"Fusion OS","lang":"en-US","frontmatter":{"title":"Fusion OS"},"headers":[{"level":2,"title":"Fusion OS","slug":"fusion-os","link":"#fusion-os","children":[]}],"git":{"updatedTime":1720962076000},"filePathRelative":"README.md","excerpt":""}');export{e as data};

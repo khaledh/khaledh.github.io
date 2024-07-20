@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en-US">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="generator" content="VuePress 2.0.0-rc.0">
+    <style>
+      :root {
+        --c-bg: #fff;
+      }
+      html.dark {
+        --c-bg: #22272e;
+      }
+      html, body {
+        background-color: var(--c-bg);
+      }
+    </style>
+    <script>
+      const userMode = localStorage.getItem('vuepress-color-scheme');
+			const systemDarkMode = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+			if (userMode === 'dark' || (userMode !== 'light' && systemDarkMode)) {
+				document.documentElement.classList.toggle('dark', true);
+			}
+    </script>
+    <title>Fusion OS</title><meta name="description" content="Building a 64-bit operating system from scratch in Nim">
+    <link rel="preload" href="/assets/style-RZv5cj1r.css" as="style"><link rel="stylesheet" href="/assets/style-RZv5cj1r.css">
+    <link rel="modulepreload" href="/assets/app-y8sbR1MG.js"><link rel="modulepreload" href="/assets/404.html-0VZoFCxQ.js"><link rel="modulepreload" href="/assets/404.html-ISaolsSn.js">
+    <link rel="prefetch" href="/assets/index.html--JJGqRvl.js" as="script"><link rel="prefetch" href="/assets/01-intro.html-g5rnntGi.js" as="script"><link rel="prefetch" href="/assets/02-environment-setup.html-1EPAxiFL.js" as="script"><link rel="prefetch" href="/assets/03-targeting-uefi-p1.html-VMgu-pqh.js" as="script"><link rel="prefetch" href="/assets/04-targeting-uefi-p2.html-SzgFTAjb.js" as="script"><link rel="prefetch" href="/assets/05-bootloader-p1.html-059bD68v.js" as="script"><link rel="prefetch" href="/assets/06-bootloader-p2.html-G239nirG.js" as="script"><link rel="prefetch" href="/assets/07-kernel-image.html-1Z6SiL7m.js" as="script"><link rel="prefetch" href="/assets/08-loading-the-kernel-p1.html-VzU3HJNt.js" as="script"><link rel="prefetch" href="/assets/09-loading-the-kernel-p2.html-H7BdQk-U.js" as="script"><link rel="prefetch" href="/assets/10-loading-the-kernel-p3.html-1rDG2wcm.js" as="script"><link rel="prefetch" href="/assets/11-physical-memory.html-EDdLmII5.js" as="script"><link rel="prefetch" href="/assets/12-virtual-memory.html-O1cpM6Qy.js" as="script"><link rel="prefetch" href="/assets/13-higher-half-kernel.html-mEChW9aU.js" as="script"><link rel="prefetch" href="/assets/14-memory-segments.html-5GhYOc2Q.js" as="script"><link rel="prefetch" href="/assets/15-interrupts.html-VqgWfFwB.js" as="script"><link rel="prefetch" href="/assets/16-user-mode.html-0qv8rpDq.js" as="script"><link rel="prefetch" href="/assets/17-tss.html-aIEzzz0q.js" as="script"><link rel="prefetch" href="/assets/18-system-calls.html-k4-1q_Xg.js" as="script"><link rel="prefetch" href="/assets/19-tasks.html-pbFGNQUq.js" as="script"><link rel="prefetch" href="/assets/20-position-independent-code.html-BEdvC7MI.js" as="script"><link rel="prefetch" href="/assets/21-elf-loader-p1.html-qQp0omKO.js" as="script"><link rel="prefetch" href="/assets/22-elf-loader-p2.html-oOzugP6S.js" as="script"><link rel="prefetch" href="/assets/23-coop-multitasking.html-ANY3A0cR.js" as="script"><link rel="prefetch" href="/assets/24-system-library.html-NpKEXt0W.js" as="script"><link rel="prefetch" href="/assets/index.html-FpFvWBi7.js" as="script"><link rel="prefetch" href="/assets/index.html-mq1XPDAg.js" as="script"><link rel="prefetch" href="/assets/01-intro.html-4odJujQn.js" as="script"><link rel="prefetch" href="/assets/02-environment-setup.html-aWLYk4La.js" as="script"><link rel="prefetch" href="/assets/03-targeting-uefi-p1.html-LzlrWWDr.js" as="script"><link rel="prefetch" href="/assets/04-targeting-uefi-p2.html-r8h_XgFh.js" as="script"><link rel="prefetch" href="/assets/05-bootloader-p1.html-MK2tI52L.js" as="script"><link rel="prefetch" href="/assets/06-bootloader-p2.html-cgpfqBrd.js" as="script"><link rel="prefetch" href="/assets/07-kernel-image.html-woYFJh4s.js" as="script"><link rel="prefetch" href="/assets/08-loading-the-kernel-p1.html-4PxdWLDw.js" as="script"><link rel="prefetch" href="/assets/09-loading-the-kernel-p2.html-xhN9nIeF.js" as="script"><link rel="prefetch" href="/assets/10-loading-the-kernel-p3.html-gMPHxNyD.js" as="script"><link rel="prefetch" href="/assets/11-physical-memory.html-4W82L2vx.js" as="script"><link rel="prefetch" href="/assets/12-virtual-memory.html-yglE1PhP.js" as="script"><link rel="prefetch" href="/assets/13-higher-half-kernel.html-Tfyh57U8.js" as="script"><link rel="prefetch" href="/assets/14-memory-segments.html-f3Vn12tg.js" as="script"><link rel="prefetch" href="/assets/15-interrupts.html-Nju5sqVQ.js" as="script"><link rel="prefetch" href="/assets/16-user-mode.html-N8itXL7l.js" as="script"><link rel="prefetch" href="/assets/17-tss.html-k3ImxHQO.js" as="script"><link rel="prefetch" href="/assets/18-system-calls.html-27EH2VDU.js" as="script"><link rel="prefetch" href="/assets/19-tasks.html-I2z-mbnl.js" as="script"><link rel="prefetch" href="/assets/20-position-independent-code.html-clksGLXG.js" as="script"><link rel="prefetch" href="/assets/21-elf-loader-p1.html-t0s1gUMr.js" as="script"><link rel="prefetch" href="/assets/22-elf-loader-p2.html-dMJjSW7Q.js" as="script"><link rel="prefetch" href="/assets/23-coop-multitasking.html-tKuELhxI.js" as="script"><link rel="prefetch" href="/assets/24-system-library.html-skSzABJI.js" as="script"><link rel="prefetch" href="/assets/index.html-Wua0bwrm.js" as="script"><link rel="prefetch" href="/assets/SearchResult-siWPB0KM.js" as="script"><link rel="prefetch" href="/assets/giscus-unEZQsJ0.js" as="script">
+  </head>
+  <body>
+    <div id="app"><!--[--><div class="theme-container"><main class="page"><div class="theme-default-content"><h1>404</h1><blockquote>That&#39;s a Four-Oh-Four.</blockquote><a href="/" class="">Take me home</a></div></main></div><!----><!----><!--]--></div>
+    <script type="module" src="/assets/app-y8sbR1MG.js" defer></script>
+  </body>
+</html>

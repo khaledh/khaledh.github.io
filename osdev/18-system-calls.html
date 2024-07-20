@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="en-US">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="generator" content="VuePress 2.0.0-rc.0">
+    <style>
+      :root {
+        --c-bg: #fff;
+      }
+      html.dark {
+        --c-bg: #22272e;
+      }
+      html, body {
+        background-color: var(--c-bg);
+      }
+    </style>
+    <script>
+      const userMode = localStorage.getItem('vuepress-color-scheme');
+			const systemDarkMode = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+			if (userMode === 'dark' || (userMode !== 'light' && systemDarkMode)) {
+				document.documentElement.classList.toggle('dark', true);
+			}
+    </script>
+    <title>System Calls | Fusion OS</title><meta name="description" content="Building a 64-bit operating system from scratch in Nim">
+    <link rel="preload" href="/assets/style-RZv5cj1r.css" as="style"><link rel="stylesheet" href="/assets/style-RZv5cj1r.css">
+    <link rel="modulepreload" href="/assets/app-y8sbR1MG.js"><link rel="modulepreload" href="/assets/18-system-calls.html-k4-1q_Xg.js"><link rel="modulepreload" href="/assets/18-system-calls.html-27EH2VDU.js">
+    <link rel="prefetch" href="/assets/index.html--JJGqRvl.js" as="script"><link rel="prefetch" href="/assets/01-intro.html-g5rnntGi.js" as="script"><link rel="prefetch" href="/assets/02-environment-setup.html-1EPAxiFL.js" as="script"><link rel="prefetch" href="/assets/03-targeting-uefi-p1.html-VMgu-pqh.js" as="script"><link rel="prefetch" href="/assets/04-targeting-uefi-p2.html-SzgFTAjb.js" as="script"><link rel="prefetch" href="/assets/05-bootloader-p1.html-059bD68v.js" as="script"><link rel="prefetch" href="/assets/06-bootloader-p2.html-G239nirG.js" as="script"><link rel="prefetch" href="/assets/07-kernel-image.html-1Z6SiL7m.js" as="script"><link rel="prefetch" href="/assets/08-loading-the-kernel-p1.html-VzU3HJNt.js" as="script"><link rel="prefetch" href="/assets/09-loading-the-kernel-p2.html-H7BdQk-U.js" as="script"><link rel="prefetch" href="/assets/10-loading-the-kernel-p3.html-1rDG2wcm.js" as="script"><link rel="prefetch" href="/assets/11-physical-memory.html-EDdLmII5.js" as="script"><link rel="prefetch" href="/assets/12-virtual-memory.html-O1cpM6Qy.js" as="script"><link rel="prefetch" href="/assets/13-higher-half-kernel.html-mEChW9aU.js" as="script"><link rel="prefetch" href="/assets/14-memory-segments.html-5GhYOc2Q.js" as="script"><link rel="prefetch" href="/assets/15-interrupts.html-VqgWfFwB.js" as="script"><link rel="prefetch" href="/assets/16-user-mode.html-0qv8rpDq.js" as="script"><link rel="prefetch" href="/assets/17-tss.html-aIEzzz0q.js" as="script"><link rel="prefetch" href="/assets/19-tasks.html-pbFGNQUq.js" as="script"><link rel="prefetch" href="/assets/20-position-independent-code.html-BEdvC7MI.js" as="script"><link rel="prefetch" href="/assets/21-elf-loader-p1.html-qQp0omKO.js" as="script"><link rel="prefetch" href="/assets/22-elf-loader-p2.html-oOzugP6S.js" as="script"><link rel="prefetch" href="/assets/23-coop-multitasking.html-ANY3A0cR.js" as="script"><link rel="prefetch" href="/assets/24-system-library.html-NpKEXt0W.js" as="script"><link rel="prefetch" href="/assets/index.html-FpFvWBi7.js" as="script"><link rel="prefetch" href="/assets/404.html-ISaolsSn.js" as="script"><link rel="prefetch" href="/assets/index.html-mq1XPDAg.js" as="script"><link rel="prefetch" href="/assets/01-intro.html-4odJujQn.js" as="script"><link rel="prefetch" href="/assets/02-environment-setup.html-aWLYk4La.js" as="script"><link rel="prefetch" href="/assets/03-targeting-uefi-p1.html-LzlrWWDr.js" as="script"><link rel="prefetch" href="/assets/04-targeting-uefi-p2.html-r8h_XgFh.js" as="script"><link rel="prefetch" href="/assets/05-bootloader-p1.html-MK2tI52L.js" as="script"><link rel="prefetch" href="/assets/06-bootloader-p2.html-cgpfqBrd.js" as="script"><link rel="prefetch" href="/assets/07-kernel-image.html-woYFJh4s.js" as="script"><link rel="prefetch" href="/assets/08-loading-the-kernel-p1.html-4PxdWLDw.js" as="script"><link rel="prefetch" href="/assets/09-loading-the-kernel-p2.html-xhN9nIeF.js" as="script"><link rel="prefetch" href="/assets/10-loading-the-kernel-p3.html-gMPHxNyD.js" as="script"><link rel="prefetch" href="/assets/11-physical-memory.html-4W82L2vx.js" as="script"><link rel="prefetch" href="/assets/12-virtual-memory.html-yglE1PhP.js" as="script"><link rel="prefetch" href="/assets/13-higher-half-kernel.html-Tfyh57U8.js" as="script"><link rel="prefetch" href="/assets/14-memory-segments.html-f3Vn12tg.js" as="script"><link rel="prefetch" href="/assets/15-interrupts.html-Nju5sqVQ.js" as="script"><link rel="prefetch" href="/assets/16-user-mode.html-N8itXL7l.js" as="script"><link rel="prefetch" href="/assets/17-tss.html-k3ImxHQO.js" as="script"><link rel="prefetch" href="/assets/19-tasks.html-I2z-mbnl.js" as="script"><link rel="prefetch" href="/assets/20-position-independent-code.html-clksGLXG.js" as="script"><link rel="prefetch" href="/assets/21-elf-loader-p1.html-t0s1gUMr.js" as="script"><link rel="prefetch" href="/assets/22-elf-loader-p2.html-dMJjSW7Q.js" as="script"><link rel="prefetch" href="/assets/23-coop-multitasking.html-tKuELhxI.js" as="script"><link rel="prefetch" href="/assets/24-system-library.html-skSzABJI.js" as="script"><link rel="prefetch" href="/assets/index.html-Wua0bwrm.js" as="script"><link rel="prefetch" href="/assets/404.html-0VZoFCxQ.js" as="script"><link rel="prefetch" href="/assets/SearchResult-siWPB0KM.js" as="script"><link rel="prefetch" href="/assets/giscus-unEZQsJ0.js" as="script">
+  </head>
+  <body>
+    <div id="app"><!--[--><div class="theme-container"><!--[--><header class="navbar"><div class="toggle-sidebar-button" title="toggle sidebar" aria-expanded="false" role="button" tabindex="0"><div class="icon" aria-hidden="true"><span></span><span></span><span></span></div></div><span><a href="/" class=""><!----><span class="site-name">Fusion OS</span></a></span><div class="navbar-items-wrapper" style=""><!--[--><!--]--><!----><!--[--><!--]--><button class="toggle-color-mode-button" title="toggle color mode"><svg style="" class="icon" focusable="false" viewBox="0 0 32 32"><path d="M16 12.005a4 4 0 1 1-4 4a4.005 4.005 0 0 1 4-4m0-2a6 6 0 1 0 6 6a6 6 0 0 0-6-6z" fill="currentColor"></path><path d="M5.394 6.813l1.414-1.415l3.506 3.506L8.9 10.318z" fill="currentColor"></path><path d="M2 15.005h5v2H2z" fill="currentColor"></path><path d="M5.394 25.197L8.9 21.691l1.414 1.415l-3.506 3.505z" fill="currentColor"></path><path d="M15 25.005h2v5h-2z" fill="currentColor"></path><path d="M21.687 23.106l1.414-1.415l3.506 3.506l-1.414 1.414z" fill="currentColor"></path><path d="M25 15.005h5v2h-5z" fill="currentColor"></path><path d="M21.687 8.904l3.506-3.506l1.414 1.415l-3.506 3.505z" fill="currentColor"></path><path d="M15 2.005h2v5h-2z" fill="currentColor"></path></svg><svg style="display:none;" class="icon" focusable="false" viewBox="0 0 32 32"><path d="M13.502 5.414a15.075 15.075 0 0 0 11.594 18.194a11.113 11.113 0 0 1-7.975 3.39c-.138 0-.278.005-.418 0a11.094 11.094 0 0 1-3.2-21.584M14.98 3a1.002 1.002 0 0 0-.175.016a13.096 13.096 0 0 0 1.825 25.981c.164.006.328 0 .49 0a13.072 13.072 0 0 0 10.703-5.555a1.01 1.01 0 0 0-.783-1.565A13.08 13.08 0 0 1 15.89 4.38A1.015 1.015 0 0 0 14.98 3z" fill="currentColor"></path></svg></button><!--[--><button type="button" class="search-pro-button" role="search" aria-label="Search"><svg xmlns="http://www.w3.org/2000/svg" class="icon search-icon" viewBox="0 0 1024 1024" fill="currentColor" aria-label="search icon"><path d="M192 480a256 256 0 1 1 512 0 256 256 0 0 1-512 0m631.776 362.496-143.2-143.168A318.464 318.464 0 0 0 768 480c0-176.736-143.264-320-320-320S128 303.264 128 480s143.264 320 320 320a318.016 318.016 0 0 0 184.16-58.592l146.336 146.368c12.512 12.48 32.768 12.48 45.28 0 12.48-12.512 12.48-32.768 0-45.28"></path></svg><div class="search-pro-placeholder">Search</div><div class="search-pro-key-hints"><kbd class="search-pro-key">Ctrl</kbd><kbd class="search-pro-key">K</kbd></div></button><!--]--></div></header><!--]--><div class="sidebar-mask"></div><!--[--><aside class="sidebar"><!----><!--[--><!--]--><ul class="sidebar-items"><!--[--><li><a href="/osdev/01-intro.html" class="sidebar-item sidebar-heading" aria-label="Writing an OS in Nim"><!--[--><!--]--> Writing an OS in Nim <!--[--><!--]--></a><!----></li><li><a href="/osdev/02-environment-setup.html" class="sidebar-item sidebar-heading" aria-label="Environment Setup"><!--[--><!--]--> Environment Setup <!--[--><!--]--></a><!----></li><li><a href="/osdev/03-targeting-uefi-p1.html" class="sidebar-item sidebar-heading" aria-label="Targeting UEFI (Part 1)"><!--[--><!--]--> Targeting UEFI (Part 1) <!--[--><!--]--></a><!----></li><li><a href="/osdev/04-targeting-uefi-p2.html" class="sidebar-item sidebar-heading" aria-label="Targeting UEFI (Part 2)"><!--[--><!--]--> Targeting UEFI (Part 2) <!--[--><!--]--></a><!----></li><li><a href="/osdev/05-bootloader-p1.html" class="sidebar-item sidebar-heading" aria-label="UEFI Bootloader (Part 1)"><!--[--><!--]--> UEFI Bootloader (Part 1) <!--[--><!--]--></a><!----></li><li><a href="/osdev/06-bootloader-p2.html" class="sidebar-item sidebar-heading" aria-label="UEFI Bootloader (Part 2)"><!--[--><!--]--> UEFI Bootloader (Part 2) <!--[--><!--]--></a><!----></li><li><a href="/osdev/07-kernel-image.html" class="sidebar-item sidebar-heading" aria-label="Kernel Image"><!--[--><!--]--> Kernel Image <!--[--><!--]--></a><!----></li><li><a href="/osdev/08-loading-the-kernel-p1.html" class="sidebar-item sidebar-heading" aria-label="Loading the Kernel (Part 1)"><!--[--><!--]--> Loading the Kernel (Part 1) <!--[--><!--]--></a><!----></li><li><a href="/osdev/09-loading-the-kernel-p2.html" class="sidebar-item sidebar-heading" aria-label="Loading the Kernel (Part 2)"><!--[--><!--]--> Loading the Kernel (Part 2) <!--[--><!--]--></a><!----></li><li><a href="/osdev/10-loading-the-kernel-p3.html" class="sidebar-item sidebar-heading" aria-label="Loading the Kernel (Part 3)"><!--[--><!--]--> Loading the Kernel (Part 3) <!--[--><!--]--></a><!----></li><li><a href="/osdev/11-physical-memory.html" class="sidebar-item sidebar-heading" aria-label="Physical Memory"><!--[--><!--]--> Physical Memory <!--[--><!--]--></a><!----></li><li><a href="/osdev/12-virtual-memory.html" class="sidebar-item sidebar-heading" aria-label="Virtual Memory"><!--[--><!--]--> Virtual Memory <!--[--><!--]--></a><!----></li><li><a href="/osdev/13-higher-half-kernel.html" class="sidebar-item sidebar-heading" aria-label="Higher Half Kernel"><!--[--><!--]--> Higher Half Kernel <!--[--><!--]--></a><!----></li><li><a href="/osdev/14-memory-segments.html" class="sidebar-item sidebar-heading" aria-label="Memory Segments"><!--[--><!--]--> Memory Segments <!--[--><!--]--></a><!----></li><li><a href="/osdev/15-interrupts.html" class="sidebar-item sidebar-heading" aria-label="Interrupts"><!--[--><!--]--> Interrupts <!--[--><!--]--></a><!----></li><li><a href="/osdev/16-user-mode.html" class="sidebar-item sidebar-heading" aria-label="User Mode"><!--[--><!--]--> User Mode <!--[--><!--]--></a><!----></li><li><a href="/osdev/17-tss.html" class="sidebar-item sidebar-heading" aria-label="Task State Segment"><!--[--><!--]--> Task State Segment <!--[--><!--]--></a><!----></li><li><a aria-current="page" href="/osdev/18-system-calls.html" class="router-link-active router-link-exact-active router-link-active sidebar-item sidebar-heading active" aria-label="System Calls"><!--[--><!--]--> System Calls <!--[--><!--]--></a><ul style="" class="sidebar-item-children"><!--[--><li><a aria-current="page" href="/osdev/18-system-calls.html#system-call-interface" class="router-link-active router-link-exact-active sidebar-item" aria-label="System Call Interface"><!--[--><!--]--> System Call Interface <!--[--><!--]--></a><!----></li><li><a aria-current="page" href="/osdev/18-system-calls.html#initialization" class="router-link-active router-link-exact-active sidebar-item" aria-label="Initialization"><!--[--><!--]--> Initialization <!--[--><!--]--></a><!----></li><li><a aria-current="page" href="/osdev/18-system-calls.html#invoking-system-calls" class="router-link-active router-link-exact-active sidebar-item" aria-label="Invoking System Calls"><!--[--><!--]--> Invoking System Calls <!--[--><!--]--></a><!----></li><li><a aria-current="page" href="/osdev/18-system-calls.html#switching-stacks" class="router-link-active router-link-exact-active sidebar-item" aria-label="Switching Stacks"><!--[--><!--]--> Switching Stacks <!--[--><!--]--></a><!----></li><li><a aria-current="page" href="/osdev/18-system-calls.html#system-call-handler" class="router-link-active router-link-exact-active sidebar-item" aria-label="System Call Handler"><!--[--><!--]--> System Call Handler <!--[--><!--]--></a><!----></li><li><a aria-current="page" href="/osdev/18-system-calls.html#system-call-table" class="router-link-active router-link-exact-active sidebar-item" aria-label="System Call Table"><!--[--><!--]--> System Call Table <!--[--><!--]--></a><!----></li><li><a aria-current="page" href="/osdev/18-system-calls.html#argument-validation" class="router-link-active router-link-exact-active sidebar-item" aria-label="Argument Validation"><!--[--><!--]--> Argument Validation <!--[--><!--]--></a><!----></li><li><a aria-current="page" href="/osdev/18-system-calls.html#the-exit-system-call" class="router-link-active router-link-exact-active sidebar-item" aria-label="The exit System Call"><!--[--><!--]--> The exit System Call <!--[--><!--]--></a><!----></li><!--]--></ul></li><li><a href="/osdev/19-tasks.html" class="sidebar-item sidebar-heading" aria-label="Tasks"><!--[--><!--]--> Tasks <!--[--><!--]--></a><!----></li><li><a href="/osdev/20-position-independent-code.html" class="sidebar-item sidebar-heading" aria-label="Position Independent Code"><!--[--><!--]--> Position Independent Code <!--[--><!--]--></a><!----></li><li><a href="/osdev/21-elf-loader-p1.html" class="sidebar-item sidebar-heading" aria-label="ELF Loader (Part 1)"><!--[--><!--]--> ELF Loader (Part 1) <!--[--><!--]--></a><!----></li><li><a href="/osdev/22-elf-loader-p2.html" class="sidebar-item sidebar-heading" aria-label="ELF Loader (Part 2)"><!--[--><!--]--> ELF Loader (Part 2) <!--[--><!--]--></a><!----></li><li><a href="/osdev/23-coop-multitasking.html" class="sidebar-item sidebar-heading" aria-label="Cooperative Multitasking"><!--[--><!--]--> Cooperative Multitasking <!--[--><!--]--></a><!----></li><li><a href="/osdev/24-system-library.html" class="sidebar-item sidebar-heading" aria-label="System Library"><!--[--><!--]--> System Library <!--[--><!--]--></a><!----></li><!--]--></ul><!--[--><!--]--></aside><!--]--><!--[--><main class="page"><!--[--><!--]--><div class="theme-default-content"><!--[--><!--]--><div><h1 id="system-calls" tabindex="-1"><a class="header-anchor" href="#system-calls" aria-hidden="true">#</a> System Calls</h1><p>User programs run in a restricted environment. They can&#39;t access hardware directly, allocate memory, or do any privileged operations. Instead, they must ask the kernel to do these things for them. The kernel provides these services through system calls. System calls are the interface between user programs and the kernel.</p><p>Transferring control to the kernel requires special support from the CPU. Traditionally, this has been done using software interrupts, e.g. <code>int 0x80</code> in Linux. However, modern CPUs provide a more efficient way to do this: the <code>syscall</code>/<code>sysret</code> instruction pair.</p><h2 id="system-call-interface" tabindex="-1"><a class="header-anchor" href="#system-call-interface" aria-hidden="true">#</a> System Call Interface</h2><p>The <code>syscall</code>/<code>sysret</code> instructions simply transfers control to the kernel and back to the user program. They don&#39;t define the interface between user programs and the kernel. The kernel defines this interface, i.e. the system call numbers and the arguments for each system call. The kernel also defines the calling convention for system calls, e.g. which registers to use for arguments and return values. This is called Application Binary Interface (ABI).</p><p>We&#39;re not building a kernel adhering to any particular ABI; we&#39;ll define our own. Let&#39;s start with the system call number and arguments. We&#39;ll use the following registers for these:</p><ul><li><code>rdi</code>: system call number</li><li><code>rsi</code>: first argument</li><li><code>rdx</code>: second argument</li><li><code>rcx</code>: third argument</li><li><code>r8</code>: fourth argument</li><li><code>r9</code>: fifth argument</li></ul><p>We&#39;ll use <code>rax</code> for the return value.</p><p>When executing <code>syscall</code>, the CPU stores the user <code>RIP</code> and <code>RFLAGS</code> in <code>rcx</code> and <code>r11</code> respectively. Upoin returning to user mode, the CPU restores <code>RIP</code> and <code>RFLAGS</code> from <code>rcx</code> and <code>r11</code>. So we have to make sure that <code>rcx</code> and <code>r11</code> are preserved across system calls.</p><p>Also, the CPU doesn&#39;t switch stacks for us when executing <code>syscall</code>. We have to do that ourselves. This is in contrast with interrupts, where the CPU switches to the kernel stack before executing the interrupt handler. So it&#39;s a bit more inconvenient to handle system calls than interrupts, but it&#39;s a faster mechanism.</p><h2 id="initialization" tabindex="-1"><a class="header-anchor" href="#initialization" aria-hidden="true">#</a> Initialization</h2><p>There&#39;s a few things we need to do to initialize system calls. They&#39;re all done through Model Specific Registers (MSRs).</p><ul><li>Set the <code>SCE</code> (SYSCALL Enable) flag in the <code>IA32_EFER</code> MSR.</li><li>Set the kernel and user mode segment selectors in the <code>IA32_STAR</code> MSR.</li><li>Set the syscall entry point in the <code>IA32_LSTAR</code> MSR.</li><li>Set the kernel mode CPU flags mask in the <code>IA32_FMASK</code> MSR.</li></ul><p>Since we&#39;re going to be reading/writing CPU registers, let&#39;s create a module for that. Let&#39;s add <code>src/kernel/cpu.nim</code> and define some constants for the MSRs, and two procs to read/write them.</p><div class="language-nim line-numbers-mode" data-ext="nim"><pre class="language-nim"><code><span class="token comment"># src/kernel/cpu.nim</span>
+
+<span class="token keyword">const</span>
+  IA32_EFER<span class="token operator">*</span> <span class="token operator">=</span> <span class="token number">0xC0000080&#39;u32</span>
+
+  IA32_STAR<span class="token operator">*</span> <span class="token operator">=</span> <span class="token number">0xC0000081&#39;u32</span>
+  IA32_LSTAR<span class="token operator">*</span> <span class="token operator">=</span> <span class="token number">0xC0000082&#39;u32</span>
+  IA32_FMASK<span class="token operator">*</span> <span class="token operator">=</span> <span class="token number">0xC0000084&#39;u32</span>
+
+<span class="token keyword">proc</span> <span class="token function">readMSR<span class="token operator">*</span></span><span class="token punctuation">(</span>ecx<span class="token operator">:</span> uint32<span class="token punctuation">)</span><span class="token operator">:</span> uint64 <span class="token operator">=</span>
+  <span class="token keyword">var</span> eax<span class="token punctuation">,</span> edx<span class="token operator">:</span> uint32
+  <span class="token keyword">asm</span> <span class="token string">&quot;&quot;&quot;
+    rdmsr
+    : &quot;=a&quot;(`eax`), &quot;=d&quot;(`edx`)
+    : &quot;c&quot;(`ecx`)
+  &quot;&quot;&quot;</span>
+  result <span class="token operator">=</span> <span class="token punctuation">(</span>edx<span class="token operator">.</span>uint64 <span class="token operator">shl</span> <span class="token number">32</span><span class="token punctuation">)</span> <span class="token operator">or</span> eax
+
+<span class="token keyword">proc</span> <span class="token function">writeMSR<span class="token operator">*</span></span><span class="token punctuation">(</span>ecx<span class="token operator">:</span> uint32<span class="token punctuation">,</span> value<span class="token operator">:</span> uint64<span class="token punctuation">)</span> <span class="token operator">=</span>
+  <span class="token keyword">var</span> eax<span class="token punctuation">,</span> edx<span class="token operator">:</span> uint32
+  eax <span class="token operator">=</span> value<span class="token operator">.</span>uint32
+  edx <span class="token operator">=</span> <span class="token punctuation">(</span>value <span class="token operator">shr</span> <span class="token number">32</span><span class="token punctuation">)</span><span class="token operator">.</span>uint32
+  <span class="token keyword">asm</span> <span class="token string">&quot;&quot;&quot;
+    wrmsr
+    :
+    : &quot;c&quot;(`ecx`), &quot;a&quot;(`eax`), &quot;d&quot;(`edx`)
+  &quot;&quot;&quot;</span>
+</code></pre><div class="line-numbers" aria-hidden="true"><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div></div></div><p>Now, let&#39;s create another module <code>src/kernel/syscalls.nim</code> and add a proc to initialize system calls, and a dummy syscall entry point.</p><div class="language-nim line-numbers-mode" data-ext="nim"><pre class="language-nim"><code><span class="token comment"># src/kernel/syscalls.nim</span>
+
+<span class="token keyword">import</span> cpu
+<span class="token keyword">import</span> gdt
+
+<span class="token keyword">proc</span> <span class="token function">syscallEntry</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{.</span>asmNoStackFrame<span class="token punctuation">.}</span> <span class="token operator">=</span>
+  <span class="token comment"># just halt for now</span>
+  <span class="token keyword">asm</span> <span class="token string">&quot;&quot;&quot;
+    cli
+    hlt
+  &quot;&quot;&quot;</span>
+
+<span class="token keyword">proc</span> <span class="token function">syscallInit<span class="token operator">*</span></span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">=</span>
+  <span class="token comment"># enable syscall feature</span>
+  <span class="token function">writeMSR</span><span class="token punctuation">(</span>IA32_EFER<span class="token punctuation">,</span> <span class="token function">readMSR</span><span class="token punctuation">(</span>IA32_EFER<span class="token punctuation">)</span> <span class="token operator">or</span> <span class="token number">1</span><span class="token punctuation">)</span>  <span class="token comment"># Bit 0: SYSCALL Enable</span>
+
+  <span class="token comment"># set up segment selectors in IA32_STAR (Syscall Target Address Register)</span>
+  <span class="token comment"># note that for SYSCALL, the kernel segment selectors are:</span>
+  <span class="token comment">#   CS: IA32_STAR[47:32]</span>
+  <span class="token comment">#   SS: IA32_STAR[47:32] + 8</span>
+  <span class="token comment"># and for SYSRET, the user segment selectors are:</span>
+  <span class="token comment">#   CS: IA32_STAR[63:48] + 16</span>
+  <span class="token comment">#   SS: IA32_STAR[63:48] + 8</span>
+  <span class="token comment"># thus, setting both parts of the register to KernelCodeSegmentSelector</span>
+  <span class="token comment"># satisfies both requirements (+0 is kernrel CS, +8 is data segment, +16 is user CS)</span>
+  <span class="token keyword">let</span> star <span class="token operator">=</span> <span class="token punctuation">(</span>
+    <span class="token punctuation">(</span>KernelCodeSegmentSelector<span class="token operator">.</span>uint64 <span class="token operator">shl</span> <span class="token number">32</span><span class="token punctuation">)</span> <span class="token function">or</span>
+    <span class="token punctuation">(</span>KernelCodeSegmentSelector<span class="token operator">.</span>uint64 <span class="token operator">shl</span> <span class="token number">48</span><span class="token punctuation">)</span>
+  <span class="token punctuation">)</span>
+  <span class="token function">writeMSR</span><span class="token punctuation">(</span>IA32_STAR<span class="token punctuation">,</span> star<span class="token punctuation">)</span>
+
+  <span class="token comment"># set up syscall entry point</span>
+  <span class="token function">writeMSR</span><span class="token punctuation">(</span>IA32_LSTAR<span class="token punctuation">,</span> <span class="token function">cast[uint64]</span><span class="token punctuation">(</span>syscallEntry<span class="token punctuation">)</span><span class="token punctuation">)</span>
+
+  <span class="token comment"># set up flags mask (should mask interrupt flag to disable interrupts)</span>
+  <span class="token function">writeMSR</span><span class="token punctuation">(</span>IA32_FMASK<span class="token punctuation">,</span> <span class="token number">0x200</span><span class="token punctuation">)</span>  <span class="token comment"># rflags will be ANDed with the *complement* of this value</span>
+</code></pre><div class="line-numbers" aria-hidden="true"><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div></div></div><p>The <code>syscallEntry</code> proc is a low-level entry point for system calls, hence the pure assembly. We can&#39;t rely on conventional prologue/epilogue code here, since the CPU doesn&#39;t switch stacks for us. We&#39;ll have to do that ourselves as early as possible in the entry point. Right now we just want to make sure that the syscall transition to kernel mode works.</p><p>The <code>syscallInit</code> proc does the actual initialization. It enables the syscall feature, sets up the segment selectors, sets the syscall entry point, and sets the flags mask. The flags mask is used to <em>clear</em> the flags corresponding to the bits set in the mask when entering kernel mode.</p><p>Finally, let&#39;s call <code>syscallInit</code> from <code>src/kernel/main.nim</code>.</p><div class="language-nim line-numbers-mode" data-ext="nim"><pre class="language-nim"><code><span class="token comment"># src/kernel/main.nim</span>
+
+<span class="token keyword">import</span> syscalls
+<span class="token operator">..</span>
+
+<span class="token keyword">proc</span> <span class="token function">KernelMainInner</span><span class="token punctuation">(</span>bootInfo<span class="token operator">:</span> <span class="token keyword">ptr</span> BootInfo<span class="token punctuation">)</span> <span class="token operator">=</span>
+  debugln <span class="token string">&quot;&quot;</span>
+  debugln <span class="token string">&quot;kernel: Fusion Kernel&quot;</span>
+
+  <span class="token operator">...</span>
+
+  debug <span class="token string">&quot;kernel: Initializing Syscalls &quot;</span>
+  <span class="token function">syscallInit</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+  debugln <span class="token string">&quot;[success]&quot;</span>
+</code></pre><div class="highlight-lines"><br><br><div class="highlight-line"> </div><br><br><br><br><br><br><br><br><div class="highlight-line"> </div><div class="highlight-line"> </div><div class="highlight-line"> </div></div><div class="line-numbers" aria-hidden="true"><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div></div></div><h2 id="invoking-system-calls" tabindex="-1"><a class="header-anchor" href="#invoking-system-calls" aria-hidden="true">#</a> Invoking System Calls</h2><p>We should now be able to invoke system calls from user mode. Let&#39;s modify our user program to do that. We&#39;re going to pass the system call number in <code>rdi</code>, but we won&#39;t pass any arguments for now.</p><div class="language-nim line-numbers-mode" data-ext="nim"><pre class="language-nim"><code><span class="token comment"># src/user/utask.nim</span>
+<span class="token operator">...</span>
+
+<span class="token keyword">proc</span> <span class="token function">UserMain<span class="token operator">*</span></span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{.</span>exportc<span class="token punctuation">.}</span> <span class="token operator">=</span>
+  <span class="token function">NimMain</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+
+  <span class="token keyword">asm</span> <span class="token string">&quot;&quot;&quot;
+    mov rdi, 1
+    syscall
+
+  .loop:
+    pause
+    jmp .loop
+  &quot;&quot;&quot;</span>
+</code></pre><div class="highlight-lines"><br><br><br><br><br><br><br><div class="highlight-line"> </div><br><br><br><br><br><br></div><div class="line-numbers" aria-hidden="true"><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div></div></div><p>Let&#39;s try this out and use the QEMU monitor to check where execution stops.</p><div class="language-text line-numbers-mode" data-ext="text"><pre class="language-text"><code>(qemu) x /2i $eip-2
+0xffff800000120490:  fa                       cli
+0xffff800000120491:  f4                       hlt
+</code></pre><div class="line-numbers" aria-hidden="true"><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div></div></div><p>The command <code>x /2i $eip-2</code> disassembles the two instructions just before the current instruction pointer, which shows that we&#39;re executing the <code>cli</code> and <code>hlt</code> instructions in <code>syscallEntry</code>. Just to double-check, we can confirm this by comparing the value of <code>rip</code> with the address of <code>syscallEntry</code> from the kernel linker map.</p><div class="language-text line-numbers-mode" data-ext="text"><pre class="language-text"><code>ffff800000120490 ffff800000120490       4e    16    .../fusion/build/@msyscalls.nim.c.o:(.ltext.syscallEntry__syscalls_u23)
+ffff800000120490 ffff800000120490       4e     1            syscallEntry__syscalls_u23
+</code></pre><div class="line-numbers" aria-hidden="true"><div class="line-number"></div><div class="line-number"></div></div></div><p>Indeed, the value of <code>rip - 2</code> is the same as the address of <code>syscallEntry</code>.</p><p>Now, let&#39;s check the CPU registers.</p><div class="language-text line-numbers-mode" data-ext="text"><pre class="language-text"><code>(qemu) info registers
+CPU#0
+RAX=ffff800000327540 RBX=ffff800000327548 RCX=0000000040000067 RDX=000000004000add8
+RSI=0000000000000001 RDI=0000000000000001 RBP=0000000050000ff8 RSP=0000000050000fc8
+R8 =ffff800100003c00 R9 =0000000000000000 R10=0000000000000000 R11=0000000000000202
+R12=0000000000000000 R13=0000000006bb1588 R14=0000000000000000 R15=0000000007ebf1e0
+RIP=ffff8000001204a9 RFL=00000002 [-------] CPL=0 II=0 A20=1 SMM=0 HLT=1
+ES =0013 0000000000000000 000fffff 000ff300 DPL=3 DS   [-WA]
+CS =0008 0000000000000000 ffffffff 00a09b00 DPL=0 CS64 [-RA]
+SS =0010 0000000000000000 ffffffff 00c09300 DPL=0 DS   [-WA]
+DS =0013 0000000000000000 000fffff 000ff300 DPL=3 DS   [-WA]
+FS =0013 0000000000000000 000fffff 000ff300 DPL=3 DS   [-WA]
+GS =0013 0000000000000000 000fffff 000ff300 DPL=3 DS   [-WA]
+LDT=0000 0000000000000000 0000ffff 00008200 DPL=0 LDT
+TR =0020 ffff800000326430 00000067 00008900 DPL=0 TSS64-avl
+GDT=     ffff8000003264d0 0000002f
+IDT=     ffff800000326500 00000fff
+</code></pre><div class="highlight-lines"><br><br><div class="highlight-line"> </div><div class="highlight-line"> </div><div class="highlight-line"> </div><br><br><br><div class="highlight-line"> </div><div class="highlight-line"> </div><br><br><br><br><br><br><br></div><div class="line-numbers" aria-hidden="true"><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div></div></div><p>The three registers important to us here are <code>rcx</code>, <code>r11</code>, and <code>rdi</code>:</p><ul><li><code>rcx</code> contains the user <code>rip</code> to return to after the system call (<code>0x40000067</code>)</li><li><code>r11</code> contains the user <code>rflags</code> to restore after the system call (<code>0x202</code>)</li><li><code>rdi</code> contains the system call number (<code>1</code>)</li></ul><p>We can also see that <code>CS</code> and <code>SS</code> are set to the kernel code and data segments, respectively, and their DPL=0. <code>rflags</code> also has the <code>IF</code> (interrupt flag) cleared. So everything looks good so far. Notice that <code>rsp</code> is set to <code>0x50000fc8</code>, which is within the user stack. As I mentioned earlier, we&#39;ll need to switch to the kernel stack ourselves.</p><p>Let&#39;s test <code>sysret</code> to make sure we can return to user mode. We&#39;ll modify <code>syscallEntry</code> to put a dummy value in <code>rax</code> as a return code, and then call <code>sysretq</code> (the <code>q</code> suffix is for returning to 64-bit mode; otherwise, <code>sysret</code> would return to 32-bit compatibility mode).</p><div class="language-nim line-numbers-mode" data-ext="nim"><pre class="language-nim"><code><span class="token comment"># src/kernel/syscalls.nim</span>
+<span class="token operator">...</span>
+
+<span class="token keyword">proc</span> <span class="token function">syscallEntry</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{.</span>asmNoStackFrame<span class="token punctuation">.}</span> <span class="token operator">=</span>
+  <span class="token keyword">asm</span> <span class="token string">&quot;&quot;&quot;
+    mov rax, 0x5050
+    sysretq
+  &quot;&quot;&quot;</span>
+</code></pre><div class="highlight-lines"><br><br><br><br><br><div class="highlight-line"> </div><br><br></div><div class="line-numbers" aria-hidden="true"><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div></div></div><p>Let&#39;s run it and see where we stop.</p><div class="language-text line-numbers-mode" data-ext="text"><pre class="language-text"><code>(qemu) x /2i $eip-2
+0x40000067:  f3 90                    pause
+0x40000069:  e9 f9 ff ff ff           jmp      0x40000067
+</code></pre><div class="line-numbers" aria-hidden="true"><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div></div></div><p>We&#39;re now executing the <code>pause</code> loop in <code>UserMain</code>, so we&#39;re back in user mode. Let&#39;s check the registers.</p><div class="language-text line-numbers-mode" data-ext="text"><pre class="language-text"><code>(qemu) info registers
+CPU#0
+RAX=0000000000005050 RBX=0000000000000000 RCX=0000000040000067 RDX=000000004000add8
+RSI=0000000000000001 RDI=0000000000000001 RBP=0000000050000ff8 RSP=0000000050000fc8
+R8 =ffff800100003c00 R9 =0000000000000000 R10=000000000636d001 R11=0000000000000202
+R12=0000000000000000 R13=0000000006bb1588 R14=0000000000000000 R15=0000000007ebf1e0
+RIP=0000000040000069 RFL=00000202 [-------] CPL=3 II=0 A20=1 SMM=0 HLT=0
+ES =0013 0000000000000000 000fffff 000ff300 DPL=3 DS   [-WA]
+CS =001b 0000000000000000 ffffffff 00a0fb00 DPL=3 CS64 [-RA]
+SS =0013 0000000000000000 ffffffff 00c0f300 DPL=3 DS   [-WA]
+DS =0013 0000000000000000 000fffff 000ff300 DPL=3 DS   [-WA]
+FS =0013 0000000000000000 000fffff 000ff300 DPL=3 DS   [-WA]
+GS =0013 0000000000000000 000fffff 000ff300 DPL=3 DS   [-WA]
+LDT=0000 0000000000000000 0000ffff 00008200 DPL=0 LDT
+TR =0020 ffff8000003263f0 00000067 00008900 DPL=0 TSS64-avl
+GDT=     ffff800000326490 0000002f
+IDT=     ffff8000003264c0 00000fff
+</code></pre><div class="highlight-lines"><br><br><div class="highlight-line"> </div><br><br><br><div class="highlight-line"> </div><br><div class="highlight-line"> </div><div class="highlight-line"> </div><br><br><br><br><br><br><br></div><div class="line-numbers" aria-hidden="true"><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div></div></div><p>We can see that <code>rip</code> is back in user space, and <code>CS</code> and <code>SS</code> are set to user code and data segments, respectively, and their DPL=3. The <code>rflags</code> are also restored to the user value with interrupts enabled. Everything looks good.</p><h2 id="switching-stacks" tabindex="-1"><a class="header-anchor" href="#switching-stacks" aria-hidden="true">#</a> Switching Stacks</h2><p>As I mentioned earlier, the CPU doesn&#39;t switch stacks for us when executing <code>syscall</code>. We need to switch to a kernel stack ourselves. We&#39;ll use the same stack we use for interrupts, the one we stored its address in <code>tss.rsp0</code>. We&#39;ll also need to save the user <code>rsp</code> somewhere so we can restore it later. We&#39;ll define two global variables for this in the <code>syscalls</code> module.</p><div class="language-nim line-numbers-mode" data-ext="nim"><pre class="language-nim"><code><span class="token comment"># src/kernel/syscalls.nim</span>
+
+<span class="token keyword">var</span>
+  kernelStackAddr<span class="token operator">:</span> uint64
+  userRsp<span class="token operator">:</span> uint64
+<span class="token operator">...</span>
+
+<span class="token keyword">proc</span> <span class="token function">syscallInit<span class="token operator">*</span></span><span class="token punctuation">(</span>kernelStack<span class="token operator">:</span> uint64<span class="token punctuation">)</span> <span class="token operator">=</span>
+  kernelStackAddr <span class="token operator">=</span> kernelStack
+  <span class="token operator">...</span>
+</code></pre><div class="line-numbers" aria-hidden="true"><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div></div></div><p>Let&#39;s pass the kernel stack address to <code>syscallInit</code> from <code>main.nim</code>.</p><div class="language-nim line-numbers-mode" data-ext="nim"><pre class="language-nim"><code><span class="token comment"># src/kernel/main.nim</span>
+
+<span class="token keyword">import</span> syscalls
+
+<span class="token keyword">proc</span> <span class="token function">KernelMainInner</span><span class="token punctuation">(</span>bootInfo<span class="token operator">:</span> <span class="token keyword">ptr</span> BootInfo<span class="token punctuation">)</span> <span class="token operator">=</span>
+  debugln <span class="token string">&quot;&quot;</span>
+  debugln <span class="token string">&quot;kernel: Fusion Kernel&quot;</span>
+
+  <span class="token operator">...</span>
+
+  <span class="token comment"># create a kernel switch stack and set tss.rsp0</span>
+  debugln <span class="token string">&quot;kernel: Creating kernel switch stack&quot;</span>
+  <span class="token operator">...</span>
+
+  debug <span class="token string">&quot;kernel: Initializing Syscalls &quot;</span>
+  <span class="token function">syscallInit</span><span class="token punctuation">(</span>tss<span class="token operator">.</span>rsp0<span class="token punctuation">)</span>
+  debugln <span class="token string">&quot;[success]&quot;</span>
+
+  <span class="token operator">...</span>
+</code></pre><div class="highlight-lines"><br><br><br><br><br><br><br><br><br><br><br><br><br><br><div class="highlight-line"> </div><div class="highlight-line"> </div><div class="highlight-line"> </div><br><br></div><div class="line-numbers" aria-hidden="true"><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div></div></div><p>Now, let&#39;s modify <code>syscallEntry</code> to switch to the kernel stack and save the user <code>rsp</code>. We&#39;ll also push <code>rcx</code> and <code>r11</code> (user <code>rip</code> and <code>rflags</code>, respectively) on the kernel stack and restore them before calling <code>sysretq</code> to return to user mode.</p><div class="language-nim line-numbers-mode" data-ext="nim"><pre class="language-nim"><code><span class="token comment"># src/kernel/syscalls.nim</span>
+
+<span class="token keyword">proc</span> <span class="token function">syscallEntry</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{.</span>asmNoStackFrame<span class="token punctuation">.}</span> <span class="token operator">=</span>
+  <span class="token keyword">asm</span> <span class="token string">&quot;&quot;&quot;
+    # switch to kernel stack
+    mov %0, rsp
+    mov rsp, %1
+
+    # save user rip and rflags    
+    push rcx
+    push r11
+
+    # TODO: dispatch system call
+
+    # restore user rip and rflags
+    pop r11
+    pop rcx
+
+    # switch to user stack
+    mov rsp, %0
+
+    sysretq
+    : &quot;+r&quot;(`userRsp`)
+    : &quot;m&quot;(`kernelStackAddr`)
+    : &quot;rcx&quot;, &quot;r11&quot;
+  &quot;&quot;&quot;</span>
+</code></pre><div class="highlight-lines"><br><br><br><br><div class="highlight-line"> </div><div class="highlight-line"> </div><div class="highlight-line"> </div><div class="highlight-line"> </div><div class="highlight-line"> </div><div class="highlight-line"> </div><div class="highlight-line"> </div><br><br><br><div class="highlight-line"> </div><div class="highlight-line"> </div><div class="highlight-line"> </div><div class="highlight-line"> </div><div class="highlight-line"> </div><div class="highlight-line"> </div><br><br><div class="highlight-line"> </div><div class="highlight-line"> </div><br><br></div><div class="line-numbers" aria-hidden="true"><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div></div></div><p>Right now, we&#39;re not doing much to handle the system call itself. We&#39;re just switching stacks, and saving and restoring the user <code>rip</code> and <code>rflags</code>. In order to do something useful, we need to define a system call handler and a way to pass arguments to it.</p><h2 id="system-call-handler" tabindex="-1"><a class="header-anchor" href="#system-call-handler" aria-hidden="true">#</a> System Call Handler</h2><p>Let&#39;s now define the actual system call handler. We&#39;ll define a <code>SyscallArgs</code> type to hold the system call number and arguments, and implement a <code>syscall</code> proc that takes a pointer to <code>SyscallArgs</code> and returns a <code>uint64</code> as the return value.</p><div class="language-nim line-numbers-mode" data-ext="nim"><pre class="language-nim"><code><span class="token comment"># src/kernel/syscalls.nim</span>
+
+<span class="token keyword">type</span>
+  SyscallArgs<span class="token operator">*</span> <span class="token operator">=</span> <span class="token keyword">object</span>
+    num<span class="token operator">:</span> uint64
+    arg1<span class="token punctuation">,</span> arg2<span class="token punctuation">,</span> arg3<span class="token punctuation">,</span> arg4<span class="token punctuation">,</span> arg5<span class="token operator">:</span> uint64
+
+<span class="token operator">...</span>
+
+<span class="token keyword">proc</span> <span class="token function">syscall<span class="token operator">*</span></span><span class="token punctuation">(</span>args<span class="token operator">:</span> <span class="token keyword">ptr</span> SyscallArgs<span class="token punctuation">)</span><span class="token operator">:</span> uint64 <span class="token punctuation">{.</span>exportc<span class="token punctuation">.}</span> <span class="token operator">=</span>
+  debugln <span class="token operator">&amp;</span><span class="token string">&quot;syscall: num={args.num}&quot;</span>
+  result <span class="token operator">=</span> <span class="token number">0x5050</span>  <span class="token comment"># dummy return value</span>
+</code></pre><div class="line-numbers" aria-hidden="true"><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div></div></div><p>Notice that we&#39;re using the <code>exportc</code> pragma to export the <code>syscall</code> proc, since we&#39;ll be calling it from assembly code.</p><p>Now, let&#39;s modify <code>syscallEntry</code> to call <code>syscall</code> with the system call number and arguments. We&#39;ll create the <code>SyscallArgs</code> object on the kernel stack by pushing the appropriate registers, and pass its address to <code>syscall</code>.</p><div class="language-nim line-numbers-mode" data-ext="nim"><pre class="language-nim"><code><span class="token comment"># src/kernel/syscalls.nim</span>
+<span class="token operator">...</span>
+
+<span class="token keyword">proc</span> <span class="token function">syscallEntry</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{.</span>asmNoStackFrame<span class="token punctuation">.}</span> <span class="token operator">=</span>
+  <span class="token keyword">asm</span> <span class="token string">&quot;&quot;&quot;
+    # switch to kernel stack
+    mov %0, rsp
+    mov rsp, %1
+
+    push r11  # user rflags
+    push rcx  # user rip
+
+    # create SyscallArgs on stack
+    push r9
+    push r8
+    push rcx
+    push rdx
+    push rsi
+    push rdi
+
+    mov rdi, rsp  # address of SyscallArgs
+    call syscall
+
+    # restore registers
+    pop rdi
+    pop rsi
+    pop rdx
+    pop rcx
+    pop r8
+    pop r9
+
+    # prepare for sysret
+    pop rcx  # rip
+    pop r11  # rflags
+
+    # switch to user stack
+    mov rsp, %0
+
+    sysretq
+    : &quot;+r&quot;(`userRsp`)
+    : &quot;m&quot;(`kernelStackAddr`)
+    : &quot;rcx&quot;, &quot;r11&quot;, &quot;rdi&quot;, &quot;rsi&quot;, &quot;rdx&quot;, &quot;rcx&quot;, &quot;r8&quot;, &quot;r9&quot;, &quot;rax&quot;
+  &quot;&quot;&quot;</span>
+</code></pre><div class="highlight-lines"><br><br><br><br><br><br><br><br><br><br><br><br><div class="highlight-line"> </div><div class="highlight-line"> </div><div class="highlight-line"> </div><div class="highlight-line"> </div><div class="highlight-line"> </div><div class="highlight-line"> </div><div class="highlight-line"> </div><div class="highlight-line"> </div><div class="highlight-line"> </div><div class="highlight-line"> </div><div class="highlight-line"> </div><div class="highlight-line"> </div><div class="highlight-line"> </div><div class="highlight-line"> </div><div class="highlight-line"> </div><div class="highlight-line"> </div><div class="highlight-line"> </div><div class="highlight-line"> </div><br><br><br><br><br><br><br><br><br><br><br><br><br></div><div class="line-numbers" aria-hidden="true"><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div></div></div><p>Notice that on the last line we&#39;re telling the compiler that <code>syscallEntry</code> clobbers the indicated registers. Otherwise, the compiler might try to use them for other purposes.</p><p>Let&#39;s try this out. We still have the user program passing <code>1</code>, so we should see that printed by <code>syscall</code>, and the dummy return value <code>0x5050</code> should be in <code>rax</code> when we return to user mode.</p><div class="language-text line-numbers-mode" data-ext="text"><pre class="language-text"><code>kernel: Initializing Syscalls [success]
+kernel: Switching to user mode
+syscall: num=1
+</code></pre><div class="line-numbers" aria-hidden="true"><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div></div></div><p>Great! The <code>syscall</code> proc was called and received the correct syscall number. Let&#39;s look at the <code>rax</code> register to see if it contains the dummy return value.</p><div class="language-text line-numbers-mode" data-ext="text"><pre class="language-text"><code>(qemu) info registers
+CPU#0
+RAX=0000000000005050 RBX=ffff800000327220 RCX=0000000040000074 RDX=000000004000ade8
+RSI=0000000000000001 RDI=0000000000000001 RBP=0000000050000ff8 RSP=0000000050000fc8
+R8 =ffff800100003c00 R9 =0000000000000000 R10=0000000050000fc8 R11=0000000000000202
+R12=0000000000000000 R13=0000000006bb1588 R14=0000000000000000 R15=0000000007ebf1e0
+RIP=0000000040000076 RFL=00000202 [-------] CPL=3 II=0 A20=1 SMM=0 HLT=0
+ES =0013 0000000000000000 000fffff 000ff300 DPL=3 DS   [-WA]
+CS =001b 0000000000000000 ffffffff 00a0fb00 DPL=3 CS64 [-RA]
+SS =0013 0000000000000000 ffffffff 00c0f300 DPL=3 DS   [-WA]
+...
+</code></pre><div class="highlight-lines"><br><br><div class="highlight-line"> </div><br><br><br><br><br><br><br><br></div><div class="line-numbers" aria-hidden="true"><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div></div></div><p>Indeed, <code>rax</code> contains <code>0x5050</code>, and from the <code>rip</code>, <code>cs</code>, and <code>ss</code> register values we can see that we&#39;re back in user mode. So everything is working as expected.</p><h2 id="system-call-table" tabindex="-1"><a class="header-anchor" href="#system-call-table" aria-hidden="true">#</a> System Call Table</h2><p>Over time, we&#39;ll have more system calls, so we&#39;ll need a way to dispatch them. One way to do this is store the system call handlers in a table indexed by the system call number. Let&#39;s create that table.</p><div class="language-nim line-numbers-mode" data-ext="nim"><pre class="language-nim"><code><span class="token comment"># src/kernel/syscalls.nim</span>
+
+<span class="token keyword">type</span>
+  SyscallHandler<span class="token operator">*</span> <span class="token operator">=</span> <span class="token function">proc</span> <span class="token punctuation">(</span>args<span class="token operator">:</span> <span class="token keyword">ptr</span> SyscallArgs<span class="token punctuation">)</span><span class="token operator">:</span> uint64 <span class="token punctuation">{.</span>cdecl<span class="token punctuation">.}</span>
+  SyscallArgs <span class="token operator">=</span> <span class="token keyword">object</span>
+    num<span class="token operator">:</span> uint64
+    arg1<span class="token punctuation">,</span> arg2<span class="token punctuation">,</span> arg3<span class="token punctuation">,</span> arg4<span class="token punctuation">,</span> arg5<span class="token operator">:</span> uint64
+  SyscallError<span class="token operator">*</span> <span class="token operator">=</span> <span class="token keyword">enum</span>
+    None
+    InvalidSyscall
+
+<span class="token keyword">var</span>
+  syscallTable<span class="token operator">:</span> array<span class="token punctuation">[</span><span class="token number">256</span><span class="token punctuation">,</span> SyscallHandler<span class="token punctuation">]</span>
+
+<span class="token operator">...</span>
+
+<span class="token keyword">proc</span> <span class="token function">syscall<span class="token operator">*</span></span><span class="token punctuation">(</span>args<span class="token operator">:</span> <span class="token keyword">ptr</span> SyscallArgs<span class="token punctuation">)</span><span class="token operator">:</span> uint64 <span class="token punctuation">{.</span>exportc<span class="token punctuation">.}</span> <span class="token operator">=</span>
+  debugln <span class="token operator">&amp;</span><span class="token string">&quot;syscall: num={args.num}&quot;</span>
+  <span class="token keyword">if</span> args<span class="token operator">.</span>num <span class="token operator">&gt;</span> syscallTable<span class="token operator">.</span>high<span class="token operator">.</span>uint64 <span class="token operator">or</span> syscallTable<span class="token punctuation">[</span>args<span class="token operator">.</span>num<span class="token punctuation">]</span> <span class="token operator">==</span> <span class="token keyword">nil</span><span class="token operator">:</span>
+    <span class="token keyword">return</span> InvalidSyscall<span class="token operator">.</span>uint64
+  result <span class="token operator">=</span> <span class="token function">syscallTable[args.num]</span><span class="token punctuation">(</span>args<span class="token punctuation">)</span>
+</code></pre><div class="highlight-lines"><br><br><br><div class="highlight-line"> </div><br><br><br><div class="highlight-line"> </div><div class="highlight-line"> </div><div class="highlight-line"> </div><br><div class="highlight-line"> </div><div class="highlight-line"> </div><br><br><br><br><br><div class="highlight-line"> </div><div class="highlight-line"> </div><div class="highlight-line"> </div></div><div class="line-numbers" aria-hidden="true"><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div></div></div><p>Now, let&#39;s define a system call to output a string to the debug console. The system call will take one argumet: a pointer to a <code>string</code> object containing the string to output. We&#39;ll register the system call handler in <code>syscallInit</code>.</p><div class="language-nim line-numbers-mode" data-ext="nim"><pre class="language-nim"><code><span class="token comment"># src/kernel/syscalls.nim</span>
+<span class="token operator">...</span>
+
+<span class="token keyword">proc</span> <span class="token function">print<span class="token operator">*</span></span><span class="token punctuation">(</span>args<span class="token operator">:</span> <span class="token keyword">ptr</span> SyscallArgs<span class="token punctuation">)</span><span class="token operator">:</span> uint64 <span class="token punctuation">{.</span>cdecl<span class="token punctuation">.}</span> <span class="token operator">=</span>
+  debugln <span class="token string">&quot;syscall: print&quot;</span>
+  <span class="token keyword">let</span> s <span class="token operator">=</span> <span class="token function">cast[ptr string]</span><span class="token punctuation">(</span>args<span class="token operator">.</span>arg1<span class="token punctuation">)</span>
+  debugln s<span class="token punctuation">[</span><span class="token punctuation">]</span>
+  result <span class="token operator">=</span> <span class="token number">0</span>
+
+<span class="token keyword">proc</span> <span class="token function">syscallInit<span class="token operator">*</span></span><span class="token punctuation">(</span>kernelStack<span class="token operator">:</span> uint64<span class="token punctuation">)</span> <span class="token operator">=</span>
+  <span class="token operator">...</span>
+  syscallTable<span class="token punctuation">[</span><span class="token number">1</span><span class="token punctuation">]</span> <span class="token operator">=</span> print
+  <span class="token operator">...</span>
+</code></pre><div class="line-numbers" aria-hidden="true"><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div></div></div><p>Let&#39;s try to invoke this system call from our user program.</p><div class="language-nim line-numbers-mode" data-ext="nim"><pre class="language-nim"><code><span class="token comment"># src/user/utask.nim</span>
+<span class="token operator">...</span>
+
+<span class="token keyword">let</span>
+  msg <span class="token operator">=</span> <span class="token string">&quot;user: Hello from user mode!&quot;</span>
+  pmsg <span class="token operator">=</span> msg<span class="token operator">.</span><span class="token keyword">addr</span>
+
+<span class="token keyword">proc</span> <span class="token function">UserMain<span class="token operator">*</span></span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{.</span>exportc<span class="token punctuation">.}</span> <span class="token operator">=</span>
+  <span class="token function">NimMain</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+
+  <span class="token keyword">asm</span> <span class="token string">&quot;&quot;&quot;
+    mov rdi, 1
+    mov rsi, %0
+    syscall
+
+  .loop:
+    pause
+    jmp .loop
+    :
+    : &quot;r&quot;(`pmsg`)
+    : &quot;rdi&quot;, &quot;rsi&quot;
+  &quot;&quot;&quot;</span>
+</code></pre><div class="highlight-lines"><br><br><br><div class="highlight-line"> </div><div class="highlight-line"> </div><div class="highlight-line"> </div><br><br><br><br><br><div class="highlight-line"> </div><br><br><br><br><br><br><br><div class="highlight-line"> </div><div class="highlight-line"> </div><br></div><div class="line-numbers" aria-hidden="true"><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div></div></div><p>We&#39;re passing the system call number <code>1</code> in <code>rdi</code>, and the address of the string in <code>rsi</code>. Let&#39;s run it and see what happens.</p><div class="language-text line-numbers-mode" data-ext="text"><pre class="language-text"><code>kernel: Initializing Syscalls [success]
+kernel: Switching to user mode
+syscall: num=1
+syscall: print
+user: Hello from user mode!
+</code></pre><div class="line-numbers" aria-hidden="true"><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div></div></div><p>Great! We can now ask the kernel to print a string for us. This is our first kernel service provided through a system call!</p><h2 id="argument-validation" tabindex="-1"><a class="header-anchor" href="#argument-validation" aria-hidden="true">#</a> Argument Validation</h2><p>There&#39;s one important piece missing though. Arguments to system calls have to be validated thoroughly. We can&#39;t just blindly trust the user program to pass valid arguments. We already did this for the system call number. But what about the string pointer? The user can pass any pointer value, so it&#39;s imperative that we validate it before dereferencing it. In this case, we&#39;ll keep it simple and make sure that the pointer is within the user address space. We can check if it&#39;s mapped, but that&#39;s going to be expensive. Instead, we&#39;ll just check if it&#39;s within the user address space range, and if it isn&#39;t mapped, we&#39;ll let the page fault handler deal with it.</p><p>Here&#39;s the modified <code>print</code> system call.</p><div class="language-nim line-numbers-mode" data-ext="nim"><pre class="language-nim"><code><span class="token comment"># src/kernel/syscalls.nim</span>
+
+<span class="token keyword">type</span>
+  SyscallError<span class="token operator">*</span> <span class="token operator">=</span> <span class="token keyword">enum</span>
+    None
+    InvalidSyscall
+    InvalidArg
+
+<span class="token keyword">const</span>
+  UserAddrSpaceEnd<span class="token operator">*</span> <span class="token operator">=</span> <span class="token number">0x00007FFFFFFFFFFF</span>
+
+<span class="token operator">...</span>
+
+<span class="token keyword">proc</span> <span class="token function">print<span class="token operator">*</span></span><span class="token punctuation">(</span>args<span class="token operator">:</span> <span class="token keyword">ptr</span> SyscallArgs<span class="token punctuation">)</span><span class="token operator">:</span> uint64 <span class="token punctuation">{.</span>cdecl<span class="token punctuation">.}</span> <span class="token operator">=</span>
+  debugln <span class="token string">&quot;syscall: print&quot;</span>
+
+  <span class="token keyword">if</span> args<span class="token operator">.</span>arg1 <span class="token operator">&gt;</span> UserAddrSpaceEnd<span class="token operator">:</span>
+    debugln <span class="token string">&quot;syscall: print: Invalid pointer&quot;</span>
+    <span class="token keyword">return</span> InvalidArg<span class="token operator">.</span>uint64
+
+  <span class="token keyword">let</span> s <span class="token operator">=</span> <span class="token function">cast[ptr string]</span><span class="token punctuation">(</span>args<span class="token operator">.</span>arg1<span class="token punctuation">)</span>
+  debugln s<span class="token punctuation">[</span><span class="token punctuation">]</span>
+
+  result <span class="token operator">=</span> <span class="token number">0</span>
+</code></pre><div class="highlight-lines"><br><br><br><br><br><br><br><br><div class="highlight-line"> </div><div class="highlight-line"> </div><br><br><br><br><br><br><div class="highlight-line"> </div><div class="highlight-line"> </div><div class="highlight-line"> </div><br><br><br><br><br></div><div class="line-numbers" aria-hidden="true"><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div></div></div><p>Let&#39;s try it out by passing an address in kernel space to the system call.</p><div class="language-nim line-numbers-mode" data-ext="nim"><pre class="language-nim"><code><span class="token comment"># src/user/utask.nim</span>
+
+<span class="token keyword">let</span>
+  msg <span class="token operator">=</span> <span class="token string">&quot;user: Hello from user mode!&quot;</span>
+  pmsg <span class="token operator">=</span> <span class="token number">0xffff800000100000</span>  <span class="token comment"># kernel space address</span>
+
+<span class="token operator">...</span>
+</code></pre><div class="highlight-lines"><br><br><br><br><div class="highlight-line"> </div><br><br></div><div class="line-numbers" aria-hidden="true"><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div></div></div><p>If we run this, we should see the error message printed by the kernel.</p><div class="language-text line-numbers-mode" data-ext="text"><pre class="language-text"><code>kernel: Initializing Syscalls [success]
+kernel: Switching to user mode
+syscall: num=1
+syscall: print
+syscall: print: Invalid pointer
+</code></pre><div class="line-numbers" aria-hidden="true"><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div></div></div><p>Awesome! Our argument validation works as expected.</p><h2 id="the-exit-system-call" tabindex="-1"><a class="header-anchor" href="#the-exit-system-call" aria-hidden="true">#</a> The <code>exit</code> System Call</h2><p>Before we leave this section, let&#39;s add one more system call: <code>exit</code>. This system call will take one argument: the exit code. Keep in mind that we don&#39;t have a scheduler yet; our kernel transferred control to the user program, the user program called a system call to print a message, and will exit user mode in one thread of execution. So, without other tasks to switch to at the moment, we&#39;ll just halt the CPU when the user program exits.</p><div class="language-nim line-numbers-mode" data-ext="nim"><pre class="language-nim"><code><span class="token comment"># src/kernel/syscalls.nim</span>
+
+<span class="token keyword">proc</span> <span class="token function">exit<span class="token operator">*</span></span><span class="token punctuation">(</span>args<span class="token operator">:</span> <span class="token keyword">ptr</span> SyscallArgs<span class="token punctuation">)</span><span class="token operator">:</span> uint64 <span class="token punctuation">{.</span>cdecl<span class="token punctuation">.}</span> <span class="token operator">=</span>
+  debugln <span class="token operator">&amp;</span><span class="token string">&quot;syscall: exit: code={args.arg1}&quot;</span>
+  <span class="token keyword">asm</span> <span class="token string">&quot;&quot;&quot;
+    cli
+    hlt
+  &quot;&quot;&quot;</span>
+</code></pre><div class="line-numbers" aria-hidden="true"><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div></div></div><p>We&#39;ll give the <code>exit</code> system call the number 1 instead of <code>print</code>, and we&#39;ll make print system call number 2.</p><div class="language-nim line-numbers-mode" data-ext="nim"><pre class="language-nim"><code><span class="token comment"># src/kernel/syscalls.nim</span>
+<span class="token operator">...</span>
+
+<span class="token keyword">proc</span> <span class="token function">syscallInit<span class="token operator">*</span></span><span class="token punctuation">(</span>kernelStack<span class="token operator">:</span> uint64<span class="token punctuation">)</span> <span class="token operator">=</span>
+  <span class="token operator">...</span>
+  syscallTable<span class="token punctuation">[</span><span class="token number">1</span><span class="token punctuation">]</span> <span class="token operator">=</span> exit
+  syscallTable<span class="token punctuation">[</span><span class="token number">2</span><span class="token punctuation">]</span> <span class="token operator">=</span> print
+  <span class="token operator">...</span>
+</code></pre><div class="highlight-lines"><br><br><br><br><br><br><br><br></div><div class="line-numbers" aria-hidden="true"><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div></div></div><p>Now, let&#39;s modify the user program to call <code>exit</code> after printing the message.</p><div class="language-nim line-numbers-mode" data-ext="nim"><pre class="language-nim"><code><span class="token comment"># src/user/utask.nim</span>
+<span class="token operator">...</span>
+
+<span class="token keyword">proc</span> <span class="token function">UserMain<span class="token operator">*</span></span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{.</span>exportc<span class="token punctuation">.}</span> <span class="token operator">=</span>
+  <span class="token function">NimMain</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+
+  <span class="token keyword">asm</span> <span class="token string">&quot;&quot;&quot;
+    # call print
+    mov rdi, 2
+    mov rsi, %0
+    syscall
+
+    # call exit
+    mov rdi, 1
+    mov rsi, 0
+    syscall
+    :
+    : &quot;r&quot;(`pmsg`)
+    : &quot;rdi&quot;, &quot;rsi&quot;
+  &quot;&quot;&quot;</span>
+</code></pre><div class="highlight-lines"><br><br><br><br><br><br><br><div class="highlight-line"> </div><div class="highlight-line"> </div><br><br><br><div class="highlight-line"> </div><div class="highlight-line"> </div><div class="highlight-line"> </div><div class="highlight-line"> </div><br><br><br><br></div><div class="line-numbers" aria-hidden="true"><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div></div></div><p>Notice that I removed the infinite loop, as as the <code>exit</code> syscall does not return. Let&#39;s run it and see what happens.</p><div class="language-text line-numbers-mode" data-ext="text"><pre class="language-text"><code>kernel: Initializing Syscalls [success]
+kernel: Switching to user mode
+syscall: num=2
+syscall: print
+user: Hello from user mode!
+syscall: num=1
+syscall: exit: code=0
+</code></pre><div class="line-numbers" aria-hidden="true"><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div></div></div><p>Looks good! The <code>exit</code> system call was called and received the correct exit code, and the kernel halted the CPU.</p><p>This is another big milestone. We now have a working system call interface, and we can invoke kernel services from user mode. In the next section, we&#39;ll look into encapsulating user task related context in a <code>Task</code> object.</p></div><!--[--><!--]--></div><footer class="page-meta"><!----><div class="meta-item last-updated"><span class="meta-item-label">Last Updated: </span><!----></div><!----></footer><nav class="page-nav"><p class="inner"><span class="prev"><a href="/osdev/17-tss.html" class="" aria-label="Task State Segment"><!--[--><!--]--> Task State Segment <!--[--><!--]--></a></span><span class="next"><a href="/osdev/19-tasks.html" class="" aria-label="Tasks"><!--[--><!--]--> Tasks <!--[--><!--]--></a></span></p></nav><!--[--><!--]--></main><!--]--></div><!----><!----><!--]--></div>
+    <script type="module" src="/assets/app-y8sbR1MG.js" defer></script>
+  </body>
+</html>
