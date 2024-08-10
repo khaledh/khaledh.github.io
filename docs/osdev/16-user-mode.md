@@ -30,7 +30,7 @@ An important thing to note is that, since this stack frame is at the bottom of t
 
 So far, the virtual memory mapping we have is for kernel space only. We need to create a different mapping for user space so that the user program can access it. This includes mapping of the user code, data, and stack regions, as well as the kernel space (which is protected since it's marked as supervisor only). Mapping the kernel space in the user page table is necessary, since interrupts and system calls cause the CPU to jump to kernel code without switching page tables. Also, many system calls will need access to data in user space.
 
-Since we don't have the ability in the kernel to access disks and filesystems yet, we won't be load the user program from disk. What we can do is build the user program separately, and copy it alongside the kernel image, and let the bootloader load it for us. So here's the plan to get user mode working:
+Since we don't have the ability in the kernel to access disks and filesystems yet, we won't load the user program from disk. What we can do is build the user program separately, and copy it alongside the kernel image, and let the bootloader load it for us. So here's the plan to get user mode working:
 
 1. Create a program that we want to run in user mode.
 2. Build the program and copy it to the `efi\fusion` directory (next to the kernel image).
