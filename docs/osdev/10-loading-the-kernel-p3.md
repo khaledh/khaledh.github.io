@@ -146,7 +146,7 @@ proc EfiMainInner(imgHandle: EfiHandle, sysTable: ptr EFiSystemTable): EfiStatus
   ...
 ```
 
-Now, let's conver the UEFI memory map to the boot memory map using the `convertUefiMemoryMap` proc, and manually copy it to the `BootInfo` memory we just allocated:
+Now, let's convert the UEFI memory map to the boot memory map using the `convertUefiMemoryMap` proc, and manually copy it to the `BootInfo` memory we just allocated:
 
 ```nim
 # src/boot/bootx64.nim
