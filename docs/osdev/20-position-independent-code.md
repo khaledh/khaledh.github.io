@@ -386,7 +386,7 @@ Dynamic section at offset 0x9ec0 contains 13 entries:
 
 I highlighted the relevant entries. The `RELA` entry tells us where the relocation entries section (`.rela.dyn`) is located in the binary, the `RELASZ` entry tells us the size of that section, the `RELAENT` entry tells us the size of each relocation entry, and the `RELACOUNT` entry tells us how many relocation entries there are. It's exactly what we want. Also, notice that the last entry is always a NULL entry, so we can use that to locate the end of the section.
 
-But where do we put the `.dynamic` section in the output image? If we put it in the middle (or end) of the image, we won't be able to locate it, so we'll need something else to locate it. Instead, we can just put it in the beginnning of the image, followed by the relocation entries, followed by the text and data sections. We just have to adjust our assumption that the entry point is not at the beginning of the image, but rather comes after the `.rela.dyn` section. Let's update the linker script to do so.
+But where do we put the `.dynamic` section in the output image? If we put it in the middle (or end) of the image, we won't be able to locate it, so we'll need something else to locate it. Instead, we can just put it in the beginning of the image, followed by the relocation entries, followed by the text and data sections. We just have to adjust our assumption that the entry point is not at the beginning of the image, but rather comes after the `.rela.dyn` section. Let's update the linker script to do so.
 
 ```ld{3-4}
 SECTIONS
