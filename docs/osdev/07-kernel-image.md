@@ -160,7 +160,7 @@ A flat binary image doesn't have metadata to specify an entry point, so the boot
 
 OK, how do we tell the linker to link the kernel at a specific address? We use a linker script. A linker script is a text file that tells the linker how to map sections from the input object files to sections in the output image, and in what order, and at what address. But before we use a linker script let's link the kernel without one, and see what sections are included in the output image.
 
-The `lld-link` linker that we've been using so far (to generate a PE image) doesn't seem to support linker scripts (at least I couldn't find a way to do it). That's OK; we don't the PE format anymore, it was only needed for the UEFI bootloader. So for the kernel, we'll switch to using the `ld.lld` linker, which is the LLVM linker for Unix systems. The most widely used executable format on Unix systems is ELF, so we'll use that as well. We'll come back later to building a raw binary image.
+The `lld-link` linker that we've been using so far (to generate a PE image) doesn't seem to support linker scripts (at least I couldn't find a way to do it). That's OK; we don't want the PE format anymore, it was only needed for the UEFI bootloader. So for the kernel, we'll switch to using the `ld.lld` linker, which is the LLVM linker for Unix systems. The most widely used executable format on Unix systems is ELF, so we'll use that as well. We'll come back later to building a raw binary image.
 
 Let's add some arguments in `src/kernel/nim.cfg` to use `ld.lld` and generate an ELF executable:
 
