@@ -578,7 +578,7 @@ proc createTask*(
   ...
 ```
 
-Finanlly, we'll remove the `entryPoint` argument from call in `main.nim`.
+Finally, we'll remove the `entryPoint` argument from call in `main.nim`.
 
 ```nim
 # src/kernel/main.nim
