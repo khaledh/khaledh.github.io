@@ -201,7 +201,7 @@ proc load*(imagePtr: pointer) =
   )
 ```
 
-We're alomst done. We're done with the kernel's temporary mapping of the user task's memory, so we
+We're almost done. We're done with the kernel's temporary mapping of the user task's memory, so we
 can unmap the regions now.
 
 ```nim
