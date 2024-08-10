@@ -108,7 +108,7 @@ For the purpose of our kernel, we'll use a single data segment with DPL=3 and se
 
 Protection of kernel memory will be done through paging, not segmentation. As a nice side effect, we don't have to save and restore the data segment registers when switching between kernel mode and user mode.
 
-One exception to the accese checks done on segment registers is the stack segment register SS. The Intel manual says:
+One exception to the access checks done on segment registers is the stack segment register SS. The Intel manual says:
 
 > **5.7 PRIVILEGE LEVEL CHECKING WHEN LOADING THE SS REGISTER**
 >
