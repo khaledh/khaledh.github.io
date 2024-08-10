@@ -440,7 +440,7 @@ proc syscall*(args: ptr SyscallArgs): uint64 {.exportc.} =
   result = syscallTable[args.num](args)
 ```
 
-Now, let's define a system call to output a string to the debug console. The system call will take one argumet: a pointer to a `string` object containing the string to output. We'll register the system call handler in `syscallInit`.
+Now, let's define a system call to output a string to the debug console. The system call will take one argument: a pointer to a `string` object containing the string to output. We'll register the system call handler in `syscallInit`.
 
 ```nim
 # src/kernel/syscalls.nim
