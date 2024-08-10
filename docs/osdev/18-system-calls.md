@@ -19,7 +19,7 @@ We're not building a kernel adhering to any particular ABI; we'll define our own
 
 We'll use `rax` for the return value.
 
-When executing `syscall`, the CPU stores the user `RIP` and `RFLAGS` in `rcx` and `r11` respectively. Upoin returning to user mode, the CPU restores `RIP` and `RFLAGS` from `rcx` and `r11`. So we have to make sure that `rcx` and `r11` are preserved across system calls.
+When executing `syscall`, the CPU stores the user `RIP` and `RFLAGS` in `rcx` and `r11` respectively. Upon returning to user mode, the CPU restores `RIP` and `RFLAGS` from `rcx` and `r11`. So we have to make sure that `rcx` and `r11` are preserved across system calls.
 
 Also, the CPU doesn't switch stacks for us when executing `syscall`. We have to do that ourselves. This is in contrast with interrupts, where the CPU switches to the kernel stack before executing the interrupt handler. So it's a bit more inconvenient to handle system calls than interrupts, but it's a faster mechanism.
 
