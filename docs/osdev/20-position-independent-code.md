@@ -230,7 +230,7 @@ Section Headers:
   [17] .strtab           STRTAB          0000000000000000 00b9c9 001930 00      0   0  1
 ```
 
-This time we'll focus on the section containing the relocation entries: `.rela.dyn` (notice that its type is `RELA`, which is short for RELocations with Addend). Let's take a look at the relocation entries (I''ll use `llvm-objdump -R` here instead of `llvm-readelf -r` since interpreting its output is more straightforward).
+This time we'll focus on the section containing the relocation entries: `.rela.dyn` (notice that its type is `RELA`, which is short for RELocations with Addend). Let's take a look at the relocation entries (I'll use `llvm-objdump -R` here instead of `llvm-readelf -r` since interpreting its output is more straightforward).
 
 ```sh-session
 $ llvm-objdump -R build/user/utask.bin
