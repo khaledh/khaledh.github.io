@@ -363,7 +363,7 @@ Lo and behold, it's the `NimStrPayload` object we saw above. So the loader will 
 
 ## Raw binary with relocations
 
-We don't have ELF support in our kernel (at least not yet), and I don't want to distract myself by implementing it now. So, we'll keep it simple and update the linker script to include the `.rela.dyn` section in the binary, and use it to patch the binary at load time. There's one problem though: the loader needs to know where the relocation entries are in the binary, and how many there are. We can add our own metadata section, but there's already one available as part of the ELF format: the `.dynamic` section. This section contains a list tags and values that are typically used by the dynamic linker, but we can also use it to locate the relocation entries. Let's take a quick look at that section using `llvm-readelf -d`.
+We don't have ELF support in our kernel (at least not yet), and I don't want to distract myself by implementing it now. So, we'll keep it simple and update the linker script to include the `.rela.dyn` section in the binary, and use it to patch the binary at load time. There's one problem though: the loader needs to know where the relocation entries are in the binary, and how many there are. We can add our own metadata section, but there's already one available as part of the ELF format: the `.dynamic` section. This section contains a list of tags and values that are typically used by the dynamic linker, but we can also use it to locate the relocation entries. Let's take a quick look at that section using `llvm-readelf -d`.
 
 ```sh-session{6-9}
 $ llvm-readelf -d build/user/utask.bin
