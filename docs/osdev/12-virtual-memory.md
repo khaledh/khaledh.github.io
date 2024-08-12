@@ -199,7 +199,7 @@ Ideally we wouldn't need to define an `entries` array field within each object, 
   PML4Table* {.align(PageSize).} = array[512, PML4Entry]
   ```
 
-Then we could access the table by indexing directly into its variable, e.g. `pml4[i]`, instead of `pml4.entries[i]`. Unfortunately Nim doesn't support type-level alginment (yet). See this [RFC](https://github.com/nim-lang/RFCs/issues/545). So, as a workaround, I defined index operators for each table type, which just forward the indexing to the `entries` field.
+Then we could access the table by indexing directly into its variable, e.g. `pml4[i]`, instead of `pml4.entries[i]`. Unfortunately Nim doesn't support type-level alignment (yet). See this [RFC](https://github.com/nim-lang/RFCs/issues/545). So, as a workaround, I defined index operators for each table type, which just forward the indexing to the `entries` field.
 :::
 
 ## Accessing page tables

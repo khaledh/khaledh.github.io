@@ -230,7 +230,7 @@ Section Headers:
   [17] .strtab           STRTAB          0000000000000000 00b9c9 001930 00      0   0  1
 ```
 
-This time we'll focus on the section containing the relocation entries: `.rela.dyn` (notice that its type is `RELA`, which is short for RELocations with Addend). Let's take a look at the relocation entries (I''ll use `llvm-objdump -R` here instead of `llvm-readelf -r` since interpreting its output is more straightforward).
+This time we'll focus on the section containing the relocation entries: `.rela.dyn` (notice that its type is `RELA`, which is short for RELocations with Addend). Let's take a look at the relocation entries (I'll use `llvm-objdump -R` here instead of `llvm-readelf -r` since interpreting its output is more straightforward).
 
 ```sh-session
 $ llvm-objdump -R build/user/utask.bin
@@ -363,7 +363,7 @@ Lo and behold, it's the `NimStrPayload` object we saw above. So the loader will 
 
 ## Raw binary with relocations
 
-We don't have ELF support in our kernel (at least not yet), and I don't want to distract myself by implementing it now. So, we'll keep it simple and update the linker script to include the `.rela.dyn` section in the binary, and use it to patch the binary at load time. There's one problem though: the loader needs to know where the relocation entries are in the binary, and how many there are. We can add our own metadata section, but there's already one available as part of the ELF format: the `.dynamic` section. This section contains a list tags and values that are typically used by the dynamic linker, but we can also use it to locate the relocation entries. Let's take a quick look at that section using `llvm-readelf -d`.
+We don't have ELF support in our kernel (at least not yet), and I don't want to distract myself by implementing it now. So, we'll keep it simple and update the linker script to include the `.rela.dyn` section in the binary, and use it to patch the binary at load time. There's one problem though: the loader needs to know where the relocation entries are in the binary, and how many there are. We can add our own metadata section, but there's already one available as part of the ELF format: the `.dynamic` section. This section contains a list of tags and values that are typically used by the dynamic linker, but we can also use it to locate the relocation entries. Let's take a quick look at that section using `llvm-readelf -d`.
 
 ```sh-session{6-9}
 $ llvm-readelf -d build/user/utask.bin
@@ -386,7 +386,7 @@ Dynamic section at offset 0x9ec0 contains 13 entries:
 
 I highlighted the relevant entries. The `RELA` entry tells us where the relocation entries section (`.rela.dyn`) is located in the binary, the `RELASZ` entry tells us the size of that section, the `RELAENT` entry tells us the size of each relocation entry, and the `RELACOUNT` entry tells us how many relocation entries there are. It's exactly what we want. Also, notice that the last entry is always a NULL entry, so we can use that to locate the end of the section.
 
-But where do we put the `.dynamic` section in the output image? If we put it in the middle (or end) of the image, we won't be able to locate it, so we'll need something else to locate it. Instead, we can just put it in the beginnning of the image, followed by the relocation entries, followed by the text and data sections. We just have to adjust our assumption that the entry point is not at the beginning of the image, but rather comes after the `.rela.dyn` section. Let's update the linker script to do so.
+But where do we put the `.dynamic` section in the output image? If we put it in the middle (or end) of the image, we won't be able to locate it, so we'll need something else to locate it. Instead, we can just put it in the beginning of the image, followed by the relocation entries, followed by the text and data sections. We just have to adjust our assumption that the entry point is not at the beginning of the image, but rather comes after the `.rela.dyn` section. Let's update the linker script to do so.
 
 ```ld{3-4}
 SECTIONS
@@ -578,7 +578,7 @@ proc createTask*(
   ...
 ```
 
-Finanlly, we'll remove the `entryPoint` argument from call in `main.nim`.
+Finally, we'll remove the `entryPoint` argument from call in `main.nim`.
 
 ```nim
 # src/kernel/main.nim

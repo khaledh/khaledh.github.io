@@ -206,7 +206,7 @@ When we compile and load this in QEMU, we still see the message printed to the s
 
 ## Handling exceptions
 
-Right now, if an exception is raied we won't see any output on the screen. In fact, the bootloader will return the default value 0, which will cause the firmware boot manager to load next.
+Right now, if an exception is raised we won't see any output on the screen. In fact, the bootloader will return the default value 0, which will cause the firmware boot manager to load next.
 
 In a normal application, Nim generates a `main` entry point which executes our top-level code, and then checks for exceptions, and if one was raised it prints the exception message to `stderr`. There's an `unhandledExceptionHook` we can use to set to a custom handler, but the issue is that it's only called when Nim is in charge of generating the `main` entry point. Since we're using `--noMain:on` and provoiding a custom `EfiMain` entry point, we need to handle exceptions ourselves.
 

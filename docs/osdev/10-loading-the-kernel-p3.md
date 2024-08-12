@@ -146,7 +146,7 @@ proc EfiMainInner(imgHandle: EfiHandle, sysTable: ptr EFiSystemTable): EfiStatus
   ...
 ```
 
-Now, let's conver the UEFI memory map to the boot memory map using the `convertUefiMemoryMap` proc, and manually copy it to the `BootInfo` memory we just allocated:
+Now, let's convert the UEFI memory map to the boot memory map using the `convertUefiMemoryMap` proc, and manually copy it to the `BootInfo` memory we just allocated:
 
 ```nim
 # src/boot/bootx64.nim
@@ -172,7 +172,7 @@ What we're doing here is treating the start of the boot info page as a `BootInfo
 
 ## Pass BootInfo to kernel
 
-We're now ready to pass our memory map the kernel. We'll change the signature of the `KernelMain` proc to take a `ptr BootInfo`. Let's change the `KernelMain` proc signature, and print the memory map length to the debug console to verify that we're getting the correct info.
+We're now ready to pass our memory map to the kernel. We'll change the signature of the `KernelMain` proc to take a `ptr BootInfo`. Let's change the `KernelMain` proc signature, and print the memory map length to the debug console to verify that we're getting the correct info.
 
 ```nim{4,8,11-12}
 # src/kernel/main.nim

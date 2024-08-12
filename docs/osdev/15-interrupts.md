@@ -4,7 +4,7 @@ When the CPU encounters an error, e.g. a division by zero or a page fault, it wi
 
 ## Interrupt Descriptors
 
-The IDT is an array of 256 entries, each is a 16-byte descriptor (in 64-bit mode). The index (not the offset) of a descriptor in the IDT is called an **interrupt vector**. Each descriptor points to an interrupt handler, which is a function in the kernel that handles that particular interrupt vector. During an interrupt, the interrupt vector is delievered to the CPU, which uses it as an index into the IDT to find the corresponding interrupt handler.
+The IDT is an array of 256 entries, each is a 16-byte descriptor (in 64-bit mode). The index (not the offset) of a descriptor in the IDT is called an **interrupt vector**. Each descriptor points to an interrupt handler, which is a function in the kernel that handles that particular interrupt vector. During an interrupt, the interrupt vector is delivered to the CPU, which uses it as an index into the IDT to find the corresponding interrupt handler.
 
 For example, the interrupt vector for a page fault is 14, so when a page fault occurs, the CPU will look at the 14th entry in the IDT to find the page fault handler. Another example is when a device is configured to use a particular interrupt vector, then when the device raises an interrupt, it places that vector on the bus, and the CPU will use it to find the interrupt handler in the IDT.
 
