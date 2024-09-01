@@ -8,35 +8,66 @@ import { commentPlugin } from "vuepress-plugin-comment2";
 export default defineUserConfig({
   host: 'localhost',
   lang: 'en-US',
-  title: 'Fusion OS',
+  title: 'Khaled Hammouda',
   description: 'Building a 64-bit operating system from scratch in Nim',
   theme: defaultTheme({
-    sidebar: [
-      '/osdev/01-intro.md',
-      '/osdev/02-environment-setup.md',
-      '/osdev/03-targeting-uefi-p1.md',
-      '/osdev/04-targeting-uefi-p2.md',
-      '/osdev/05-bootloader-p1.md',
-      '/osdev/06-bootloader-p2.md',
-      '/osdev/07-kernel-image.md',
-      '/osdev/08-loading-the-kernel-p1.md',
-      '/osdev/09-loading-the-kernel-p2.md',
-      '/osdev/10-loading-the-kernel-p3.md',
-      '/osdev/11-physical-memory.md',
-      '/osdev/12-virtual-memory.md',
-      '/osdev/13-higher-half-kernel.md',
-      '/osdev/14-memory-segments.md',
-      '/osdev/15-interrupts.md',
-      '/osdev/16-user-mode.md',
-      '/osdev/17-tss.md',
-      '/osdev/18-system-calls.md',
-      '/osdev/19-tasks.md',
-      '/osdev/20-position-independent-code.md',
-      '/osdev/21-elf-loader-p1.md',
-      '/osdev/22-elf-loader-p2.md',
-      '/osdev/23-coop-multitasking.md',
-      '/osdev/24-system-library.md',
+    navbar: [
+      { text: 'Home', link: '/' },
+      { text: 'Fusion OS', link: '/osdev/' },
+//       { text: 'Nim', link: '/nim/' },
+      { text: 'NimJet', link: '/nimjet/' },
     ],
+    sidebar: {
+      '/osdev/': [
+        {
+          text: 'Fusion OS',
+          children: [
+            '01-intro.md',
+            '02-environment-setup.md',
+            '03-targeting-uefi-p1.md',
+            '04-targeting-uefi-p2.md',
+            '05-bootloader-p1.md',
+            '06-bootloader-p2.md',
+            '07-kernel-image.md',
+            '08-loading-the-kernel-p1.md',
+            '09-loading-the-kernel-p2.md',
+            '10-loading-the-kernel-p3.md',
+            '11-physical-memory.md',
+            '12-virtual-memory.md',
+            '13-higher-half-kernel.md',
+            '14-memory-segments.md',
+            '15-interrupts.md',
+            '16-user-mode.md',
+            '17-tss.md',
+            '18-system-calls.md',
+            '19-tasks.md',
+            '20-position-independent-code.md',
+            '21-elf-loader-p1.md',
+            '22-elf-loader-p2.md',
+            '23-coop-multitasking.md',
+            '24-system-library.md',
+          ],
+        },
+      ],
+      '/nim/': [
+        {
+          text: 'Nim',
+          children: [
+            '01-mm.md',
+          ],
+        }
+      ],
+      '/nimjet/': [
+        {
+          text: 'NimJet',
+          children: [
+            '01-intro.md',
+            '02-setup.md',
+            '03-filetype.md',
+          ],
+        }
+      ],
+    },
     contributors: false,
   }),
   markdown: {

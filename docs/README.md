@@ -1,9 +1,17 @@
 ---
-title: Fusion OS
+title: Khaled Hammouda
 ---
 
-## Fusion OS
+Welcome to my little corner on the web. Here, you will find some of my software projects 
+and tutorials.
 
-This is both a documentation of my journey and a tutorial for building a modern x64 operating system from scratch in Nim.
+## [Fusion OS](osdev/01-intro.md)
 
-You can find the source code on GitHub: [https://github.com/khaledh/fusion](https://github.com/khaledh/fusion)
+This is both a documentation of my journey and a tutorial for building a modern x64
+operating system from scratch in Nim. You can find the source code on GitHub:
+[https://github.com/khaledh/fusion](https://github.com/khaledh/fusion)
+
+## [NimJet](nimjet/01-intro.md)
+
+NimJet is a plugin for the JetBrains IDEs that provides support for the [Nim 
+programming language](https://nim-lang.org/).
