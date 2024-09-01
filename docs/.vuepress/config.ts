@@ -64,6 +64,7 @@ export default defineUserConfig({
             '01-intro.md',
             '02-setup.md',
             '03-filetype.md',
+            '04-lexer.md',
           ],
         }
       ],

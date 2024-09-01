@@ -128,5 +128,15 @@ dialog:
 ![Sandbox IDE Plugin](images/sandbox-ide-plugin.png)
 
 Great! We can see that our plugin is loaded and enabled, although not doing anything at
-the moment. In the next section, we'll start by registering a new file type for the Nim
+the moment.
+
+::: tip
+When you close the sandbox project, the IDE doesn't completely close. Instead, it goes
+back to the welcome screen, which needs to be closed as well. Moreover, when you run the
+sandbox IDE again, it will show the welcome screen instead of the last project you had
+open. To avoid this, when you are in the project, quit the IDE using `Cmd+Q` (macOS), not
+by closing the project window.
+:::
+
+In the next section, we'll start by registering a new file type for the Nim
 language so that the IDE can recognize Nim files and associate them with our plugin.
