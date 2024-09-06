@@ -44,9 +44,7 @@ language file).
 
 The following diagram illustrates this structure.
 
-<p style="text-align: center">
-  <img src="./images/ast-structure.png" alt="AST Structure" width="600"/>
-</p>
+![AST Structure](images/ast-structure.png)
 
 The three boxes labelled with the `AST` tag represent the three types of nodes 
 described above. They are given placeholder names to indicate that they are instances 
