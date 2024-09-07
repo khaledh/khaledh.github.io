@@ -42,7 +42,8 @@ in the [File Type](03-filetype.md) section. The former is a node type in the AST
 the latter represents a file type in the IDE (which does not necessarily have to be a 
 language file).
 
-The following diagram illustrates this structure.
+In the following diagram, I try to illustrate these types of nodes, their base classes,
+and how the AST is created by the parser.
 
 ![AST Structure](images/ast-structure.png)
 
@@ -53,13 +54,62 @@ the language construct they represent.
 - `$FileElementName$` is a singleton that represents the root node type of the AST (e.g. 
   `NIM_FILE`)
 - `$ElementName$` represents an intermediate node (e.g. `CASE_STMT`)
-- `$TokenName$` represents a leaf node (e.g. `COLON`)
+- `$TokenName$` represents a leaf node (e.g. `STRING_LIT`)
 
-Since the root file node is a singleton, it is created by the `ParserDefinition` itself,
-rather than by the parser. The parser is responsible for creating the intermediate and
-leaf nodes, with the help of the `PsiBuilder`, which in turn uses the lexer to get the
-tokens. The lexer and the parser objects are created by the `ParserDefinition` as well.
+But how does the parser actually create the AST? In the diagram, `NimParser` is the actual
+parser class (which can be handwritten or generated), which drives the `PsiBuilder` by
+_marking_ regions of tokens in the input stream as nodes in the tree. When the parser
+tries to parse a grammar rule, it tells the `PsiBuilder` to start a
+_marker_ (a region of tokens that will be converted into a node in the AST), and then
+calls the appropriate method to parse the rule. When the rule is successfully parsed, the
+parser tells the `PsiBuilder` to set the marker as _done_, and passes the matched element
+type to be associated with the node. If the rule is not parsed successfully, the parser
+either tells the `PsiBuilder` to _rollback_ the marker, or generate an error node.
+Creating markers is done recursively, as the parser descends into the grammar rules.
+
+As nodes are marked by the parser, the `PsiBuilder` creates `ASTNode` instances
+(implemented by `TreeElement`), to represent the nodes in the AST. Each `ASTNode` has a
+reference to the `IElementType` object that represents the type of the node (the ones
+mentioned above). The parser returns the final root node of the AST by calling the 
+`PsiBuilder.getTreeBuilt()` method.
+
+The final piece of the puzzle is the `ParserDefinition` class, which provide methods for 
+creating the lexer (`createLexer`), the parser (`createParser`), and the element type 
+representing the root node of the AST (`getFileNodeType`), which is an instance of 
+`IFileElementType`.
+
+The `ParserDefinition` class also provides a few methods for returning `TokenSet` objects
+(not shown in the diagram) that identify certain types of tokens: comments, whitespace,
+and string literals.
+- `getWhitespaceTokens()`: returns a `TokenSet` of whitespace tokens. These tokens are 
+  typically ignored by the parser.
+- `getCommentTokens()`: returns a `TokenSet` of comment tokens. These tokens are also 
+  typically ignored by the parser. They are also used to search for `TODO` patterns in 
+  comments.
+- `getStringLiteralElements()`: returns a `TokenSet` of string literal tokens. These 
+  tokens are used by the "Search in strings" option during refactoring.
 
 ## PSI Structure
 
-TODO
+As mentioned earlier, the PSI is built on top of the AST, and provides a higher-level API
+for working with the source code. You can think of the PSI as an enriched view of the 
+AST, with capabilities to navigate, search, and modify the source code. The following 
+diagram shows the different classes and interfaces that make up the PSI, and their 
+relationship to the AST and the `ParserDefinition`.
+
+<p style="text-align: center">
+  <img src="./images/psi-structure.png" alt="PSI Structure" width="550"/>
+</p>
+
+The bridge between the AST and the PSI is the `ASTWrapperPsiElement` class, which is a 
+wrapper around an `ASTNode` that implements the `PsiElement` interface. The AST is 
+converted to a PSI tree through the `ParserDefinition.createElement()` method, which 
+creates the appropriate PSI element for a given AST node.
+
+The entire file is represented by an instance of the `PsiFile` interface, which 
+extends `PsiElement`. This interface is the typical entry point for working with the 
+PSI tree. In our case, the `NimFile` class implements `PsiFile`, and is created 
+through the `ParserDefinition.createFile()` method.
+
+The PSI tree is then used by the IDE to provide code completion, navigation, 
+refactoring, and other features.
