@@ -71,8 +71,16 @@ functionality to them later. First, let's define the root PSI element, `NimFile`
 // src/main/kotlin/khaledh/nimjet/psi/NimFile.kt
 ...
 
-class NimFile(viewProvider: FileViewProvider) : PsiFileBase(viewProvider, NimLanguage)
+class NimFile(viewProvider: FileViewProvider) : PsiFileBase(viewProvider, NimLanguage) {
+    override fun getFileType(): FileType = NimFileType
+    override fun toString(): String = "NimFile"
+}
 ```
+
+The `NimFile` class extends `PsiFileBase`, which is a base class that provides a default
+implementation for the `PsiFile` interface methods. We override `getFileType` to return
+our `NimFileType` instance, and `toString` to return a string representation of the PSI
+file node.
 
 Next, we define the PSI element for the statement, `NimStmt`:
 
@@ -263,3 +271,94 @@ Now, open the PSI viewer from the **Tools | View PSI Structure of Current File**
 Great! We can see the PSI tree with the `NimFile` and `NimStmt` nodes, in addition to the
 `IDENTIFIER` and `STRING_LIT` tokens under the `NimStmt` node. Our simple parser is
 working as expected.
+
+## Error Handling
+
+Let's add error handling to our parser to make it more robust. We'll change the parser 
+to detect and recover from errors, and report them to the user. We'll make each parsing
+method return a boolean indicating whether the rule was successfully parsed. If a rule
+fails, we'll mark the region as _error_ and return early. Since returning early means 
+that not all tokens are consumed, we need to advance the lexer to the end of the token 
+stream to ensure that the PSI tree is properly built (this is a requirement of the
+`PsiBuilder`).
+
+Here's the updated parser:
+
+```kotlin
+// src/main/kotlin/khaledh/nimjet/NimParser.kt
+...
+
+class NimParser : PsiParser  {
+
+    // Grammar:
+    //   file ::= stmt
+    //   stmt ::= IDENTIFIER STRING_LIT
+
+    override fun parse(root: IElementType, builder: PsiBuilder): ASTNode {
+        parseFile(root, builder)
+        return builder.treeBuilt
+    }
+
+    private fun parseFile(root: IElementType, builder: PsiBuilder) {
+        var marker = builder.mark()
+
+        if (!builder.eof()) {
+            parseStmt(builder)
+        }
+
+        // consume any remaining tokens (in case of error)
+        while (!builder.eof()) {
+            builder.advanceLexer()
+        }
+
+        marker.done(NimElement.FILE)
+    }
+
+    private fun parseStmt(builder: PsiBuilder): Boolean {
+        var marker = builder.mark()
+
+        if (builder.tokenType != NimToken.IDENTIFIER) {
+            reportError(builder, "Expecting an identifier")
+            marker.drop()
+            return false
+        }
+        builder.advanceLexer()
+
+        if (builder.tokenType != NimToken.STRING_LIT) {
+            reportError(builder, "Expecting a string literal")
+            marker.drop()
+            return false
+        }
+        builder.advanceLexer()
+
+        marker.done(NimElement.STMT)
+        return true
+    }
+
+    private fun reportError(builder: PsiBuilder, message: String) {
+        var marker = builder.mark()
+        builder.advanceLexer()
+        marker.error(message)
+    }
+}
+```
+
+We added a check for the end of the token stream in the `parseFile` method to ensure that
+we don't try to parse an empty file. The `reportError` method is used to mark the region
+as an error and report the error message to the user. If a rule fails, we drop the marker
+and return `false` to indicate that the rule was not successfully parsed.
+
+Let's run the plugin again and test the error handling by creating a file with the 
+contents `echo hello` (missing the string quotation marks).
+
+<p style="text-align: center">
+  <img src="./images/psi-error.png" alt="PSI Error Reporting" width="550"/>
+</p>
+
+And it works! The token `hello` is marked as an error with a red squiggly line, and 
+our error message is displayed when we hover over the token.
+
+OK, we now have a good understanding of how to implement a parser by hand. In the next
+section, we will look at how to generate a parser using Grammar-Kit by defining the
+grammar in a BNF-like format. This will allow us to focus on the language grammar rules
+without worrying about the details of the lexer and parser implementation.
