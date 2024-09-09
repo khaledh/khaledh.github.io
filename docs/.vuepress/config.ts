@@ -66,6 +66,7 @@ export default defineUserConfig({
             '03-filetype.md',
             '04-lexer.md',
             '05-parser.md',
+            '06-parser-p2.md',
           ],
         }
       ],

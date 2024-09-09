@@ -1,5 +1,12 @@
 # Parser
 
+In this section, we will explore the various concepts involved in parsing, including how
+the parser works, structure of the AST and the PSI, and how they are related. In the next
+section, we will implement a simple parser by hand, before moving on to generate the
+parser using Grammar-Kit.
+
+## Overview
+
 In order to work with the language constructs at a higher level, we need to parse the
 source code. The parser is responsible for converting the stream of tokens provided by the
 lexer into an abstract syntax tree (AST).
@@ -13,7 +20,9 @@ working with the source code.
 
 The following diagram shows the relationship between the lexer, parser, AST, and PSI.
 
-![Parsing](images/parsing.png)
+<p style="text-align: center">
+  <img src="./images/parsing.png" alt="Parsing" width="600"/>
+</p>
 
 - The lexer reads the source code as a sequence of characters and produces a stream of
   tokens.
@@ -73,7 +82,7 @@ reference to the `IElementType` object that represents the type of the node (the
 mentioned above). The parser returns the final root node of the AST by calling the 
 `PsiBuilder.getTreeBuilt()` method.
 
-The final piece of the puzzle is the `ParserDefinition` class, which provide methods for 
+The final piece of the puzzle is the `ParserDefinition` class, which provides methods for 
 creating the lexer (`createLexer`), the parser (`createParser`), and the element type 
 representing the root node of the AST (`getFileNodeType`), which is an instance of 
 `IFileElementType`.
@@ -98,7 +107,7 @@ diagram shows the different classes and interfaces that make up the PSI, and the
 relationship to the AST and the `ParserDefinition`.
 
 <p style="text-align: center">
-  <img src="./images/psi-structure.png" alt="PSI Structure" width="550"/>
+  <img src="./images/psi-structure.png" alt="PSI Structure" width="700"/>
 </p>
 
 The bridge between the AST and the PSI is the `ASTWrapperPsiElement` class, which is a 
@@ -106,10 +115,16 @@ wrapper around an `ASTNode` that implements the `PsiElement` interface. The AST 
 converted to a PSI tree through the `ParserDefinition.createElement()` method, which 
 creates the appropriate PSI element for a given AST node.
 
-The entire file is represented by an instance of the `PsiFile` interface, which 
+The entire file is represented by an instance of the `PsiFile` interface, which also 
 extends `PsiElement`. This interface is the typical entry point for working with the 
 PSI tree. In our case, the `NimFile` class implements `PsiFile`, and is created 
 through the `ParserDefinition.createFile()` method.
 
 The PSI tree is then used by the IDE to provide code completion, navigation, 
 refactoring, and other features.
+
+Now that we have an idea of how the various components of the parser work together, in 
+the next section we will implement a very simpler parser by hand for a simple 
+statement to get a deeper understanding of the process. Later, we will use Grammar-Kit 
+to generate the parser for us from a BNF grammar, since writing a full parser for Nim 
+by hand would be tedious and error-prone.
