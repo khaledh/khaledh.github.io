@@ -67,6 +67,7 @@ export default defineUserConfig({
             '04-lexer.md',
             '05-parser.md',
             '06-parser-p2.md',
+            '07-grammarkit.md',
           ],
         }
       ],
