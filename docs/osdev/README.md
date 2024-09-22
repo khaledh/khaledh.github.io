@@ -5,6 +5,8 @@ title: Fusion OS
 This is both a documentation and a tutorial for building a simple operating system, 
 Fusion OS, from scratch in Nim.
 
+You can find the source code on GitHub: https://github.com/khaledh/fusion
+
 ## Screenshots
 
 **UEFI Bootloader**
