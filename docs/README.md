@@ -14,4 +14,5 @@ operating system from scratch in Nim. You can find the source code on GitHub:
 ## [NimJet](nimjet/01-intro.md)
 
 NimJet is a plugin for the JetBrains IDEs that provides support for the [Nim 
-programming language](https://nim-lang.org/).
+programming language](https://nim-lang.org/). It is currently in development and is 
+not yet available in the JetBrains plugin marketplace.
