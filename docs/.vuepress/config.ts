@@ -24,6 +24,7 @@ export default defineUserConfig({
       '/osdev/': [
         {
           text: 'Fusion OS',
+          link: '/osdev/',
           children: [
             '01-intro.md',
             '02-environment-setup.md',

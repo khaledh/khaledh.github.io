@@ -2,10 +2,14 @@
 title: Fusion OS
 ---
 
-This is both a documentation and a tutorial for building a simple operating system, 
-Fusion OS, from scratch in Nim.
+# Fusion OS
 
-You can find the source code on GitHub: https://github.com/khaledh/fusion
+This is both a documentation and a tutorial for building an operating system, Fusion OS,
+from scratch in Nim. You can find the source code on GitHub at
+[https://github.com/khaledh/fusion](https://github.com/khaledh/fusion).
+
+> Note: The source for this documentation is on GitHub at [https://github.com/khaledh/khaledh.github.io](https://github.com/khaledh/khaledh.github.io).
+Comments and contributions are welcome through GitHub issues and pull requests.
 
 ## Screenshots
 
