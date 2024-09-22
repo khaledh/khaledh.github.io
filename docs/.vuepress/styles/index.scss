@@ -5,7 +5,12 @@
 :root {
   // --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen,
   //   Ubuntu, Cantarell, "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif;
-  --font-family-code: "JetBrains Mono NL", "Andale Mono", "Monaco", monospace;
+  --code-font-family: "JetBrains Mono NL", "Andale Mono", "Monaco", monospace !important;
+  --font-family-code: "JetBrains Mono NL", "Andale Mono", "Monaco", monospace !important;
+}
+
+pre code {
+  color: #fafafa;
 }
 
 p pre,
@@ -21,6 +26,7 @@ pre code,
   // border-radius: 3px;
   // overflow-wrap: break-word;
   // transition: background-color var(--t-color);
+  line-height: 1.5;
 }
 
 code[class*=language-],
@@ -40,6 +46,7 @@ pre[class*=language-] {
   // tab-size: 4;
   // -webkit-hyphens: none;
   // hyphens: none;
+  line-height: 1.5;
 }
 
 div[class*=language-].line-numbers-mode .line-numbers .line-number::before {
@@ -49,7 +56,7 @@ div[class*=language-].line-numbers-mode .line-numbers .line-number::before {
 
 div[class*=language-].line-numbers-mode .line-numbers {
   font-size: 9pt;
-  line-height: 1.375;
+  line-height: 1.5;
 }
 
 p {
@@ -60,6 +67,10 @@ dd {
   margin-block-start: 0.6em;
   margin-block-end: 1em;
   line-height: 1.5;
+}
+
+p:has(img) {
+  text-align: center !important;
 }
 
 :root {
@@ -130,4 +141,17 @@ dd {
   // --sidebar-width-mobile: calc(var(--sidebar-width) * 0.82);
   --content-width: 820px;
   // --homepage-width: 960px;
+
+  --code-word-highlight-bg-color: rgb(220 220 220 / 15%);
+  --code-word-highlight-border: rgb(230 230 230 / 40%);
+   --code-c-highlight-bg: rgba(150 150 160 / 20%);
+  --code-c-bg: #1d1d1d;
+ }
+
+div[class*=language-] .line.highlighted {
+    display: inline-block;
+    width: 100%;
+    margin: 0 calc(-1*var(--code-padding-x));
+    padding: 0 var(--code-padding-x);
+    background-color: var(--code-c-highlight-bg)
 }

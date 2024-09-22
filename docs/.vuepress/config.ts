@@ -1,9 +1,12 @@
+import { viteBundler } from '@vuepress/bundler-vite'
 import { defineUserConfig } from 'vuepress'
-import { defaultTheme } from 'vuepress'
-import { searchProPlugin } from "vuepress-plugin-search-pro";
-import { mdEnhancePlugin } from 'vuepress-plugin-md-enhance';
-import markdownItDeflist from 'markdown-it-deflist';
-import { commentPlugin } from "vuepress-plugin-comment2";
+import { defaultTheme } from '@vuepress/theme-default'
+// import { searchPlugin } from '@vuepress/plugin-search'
+import { searchProPlugin } from "vuepress-plugin-search-pro"
+// import { mdEnhancePlugin } from 'vuepress-plugin-md-enhance'
+import { commentPlugin } from '@vuepress/plugin-comment'
+import { markdownImagePlugin } from '@vuepress/plugin-markdown-image'
+import markdownItDeflist from 'markdown-it-deflist'
 
 export default defineUserConfig({
   host: 'localhost',
@@ -68,11 +71,19 @@ export default defineUserConfig({
             '05-parser.md',
             '06-parser-p2.md',
             '07-grammarkit.md',
+            '08-go-to-decl.md',
+//             '09-scopes.md',
           ],
         }
       ],
     },
     contributors: false,
+    themePlugins: {
+      prismjs: {
+        theme: 'tomorrow',
+        notationWordHighlight: true,
+      },
+    },
   }),
   markdown: {
     emoji: false
@@ -81,17 +92,26 @@ export default defineUserConfig({
     searchProPlugin({
       indexContent: true,
     }),
-    mdEnhancePlugin({
-    }),
+//     mdEnhancePlugin({
+//     }),
+//     commentPlugin({
+//       provider: "Giscus",
+//       repo: "khaledh/fusion",
+//       repoId: "R_kgDOKv64lg",
+//       category: "Blog Comments",
+//       categoryId: "DIC_kwDOKv64ls4CbG37",
+//     }),
     commentPlugin({
-      provider: "Giscus",
-      repo: "khaledh/fusion",
-      repoId: "R_kgDOKv64lg",
-      category: "Blog Comments",
-      categoryId: "DIC_kwDOKv64ls4CbG37",
     }),
-  ],
+    markdownImagePlugin({
+      size: true,
+    }),
+],
   extendsMarkdown: (md) => {
     md.use(markdownItDeflist)
   },
+  bundler: viteBundler({
+    viteOptions: {},
+    vuePluginOptions: {},
+  }),
 })
