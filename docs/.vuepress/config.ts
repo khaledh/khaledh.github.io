@@ -17,8 +17,8 @@ export default defineUserConfig({
     navbar: [
       { text: 'Home', link: '/' },
       { text: 'Fusion OS', link: '/osdev/' },
-//       { text: 'Nim', link: '/nim/' },
       { text: 'NimJet', link: '/nimjet/' },
+//    { text: 'Nim', link: '/nim/' },
     ],
     sidebar: {
       '/osdev/': [
@@ -53,14 +53,6 @@ export default defineUserConfig({
           ],
         },
       ],
-      '/nim/': [
-        {
-          text: 'Nim',
-          children: [
-            '01-mm.md',
-          ],
-        }
-      ],
       '/nimjet/': [
         {
           text: 'NimJet',
@@ -73,7 +65,15 @@ export default defineUserConfig({
             '06-parser-p2.md',
             '07-grammarkit.md',
             '08-go-to-decl.md',
-//             '09-scopes.md',
+            '09-scopes.md',
+          ],
+        }
+      ],
+      '/nim/': [
+        {
+          text: 'Nim',
+          children: [
+            '01-mm.md',
           ],
         }
       ],
