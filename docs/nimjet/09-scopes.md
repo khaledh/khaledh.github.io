@@ -130,27 +130,19 @@ Let's use the example above to illustrate how this works.
   Its `execute` method will compare the name of the declaration against the name of the
   reference, and return `false` if they match (which stops the iteration), and `true`
   otherwise.
-- When `resolve` is called on the `IdentRef` node, the `treeWalkUp` method is called,
+- When `resolve` is called on `IdentReference`, the `treeWalkUp` method is called, 
   passing an instance of `IdentScopeProcessor`.
 - The `treeWalkUp` method iterates over the ancestor scopes of the `IdentRef` node,
   starting with the reference element itself. In this particular case, the only  
   ancestor scope is the `NimFile` (as returned by the `getContext` method of the
   `IdentRef` node).
-- If any of the ancestors have a `processDeclarations` method, it is called with the  
-  `IdentScopeProcessor` instance. In our case, the `NimFile` node will have a
-  `processDeclarations` method that will iterate over its children to find the target
-  declaration.
-- The `NimFile` element knows that it holds a `StmtList` child, so it will delegate the
-  `processDeclarations` call to the `StmtList` node.
-- The `StmtList` node will iterate over a subset of its children that are of type
-  `IdentDecl` (and possibly other declaration types that we haven't implemented yet).
-- For each `IdentDecl` node, the `execute` method of the `IdentScopeProcessor` instance is
-  called. If the name of the declaration matches the name of the reference, the
-  `execute` method will return `false`, which stops the iteration and returns the
+- The ancestor's `processDeclarations` method is called with the `IdentScopeProcessor` 
+  instance. In our case, the `NimFile` node will have a `processDeclarations` method 
+  that will look for declarations under its scope.
+- For each found `IdentDecl` node, the `execute` method of the `IdentScopeProcessor`
+  instance is called. If the name of the declaration matches the name of the reference,
+  the `execute` method will return `false`, which stops the iteration and returns the
   declaration as the result of the `resolve` method.
-
-Note that we will only process the immediate children and not descend into the 
-subtrees of those children, as those subtrees would have an inaccessible scope anyway. 
 
 With this in mind, let's implement the `IdentScopeProcessor` class:
 
@@ -213,34 +205,120 @@ to store additional information during the resolution process (we're not making 
 it in our case). Finally, we return the `result` field of the `IdentScopeProcessor`, 
 whether it's `null` (if the target declaration wasn't found) or the found declaration.
 
+## Processing Declarations
+
 The last missing piece is to implement the `processDeclarations` method in the 
-`NimFile` and `StmtList` classes. We'll start with the `StmtList` class, as it's the
+`NimFile` class. It turns out that processing declarations is the same under any scope,
+so we'll implement it once in a separate class and reuse it in all scope-defining 
+elements.
 
----
+Let's add a `NimScope` singleton object that contains the `processDeclarations` method.
 
-In this case, the `msg` declaration is in a `block` statement, which has its own scope
-that is not visible to the `echo` statement. To avoid incorrectly resolving the
-reference to that declaration, we need to stop the descent into the children of the
-ancestor if we traverse into a scope that is not an ancestor of the reference. We can
-do this by using the `PsiTreeUtil.isAncestor` method to check if the current element
-is an ancestor of the reference.
+```kotlin
+object NimScope {
+    val SCOPE_ELEMENT_TYPES = hashSetOf(NimFile::class)
 
-Another problem is that when we descend into the children of an ancestor, we need to skip
-previously visited subtrees. For example, the first step of the tree walk-up is to visit
-the `Command` node. Then, when we visit the `Stmt` node, we don't want to visit the
-`Command` node again. The `processDeclarations` method takes a `lastParent` parameter that
-we can use to keep track of the last parent (i.e. ancestor) we visited while walking up
-the tree. We can then use this parameter when descending into the children to skip over
-previously visited subtrees.
+    fun processDeclarations(
+        scopeElement: PsiElement,
+        processor: PsiScopeProcessor,
+        state: ResolveState,
+        lastParent: PsiElement?,
+        place: PsiElement
+    ): Boolean {
+        // Get all descendants, stopping at new scopes or subtrees that we have already processed
+        var decls = scopeElement.descendants(
+            canGoInside = {
+                it === scopeElement ||
+                it !== lastParent &&
+                it::class !in SCOPE_ELEMENT_TYPES
+            }
+        )
+        // Keep only declaration elements
+        decls = decls.filterIsInstance<IdentDecl>()
+        // Keep the ones that are declared before the reference element
+        decls = decls.filter { it.startOffset < place.startOffset }
 
-A third problem is the case when the declaration comes _after_ the reference in the
-file. Consider the following code snippet:
+        // Now process each declaration
+        return decls.all { processor.execute(it, state) }
+    }
 
-```nim
-echo msg
-let msg = "hello"
+}
 ```
 
-In this case, the `msg` declaration comes after the reference. We need to make sure that
-we don't resolve the reference to this declaration. To do this, we need to stop
-considering children of the ancestor if they come after the reference in the file. TODO.
+We're leveraging the `descendants` extension function to get all the descendants of the
+scope element. This function takes a `canGoInside` lambda that determines whether the
+function should descend into the children of the current element (the element being
+visited). There are three cases where we continue descending:
+
+- If the current element is the scope element itself (since `descendents` includes 
+  starting element),
+- If the current element is not the last parent of a subtree that we already processed,
+- If the current element is not a scope-defining element.
+
+The last condition is important because we don't want to descend into new scopes, 
+which would be inaccessible to the reference (like the `block` scope in the example).
+
+We then perform two filtering operations on the descendants:
+- We keep only the `IdentDecl` elements,
+- We keep only the declarations that come before the reference element.
+
+Finally, we use the `all` function on those declarations to process each of them. If any
+of the declarations returns `false` from the `execute` method, the `all` function will
+return early and stop the iteration. Otherwise, it will return `true` to indicate that no
+matching declaration was found.
+
+The last thing we need to do is call this method from the `processDeclarations` method of
+the `NimFile` class.
+
+```kotlin
+class NimFile(viewProvider: FileViewProvider) : PsiFileBase(viewProvider, NimLanguage) {
+    ...
+
+    override fun processDeclarations(
+        processor: PsiScopeProcessor,
+        state: ResolveState,
+        lastParent: PsiElement?,
+        place: PsiElement
+    ): Boolean =
+        NimScope.processDeclarations(this, processor, state, lastParent, place)
+
+}
+```
+
+Before we forget, let's also update the `IdentRefMixin` class to use the 
+`SCOPE_ELEMENT_TYPES` array from the `NimScope` object.
+
+```kotlin
+abstract class IdentRefMixin(node: ASTNode) : ASTWrapperPsiElement(node), IdentRef {
+
+    override fun getContext(): PsiElement? {
+        val scopeElementTypes = NimScope.SCOPE_ELEMENT_TYPES.map { it.java }.toTypedArray()
+        return PsiTreeUtil.getParentOfType(this, *scopeElementTypes)
+    }
+
+    ...
+}
+```
+
+This should take care of the scope resolution for the `IdentReference` class.
+
+## Testing Scope Resolution
+
+Let's test it out. I modified the BNF grammar temporarily to include the `block` statement
+so that I can test the scope resolution (I used a semicolon to terminate the block, since
+we don't have indentation-based parsing yet).
+
+![Global Scope Resolution](images/global-scope-resolution.png =400x)
+
+Notice that the highlighted `msg` reference in the global scope now resolves to the
+correct declaration right above it, and not the one in the block scope, even though the
+block scope appears first in the file. Now, let's look at the block scope. 
+
+![Block Scope Resolution](images/block-scope-resolution.png =400x)
+
+Great! The highlighted `msg` reference in the block scope resolves to the correct
+declaration inside the block, and the other reference in the global scope is not
+highlighted.
+
+Also, if we move the declaration after the reference, the reference doesn't resolve to 
+it, which is the correct behavior.
