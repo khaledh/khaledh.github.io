@@ -285,16 +285,33 @@ class NimFile(viewProvider: FileViewProvider) : PsiFileBase(viewProvider, NimLan
 }
 ```
 
-Before we forget, let's also update the `IdentRefMixin` class to use the 
-`SCOPE_ELEMENT_TYPES` array from the `NimScope` object.
+Before we forget, we also need to update the `IdentRefMixin` class to use the 
+same `SCOPE_ELEMENT_TYPES` array from the `NimScope` object, instead of defining it
+locally (which could easily diverge). Since the logic for finding the scope element is
+the same for all scope-defining elements, we can actually put that logic in the 
+`NimScope` object itself.
+
+```kotlin
+...
+
+object NimScope {
+    val SCOPE_ELEMENT_TYPES = hashSetOf(NimFile::class, BlockStmt::class)
+    ...
+
+    fun parentScope(element: PsiElement): PsiElement? {
+        val scopeElementTypes = SCOPE_ELEMENT_TYPES.map { it.java }.toTypedArray()
+        return PsiTreeUtil.getParentOfType(element, *scopeElementTypes)
+    }
+}
+```
+
+Now we can use the `parentScope` method in the `IdentRefMixin` class to find the scope
+element.
 
 ```kotlin
 abstract class IdentRefMixin(node: ASTNode) : ASTWrapperPsiElement(node), IdentRef {
 
-    override fun getContext(): PsiElement? {
-        val scopeElementTypes = NimScope.SCOPE_ELEMENT_TYPES.map { it.java }.toTypedArray()
-        return PsiTreeUtil.getParentOfType(this, *scopeElementTypes)
-    }
+    override fun getContext(): PsiElement? = NimScope.parentScope(this)
 
     ...
 }
@@ -318,7 +335,10 @@ block scope appears first in the file. Now, let's look at the block scope.
 
 Great! The highlighted `msg` reference in the block scope resolves to the correct
 declaration inside the block, and the other reference in the global scope is not
-highlighted.
+highlighted. Also, if we move the declaration after the reference, the reference 
+doesn't resolve to it, which is the correct behavior.
 
-Also, if we move the declaration after the reference, the reference doesn't resolve to 
-it, which is the correct behavior.
+We've reached an important milestone. Resolving references according to scoping rules 
+is a semantic feature that is crucial for any language plugin. The groundwork we've
+laid here will enable additional features such as find usages, rename refactoring, 
+code completion, and others.

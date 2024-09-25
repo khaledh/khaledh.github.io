@@ -66,6 +66,7 @@ export default defineUserConfig({
             '07-grammarkit.md',
             '08-go-to-decl.md',
             '09-scopes.md',
+            '10-rename-refactoring.md',
           ],
         }
       ],
