@@ -67,6 +67,7 @@ export default defineUserConfig({
             '08-go-to-decl.md',
             '09-scopes.md',
             '10-rename-refactoring.md',
+            '11-indentation.md',
           ],
         }
       ],
@@ -84,6 +85,9 @@ export default defineUserConfig({
       prismjs: {
         theme: 'tomorrow',
         notationWordHighlight: true,
+        notationFocus: true,
+        notationDiff: true,
+        whitespace: true,
       },
     },
   }),

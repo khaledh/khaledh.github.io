@@ -72,7 +72,7 @@ We'll use a simplified version of the Nim AST to guide us:
   ...
 }
 
-Root       ::= !<<eof>> StmtList
+Module     ::= !<<eof>> StmtList
 StmtList   ::= Stmt*
 Stmt       ::= LetSection
              | Command
@@ -86,8 +86,9 @@ IdentRef   ::= IDENT
 ```
 
 You'll notice that I simplified the `LetSection` rule to allow only a single declaration
-for now, using `IdentDecl` instead of an undifferentiated `IDENT`. The `Command` rule 
-is also simplified to only allow two `IdentRef` elements.
+for now (we'll come back to handling multiple declarations in a single `let` section
+later), using `IdentDecl` instead of an undifferentiated `IDENT`. The `Command` rule is
+also simplified to only allow two `IdentRef` elements.
 
 If we generate the parser and PSI classes now, we'll have the following files:
 
