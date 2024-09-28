@@ -69,6 +69,7 @@ export default defineUserConfig({
             '09-scopes.md',
             '10-rename-refactoring.md',
             '11-indentation.md',
+            '12-decl-sections.md',
           ],
         }
       ],
