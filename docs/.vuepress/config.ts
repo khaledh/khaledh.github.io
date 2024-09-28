@@ -56,6 +56,7 @@ export default defineUserConfig({
       '/nimjet/': [
         {
           text: 'NimJet',
+          link: '/nimjet/',
           children: [
             '01-intro.md',
             '02-setup.md',
