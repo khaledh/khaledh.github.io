@@ -84,7 +84,7 @@ we are in. The following diagram shows the state machine we need to implement.
 ![Lexer Indentation State Machine](images/lexer-indent-fsm.png =500x)
 
 Here's how it works:
-- We start in the `NORMAL` state.
+- We start in the `YYINITIAL` state (the default lexer state).
 - Upon encountering a newline character, we switch to the `BEGIN_LINE` state.
 - In the `BEGIN_LINE` state, we use a regex to match the leading whitespace of the 
   line and get its length. This is the indentation level of the line (which could be 
@@ -92,19 +92,19 @@ Here's how it works:
 - We have three cases:
   - If the indentation level is greater than the top of the stack, we emit an `IND` 
     token, push the new indentation level to the stack, and switch back to the 
-    `NORMAL` state.
+    `YYINITIAL` state.
   - If the indentation level is equal to the top of the stack, we emit an `EQD` token, 
-    and switch back to the `NORMAL` state (we don't modify the stack).
+    and switch back to the `YYINITIAL` state (we don't modify the stack).
   - The third case handles decrease in indentation, and is more involved than the 
     other two. That's because the decrease in indentation could be _insufficient_ 
     relative to the parent block. There are two situations to consider:
     - If there's only one level of indentation on the stack, and the current 
       indentation level is 0, we emit a `DED` token, pop the stack, and switch back to 
-      the `NORMAL` state.
+      the `YYINITIAL` state.
     - If there's more than one level of indentation on the stack, and the current 
       indentation level is less than or equal to the second-to-top level of the stack, 
       we emit a `DED` token, pop the stack, but we do *not* switch back to the 
-      `NORMAL` state just yet. Instead, we stay in the `BEGIN_LINE` state, push back 
+      `YYINITIAL` state just yet. Instead, we stay in the `BEGIN_LINE` state, push back 
       the whitespace text to the lexer, and let the lexer reprocess the line. This 
       allows us to emit the correct number of `DED` tokens until we reach the correct
       indentation level.
@@ -120,69 +120,69 @@ a `processIndentation` method to our lexer so that we can call it while in the
 // src/main/kotlin/khaledh/nimjet/lexer/Nim.flex
 ...
 
-// lexer states
-%state NORMAL
-%state BEGIN_LINE
-
 // lexer class code
+
+%{
+  private Stack<Integer> indentStack = new Stack<>();
+%}
+
+%init{
+  // initial indentation level is 0
+  indentStack.push(0);
+%init}
+
 %{
   private Stack<Integer> indentStack = new Stack<>();
 
   private IElementType processIndent() {
     int currIndent = yylength();
 
-    if (
-        (indentStack.empty() && currIndent > 0) ||
-        (!indentStack.empty() && currIndent > indentStack.peek())
-      ) {
-        // new indent level
-        indentStack.push(currIndent);
-        yybegin(NORMAL);
-        return NimToken.IND;
-     }
+    if (currIndent > indentStack.peek()) {
+      // new indent level
+      indentStack.push(currIndent);
+      yybegin(YYINITIAL);
+      return NimToken.IND;
+    }
 
-      if (
-        (indentStack.empty() && currIndent == 0) ||
-        (!indentStack.empty() && currIndent == indentStack.peek())
-      ) {
-          // same indent level
-          yybegin(NORMAL);
-          return NimToken.EQD;
-      }
+    if (currIndent == indentStack.peek()) {
+      // same indent level
+      yybegin(YYINITIAL);
+      return NimToken.EQD;
+    }
 
-     if (
-        (indentStack.size() == 1 && currIndent == 0) ||
-        (indentStack.size() > 1 && currIndent <= indentStack.get(indentStack.size() - 2))
-       ) {
-        // We can only dedent one level at a time, so don't switch back to NORMAL just yet,
-        // and keep returning DED tokens as long as there's more dedent levels.
-        indentStack.pop();
-        yypushback(yylength());
-        yybegin(BEGIN_LINE);
-        return NimToken.DED;
-     }
+    if (indentStack.size() > 1 && currIndent <= indentStack.get(indentStack.size() - 2)) {
+      // We can only dedent one level at a time, so don't switch back to YYINITIAL just yet,
+      // and keep returning DED tokens as long as there's more dedent levels.
+      indentStack.pop();
+      yypushback(yylength());
+      yybegin(BEGIN_LINE);
+      return NimToken.DED;
+    }
 
      // invalid indentation
      return NimToken.INVALID_IND;
   }
 %}
 
-Eol = \r\n|\r|\n
+// lexer states
+%state BEGIN_LINE
 
-<NORMAL> {
-    ...
-    {Eol}                 { yybegin(BEGIN_LINE); return TokenType.WHITE_SPACE; }
+// macros
+EOL = \r\n|\r|\n
+
+%%
+  
+<YYINITIAL> {
+  ...
+  {EOL}                   { yybegin(BEGIN_LINE); return TokenType.WHITE_SPACE; }
+  ...
 }
 
 <BEGIN_LINE> {
-  [ \t]*{Eol}             { return TokenType.WHITE_SPACE; } // skip empty lines
+  [ \t]*{EOL}             { return TokenType.WHITE_SPACE; } // skip empty lines
   [ \t]*                  { return processIndent(); }
 }
 ```
-
-Unfortunately, I couldn't find a way to initialize the stack with initial indentation
-level of 0, which would have simplified the logic a bit. So I had to check for empty 
-stack in the first two cases.
 
 When I tested this on a code sample, the IDE threw an error saying `"Lexer is not 
 progressing after calling advance()"`. At first, I was puzzled by this, so I fired up 
@@ -196,13 +196,9 @@ To work around this issue, I created two identical copies of the `BEGIN_LINE` st
 `BEGIN_LINE_1` and `BEGIN_LINE_2`, and updated the `DED` case to toggle between the 
 two states. It's a hack, but it works.
 
-```java {6,22-27,37-45}
+```java {15-20,30,34-39}
 // src/main/kotlin/khaledh/nimjet/lexer/Nim.flex
 ...
-
-// lexer states
-%state NORMAL
-%state BEGIN_LINE_1 BEGIN_LINE_2
 
 // lexer class code
 %{
@@ -211,11 +207,8 @@ two states. It's a hack, but it works.
   private IElementType processIndent() {
     ...
 
-    if (
-      (indentStack.size() == 1 && currIndent == 0) ||
-      (indentStack.size() > 1 && currIndent <= indentStack.get(indentStack.size() - 2))
-    ) {
-      // We can only dedent one level at a time, so don't switch back to NORMAL just yet,
+    if (indentStack.size() > 1 && currIndent <= indentStack.get(indentStack.size() - 2)) {
+      // We can only dedent one level at a time, so don't switch back to YYINITIAL just yet,
       // and keep returning DED tokens as long as there's more dedent levels.
       //
       // Also, IntelliJ's lexer validation doesn't like returning the same token multiple
@@ -231,15 +224,16 @@ two states. It's a hack, but it works.
     }
   }
 %}
+
+// lexer states
+%state BEGIN_LINE_1 BEGIN_LINE_2
 ...
+%%
 
-<BEGIN_LINE_1> {
-  [ \t]*{Eol}                    { return TokenType.WHITE_SPACE; }
-  [ \t]*                         { return processIndent(); }
-}
-
-<BEGIN_LINE_2> {
-  [ \t]*{Eol}                    { return TokenType.WHITE_SPACE; }
+// handle indentation
+// (we use two identical states to avoid a lexer validation issue; see processIndent)
+<BEGIN_LINE_1, BEGIN_LINE_2>
+  [ \t]*{EOL}                    { return TokenType.WHITE_SPACE; }
   [ \t]*                         { return processIndent(); }
 }
 ```
@@ -295,68 +289,30 @@ at the beginning of the file.
 
 We get an error saying that `<stmt list>` was expected at the beginning of the second 
 line. The reason is that the lexer emitted an `EQD` token for the empty line, which is 
-not expected by the parser at that location. We can easily fix this by adjusting the 
-lexer to skip whitespace at the beginning of the file.
+not expected by the parser at that location. We can easily fix this by skipping 
+whitespace at the beginning of the file. Instead of introducing more rules to handle 
+this, we can just use a flag `firstNonEmptyLine` (defaults to `true`), to decide 
+whether we're processing the first line or not, and act accordingly.
 
-```java
-// src/main/kotlin/khaledh/nimjet/lexer/Nim.flex
-...
-
-<YYINITIAL> {
-  // skip initial whitespace
-  [ \t]*{Eol}                    { return TokenType.WHITE_SPACE; }
-  [^]                            { yypushback(yylength()); yybegin(NORMAL); }
-}
-
-<NORMAL> {
-    ...
-}
-```
-
-Now the `YYINITIAL` state consumes any empty lines at the beginning of the file, and once
-it encounters a non-empty line, it pushes back that text and switches to the 
-`NORMAL` state to let it take over.
-
-While this should fix the leading empty lines issue, we've introduced another issue. 
-If the first non-empty line has leading whitespace, it's not going to be analyzed by 
-the `BEGIN_LINE_1` state, which means that the indentation level of the first line
-won't be recognized as an error.
-
-One way to fix this issue is to have the `YYINITIAL` state switch to the 
-`BEGIN_LINE_1` state if it encounters a non-empty line. This way, the lexer will get a 
-chance to analyze indentation for the first non-empty line. But this reintroduces 
-the original issue: now `processIndentation` will emit an `EQD` token for the first 
-line if it doesn't have leading whitespace. So, while I hate using flags for handling 
-special cases, I'm going to introduce a flag `firstNonEmptyLine` (defaults to `true`), 
-to decide whether we're processing the first line or not, and act accordingly.
-
-```java {6,11-15,24}
+```java {6,11-15}
 // src/main/kotlin/khaledh/nimjet/lexer/Nim.flex
 ...
 
 %{
   private Stack<Integer> indentStack = new Stack<>();
-  Boolean firstNonEmptyLine = true;
+  private Boolean firstNonEmptyLine = true;
 
   private IElementType processIndent() {
     int currIndent = yylength();
 
     if (firstNonEmptyLine && currIndent == 0) {
       firstNonEmptyLine = false;
-      yybegin(NORMAL);
+      yybegin(YYINITIAL);
       return TokenType.WHITE_SPACE;
     }
 
     ...
 %}
-...
-
-<YYINITIAL> {
-  // skip initial whitespace
-  [ \t]*{Eol}                    { return TokenType.WHITE_SPACE; }
-  [^]                            { yypushback(yylength()); yybegin(BEGIN_LINE_1); }
-}
-...
 ```
 
 This should fix the issue with the first non-empty line. Let's test it out.
@@ -384,7 +340,7 @@ in `NimToken`).
 // src/main/kotlin/khaledh/nimjet/lexer/Nim.flex
 ...
 
-<NORMAL> {
+<YYINITIAL> {
   ...
 
   "let"                          { return NimToken.LET; }
@@ -418,7 +374,6 @@ let's introduce a private rule `DED_OR_EOF` that matches either a `DED` token or
 end of file, and use it in places where we expect a `DED` token. A private rule means 
 it doesn't get a dedicated node in the PSI tree.
 
-```bnf
 ```bnf
 // src/main/kotlin/khaledh/nimjet/parser/Nim.bnf
 ...
@@ -486,7 +441,8 @@ first, followed by the `DED` tokens from the stack, which would have been incorr
 now that we ignore the last line if it's empty, we can safely emit those `DED` tokens once
 we encounter the end of file.
 
-Let's add a new method `processEof()` to our lexer to handle this.
+Let's add a new method `processEof()` to our lexer to handle this, and call it when we
+encounter the end of file from any state.
 
 ```java
 %{
@@ -503,8 +459,7 @@ Let's add a new method `processEof()` to our lexer to handle this.
 %}
 ...
 
-<YYINITIAL, NORMAL, BEGIN_LINE_1, BEGIN_LINE_2>
-  <<EOF>>                        { return processEof(); }
+<<EOF>>                        { return processEof(); }
 ```
 
 Since we can only return one token at a time, we call `advance()` to trigger another

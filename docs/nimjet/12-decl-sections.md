@@ -70,7 +70,7 @@ Let's not also forget to add the `var` and `const` keyword tokens to the lexer a
 ```java {7-8}
 ...
 
-<NORMAL> {
+<YYINITIAL> {
   ...
 
   "let"                          { return NimToken.LET; }
