@@ -79,32 +79,30 @@ and the `proc` block.
 
 We'll need to introduce a new `BEGIN_LINE` state in our lexer, and switch to it once we 
 encounter a new line. We'll also need a stack to keep track of the indentation levels 
-we are in. The following diagram shows the state machine we need to implement.
+we are in. The stack is initialized with indentation level 0. The following diagram shows 
+the state machine we need to implement.
 
 ![Lexer Indentation State Machine](images/lexer-indent-fsm.png =500x)
 
 Here's how it works:
 - We start in the `YYINITIAL` state (the default lexer state).
-- Upon encountering a newline character, we switch to the `BEGIN_LINE` state.
+- Since we always start at the beginning of a line, we switch to the `BEGIN_LINE` state.
+- In the `BEGIN_LINE` state, we treat any empty lines as whitespace.
 - In the `BEGIN_LINE` state, we use a regex to match the leading whitespace of the 
   line and get its length. This is the indentation level of the line (which could be 
   zero).
 - We have three cases:
   - If the indentation level is greater than the top of the stack, we emit an `IND` 
-    token, push the new indentation level to the stack, and switch back to the 
-    `YYINITIAL` state.
+    token, push the new indentation level to the stack, and switch to the `DEFAULT` state.
   - If the indentation level is equal to the top of the stack, we emit an `EQD` token, 
-    and switch back to the `YYINITIAL` state (we don't modify the stack).
+    and switch back to the `DEFAULT` state (we don't modify the stack).
   - The third case handles decrease in indentation, and is more involved than the 
     other two. That's because the decrease in indentation could be _insufficient_ 
-    relative to the parent block. There are two situations to consider:
-    - If there's only one level of indentation on the stack, and the current 
-      indentation level is 0, we emit a `DED` token, pop the stack, and switch back to 
-      the `YYINITIAL` state.
+    relative to the parent block. So, the rule is:
     - If there's more than one level of indentation on the stack, and the current 
       indentation level is less than or equal to the second-to-top level of the stack, 
       we emit a `DED` token, pop the stack, but we do *not* switch back to the 
-      `YYINITIAL` state just yet. Instead, we stay in the `BEGIN_LINE` state, push back 
+      `DEFAULT` state just yet. Instead, we stay in the `BEGIN_LINE` state, push back 
       the whitespace text to the lexer, and let the lexer reprocess the line. This 
       allows us to emit the correct number of `DED` tokens until we reach the correct
       indentation level.
@@ -132,30 +130,27 @@ a `processIndentation` method to our lexer so that we can call it while in the
 %init}
 
 %{
-  private Stack<Integer> indentStack = new Stack<>();
-
   private IElementType processIndent() {
     int currIndent = yylength();
 
     if (currIndent > indentStack.peek()) {
       // new indent level
       indentStack.push(currIndent);
-      yybegin(YYINITIAL);
+      yybegin(DEFAULT);
       return NimToken.IND;
     }
 
     if (currIndent == indentStack.peek()) {
       // same indent level
-      yybegin(YYINITIAL);
+      yybegin(DEFAULT);
       return NimToken.EQD;
     }
 
     if (indentStack.size() > 1 && currIndent <= indentStack.get(indentStack.size() - 2)) {
-      // We can only dedent one level at a time, so don't switch back to YYINITIAL just yet,
+      // We can only dedent one level at a time, so don't switch back to DEFAULT just yet,
       // and keep returning DED tokens as long as there's more dedent levels.
       indentStack.pop();
       yypushback(yylength());
-      yybegin(BEGIN_LINE);
       return NimToken.DED;
     }
 
@@ -165,21 +160,24 @@ a `processIndentation` method to our lexer so that we can call it while in the
 %}
 
 // lexer states
+%state DEFAULT
 %state BEGIN_LINE
 
 // macros
 EOL = \r\n|\r|\n
 
 %%
-  
-<YYINITIAL> {
+
+<YYINITIAL> [^]           { yypushback(1); yybegin(BEGIN_LINE); }
+
+<DEFAULT> {
   ...
   {EOL}                   { yybegin(BEGIN_LINE); return TokenType.WHITE_SPACE; }
   ...
 }
 
 <BEGIN_LINE> {
-  [ \t]*{EOL}             { return TokenType.WHITE_SPACE; } // skip empty lines
+  [ \t]*{EOL}             { return TokenType.WHITE_SPACE; /* skip empty lines */ }
   [ \t]*                  { return processIndent(); }
 }
 ```
@@ -193,10 +191,10 @@ exactly what we're trying to do when we need to emit multiple `DED` tokens in a 
 when the indentation decreases more than one level.
 
 To work around this issue, I created two identical copies of the `BEGIN_LINE` state:
-`BEGIN_LINE_1` and `BEGIN_LINE_2`, and updated the `DED` case to toggle between the 
+`BEGIN_LINE` and `BEGIN_LINE_2`, and updated the `DED` case to toggle between the 
 two states. It's a hack, but it works.
 
-```java {15-20,30,34-39}
+```java {15-20,29,33-34}
 // src/main/kotlin/khaledh/nimjet/lexer/Nim.flex
 ...
 
@@ -208,31 +206,29 @@ two states. It's a hack, but it works.
     ...
 
     if (indentStack.size() > 1 && currIndent <= indentStack.get(indentStack.size() - 2)) {
-      // We can only dedent one level at a time, so don't switch back to YYINITIAL just yet,
+      // We can only dedent one level at a time, so don't switch back to DEFAULT just yet,
       // and keep returning DED tokens as long as there's more dedent levels.
       //
       // Also, IntelliJ's lexer validation doesn't like returning the same token multiple
       // times in a row at the same location while in the same state (throws an exception
       // about "Lexer is not progressing"), so as a workaround we toggle between two
       // identical states to avoid this issue.
-      int nextState = yystate() == BEGIN_LINE_1 ? BEGIN_LINE_2 : BEGIN_LINE_1;
+      int nextState = yystate() == BEGIN_LINE ? BEGIN_LINE_2 : BEGIN_LINE;
       yybegin(nextState);
       indentStack.pop();
       yypushback(yylength());
-
       return NimToken.DED;
     }
   }
 %}
 
 // lexer states
-%state BEGIN_LINE_1 BEGIN_LINE_2
+%state BEGIN_LINE BEGIN_LINE_2
 ...
 %%
 
-// handle indentation
-// (we use two identical states to avoid a lexer validation issue; see processIndent)
-<BEGIN_LINE_1, BEGIN_LINE_2>
+// We use two identical states to avoid a lexer validation issue; see processIndent.
+<BEGIN_LINE, BEGIN_LINE_2>
   [ \t]*{EOL}                    { return TokenType.WHITE_SPACE; }
   [ \t]*                         { return processIndent(); }
 }
@@ -294,20 +290,24 @@ whitespace at the beginning of the file. Instead of introducing more rules to ha
 this, we can just use a flag `firstNonEmptyLine` (defaults to `true`), to decide 
 whether we're processing the first line or not, and act accordingly.
 
-```java {6,11-15}
+```java {6,14-19}
 // src/main/kotlin/khaledh/nimjet/lexer/Nim.flex
 ...
 
 %{
   private Stack<Integer> indentStack = new Stack<>();
   private Boolean firstNonEmptyLine = true;
+%}
+...
 
+%{
   private IElementType processIndent() {
     int currIndent = yylength();
 
+    // we don't want to emit EQD for the first non-empty line
     if (firstNonEmptyLine && currIndent == 0) {
       firstNonEmptyLine = false;
-      yybegin(YYINITIAL);
+      yybegin(DEFAULT);
       return TokenType.WHITE_SPACE;
     }
 
@@ -340,7 +340,7 @@ in `NimToken`).
 // src/main/kotlin/khaledh/nimjet/lexer/Nim.flex
 ...
 
-<YYINITIAL> {
+<DEFAULT> {
   ...
 
   "let"                          { return NimToken.LET; }
@@ -448,10 +448,38 @@ encounter the end of file from any state.
 %{
 ...
 
+private IElementType processEof() {
+  // return DED tokens (one at a time) for all remaining indent levels
+  if (indentStack.size() > 1) {
+    indentStack.pop();
+    return NimToken.DED;
+  }
+  return null;
+}
+%}
+...
+
+<<EOF>>                          { return processEof(); }
+```
+
+`processEof()` will be called multiple times (lexer stays at EOF) until the stack is 
+empty, at which point we return `null` to indicate that there are no more tokens.
+
+If we test this we run into the same issue as before, where the lexer doesn't progress 
+because it's returning the same token (`DED`) multiple times in a row at the same 
+location. So, we need to use the same trick as before, and toggle between two 
+identical states to avoid this issue.
+
+```java{8-9,17,22-23}
+%{
+  ...
+
   private IElementType processEof() {
-    while (!indentStack.empty()) {
+    // return DED tokens (one at a time) for all remaining indent levels
+    if (indentStack.size() > 1) {
       indentStack.pop();
-      try { advance(); } catch (Exception e) {}
+      int nextState = yystate() == AT_EOF ? AT_EOF_2 : AT_EOF;
+      yybegin(nextState);
       return NimToken.DED;
     }
     return null;
@@ -459,11 +487,17 @@ encounter the end of file from any state.
 %}
 ...
 
-<<EOF>>                        { return processEof(); }
+%states AT_EOF AT_EOF_2
+
+%%
+...
+
+<<EOF>>                          { yybegin(AT_EOF); }
+<AT_EOF, AT_EOF_2> <<EOF>>       { return processEof(); }
 ```
 
-Since we can only return one token at a time, we call `advance()` to trigger another
-recursive call to `processEof()` (lexer stays at EOF) until the stack is empty.
+This should handle the end of file issue correctly, emitting the correct number of `DED` 
+tokens to close any open blocks.
 
 Now, let's remove the `ded_or_eof` rule from the `BlockStmt` rule, and revert it back to
 its simpler form.
