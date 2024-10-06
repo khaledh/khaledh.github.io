@@ -58,8 +58,8 @@ get to documentation comments later in the section.
 ## Lexing Comments
 
 Since multiline comments can be nested, they require a dedicated state in the lexer, 
-with a way to track the nesting level. This means that we have to match line comments 
-separately from multiline comments.
+with a way to track the nesting level. This means that we need to treat line comments 
+differently from multiline comments.
 
 Typically, we'd use a regex to match line comments. However, I wasn't able to find a 
 single regex that would allow matching merged line comments (as described in the Nim 
@@ -73,34 +73,33 @@ encountered. In this state, we'll consume the rest of the line, and any subseque
 lines as long as they start with a `#` (optionally preceded by whitespace), but not `#[` 
 (which would start a multiline comment).
 
-```java {4,11,15-22}
+```java {4,10,14-20}
 // src/main/kotlin/khaledh/nimjet/lexer/Nim.flex
 ...
 
 %state L_COMMENT
-%state BEGIN_LINE_1 BEGIN_LINE_2
 
 %%
 
-<YYINITIAL> {
+<DEFAULT> {
   ...
   "#"                            { yybegin(L_COMMENT); }
   ...
 }
 
 <L_COMMENT> {
-  {EOL}[ \t]*#                   { /* merge line comment */ }
-  {EOL}[ \t]*([^#] | "#[")       { // not a line comment
+  {EOL}[ \t]*([^#] | #[#\[])     { // next line is not a line comment
                                    yypushback(yylength());
-                                   yybegin(YYINITIAL); return NimToken.COMMENT; }
-  <<EOF>>                        { yybegin(YYINITIAL); return NimToken.COMMENT; }
+                                   yybegin(DEFAULT); return NimToken.COMMENT; }
+  <<EOF>>                        { yybegin(AT_EOF); return NimToken.COMMENT; }
   [^]                            { /* consume all other character */ }
 }
 ```
 
-The `L_COMMENT` state keeps matching lines that start with a `#` character, and only 
-exits when it encounters a line that doesn't start with a `#` character or starts with 
-`#[`. The `<<EOF>>` rule ensures that a comment at the end of file (without a newline) 
+The `L_COMMENT` state keeps matching lines, and only exits when it encounters a line that
+doesn't start with a `#` character, or one that starts with either `##` or `#[`
+(which would start a documentation comment or a multiline comment, respectively). The
+`<<EOF>>` rule ensures that a comment at the end of file (without a newline)
 is also matched.
 
 Now that we have a way to recognize line comments, let's tell our `NimParserDefinition` to
@@ -154,7 +153,7 @@ Multiline comments pose a bit of a challenge for a couple of reasons:
 
 To solve the first issue, we need to introduce a variable, `multilineCommentLevel`, 
 and increment it when we encounter an opening `[#` sequence, and decrement it when we 
-encounter a closing `]#` sequence. We'll only switch back to the `YYINITIAL` state when 
+encounter a closing `]#` sequence. We'll only switch back to the `DEFAULT` state when 
 `multilineCommentLevel` reaches zero.
 
 The second issue is a bit more tricky. The lexer doesn't have a way to report errors; 
@@ -179,7 +178,7 @@ Let's introduce a new lexer state for multiline comments, `ML_COMMENT`, which wo
 when it encounters a `#[`. Let's also add a new class field, `multilineCommentLevel`, 
 to track the nesting level.
 
-```java {4,8,14,18-29}
+```java {4,8,14,18-38}
 ...
 
 %{
@@ -191,7 +190,7 @@ to track the nesting level.
 
 %%
 
-<YYINITIAL> {
+<DEFAULT> {
   ...
   "#["                           { yybegin(ML_COMMENT); multilineCommentLevel++; }
   ...
@@ -201,12 +200,21 @@ to track the nesting level.
   "#["                           { multilineCommentLevel++; }
   "]#"                           { multilineCommentLevel--;
                                    if (multilineCommentLevel == 0) {
-                                     yybegin(YYINITIAL);
+                                     yybegin(DEFAULT);
                                      return NimToken.COMMENT;
                                    }
                                  }
- <<EOF>>                         { yybegin(YYINITIAL);
-                                   return NimToken.UNTERMINATED_ML_COMMENT; }
+ <<EOF>>                         { if (multilineCommentLevel > 0) {
+                                     // emit a comment token first to treat everything
+                                     // until eof as a comment
+                                     multilineCommentLevel = 0;
+                                     return NimToken.COMMENT;
+                                   }
+                                   // then emit the unterminated comment token, 
+                                   // which we will higlight using an annotation
+                                   yybegin(AT_EOF);
+                                   return NimToken.ML_COMMENT_UNTERMINATED;
+                                 }
  [^]                             { /* consume all other character */ }
 }
 ```
@@ -214,18 +222,151 @@ to track the nesting level.
 Once we encounter a `#[`, we enter the `ML_COMMENT` state and increment the nesting 
 level (which is initially zero). When we encounter a `]#`, we decrement the nesting 
 level, and if it reaches zero, we exit the `ML_COMMENT` state and return a comment 
-token. If we reach the end of the file without closing the comment, we return the 
-special token `UNTERMINATED_ML_COMMENT`. 
+token.
 
-We'll leave the handling of this token for later when we introduce annotations. For 
-now, let's test multiline comments and see if the nesting works as expected.
+If we reach the end of the file without closing the comment, we emit a comment token for
+everything until the end of the file. We also set `multilineCommentLevel` to zero, and we
+stay in the `ML_COMMENT` state. When the lexer is advanced once more, we enter the same
+`<<EOF>>` rule, but this time we emit a special `UNTERMINATED_ML_COMMENT` token. We also
+switch to the `AT_EOF` state to let it call `processEof()` to return any pending `DED`
+tokens.
+
+We'll leave the handling of the `ML_COMMENT_UNTERMINATED` for later when we introduce
+annotations. For now, let's test multiline comments and see if the nesting works as
+expected.
 
 ![Multiline Comments](images/multiline-comments.png =600x)
 
 Great! We can insert multiline comments anywhere in the code, even if they are nested, 
 and they are correctly recognized.
 
-
 ## Documentation Comments
 
-TODO
+Documentation comments are similar to regular comments, except they're not ignored by 
+the parser. Let's add a new state, `DOC_COMMENT`, to handle documentation comments.
+
+```java {3,9,13-20}
+...
+
+%state L_COMMENT ML_COMMENT DOC_COMMENT
+
+%%
+
+<DEFAULT> {
+  ...
+  "##"                           { yybegin(DOC_COMMENT); }
+  ...
+}
+
+<DOC_COMMENT> {
+  {EOL}[ \t]*([^#] | #[^#])     { // next line is not a doc comment
+                                  yypushback(yylength());
+                                  yybegin(DEFAULT); return NimToken.D_COMMENT; }
+  <<EOF>>                        { yybegin(AT_EOF); return NimToken.D_COMMENT; }
+  [^]                            { /* consume all other character */ }
+}
+```
+
+The `DOC_COMMENT` state is similar to the `L_COMMENT` state, except it starts with 
+`##`, and it returns a different token, `D_COMMENT`, which we'll use in the parser to 
+capture documentation comments in the syntax tree.
+
+Now, let's update the grammar to include documentation comments. Like regular 
+comments, doc comments can appear almost anywhere. However, from a semantic point of 
+view, they are meaningful only in certain places. A good source of information on where documentation 
+comments are meaningful semantically is the 
+[`tdoc_comments.nim`](https://github.com/nim-lang/Nim/blob/devel/tests/parser/tdoc_comments.nim)
+test file from the Nim repository. 
+
+Here's a summary of where documentation comments are meaningful:
+- In a statement list, as a comment statement.
+- For each of the following, the documentation comment can appear at the end of the 
+  declaration line, or indented right below it:
+  - Routines (procs, methods, templates, etc.)
+  - Type, type field, and enum value declarations
+  - Vars and constants declaration
+
+Let's start by updating the grammar to include documentation comments in places where 
+we expect them to show up. We'll add a rule `DocComment` to be used in the meaningful 
+places mentioned above. In all other places we'll use the `D_COMMENT` token directly. 
+
+```bnf {12,18,24,26,35}
+...
+
+Module       ::= !<<eof>> StmtList
+
+StmtList     ::= <<list Stmt EQD>>
+
+private Stmt ::= ConstSection
+               | VarSection
+               | LetSection
+               | Command
+               | BlockStmt
+               | CommentStmt
+
+ConstSection ::= CONST <<section IdentDef>>
+LetSection   ::= LET <<section IdentDef>>
+VarSection   ::= VAR <<section IdentDef>>
+
+IdentDef     ::= IdentDecl EQ STRING_LIT DocComment?
+
+Command      ::= IdentRef IdentRef
+
+BlockStmt    ::= BLOCK COLON D_COMMENT? <<indented StmtList>>
+
+CommentStmt  ::= D_COMMENT
+
+DocComment   ::= <<optind D_COMMENT>>
+
+IdentDecl    ::= IDENT
+IdentRef     ::= IDENT
+
+// meta rules
+
+private meta list     ::= <<p1>> (<<p2>> <<p1>>)*
+private meta indented ::= IND <<p>> DED
+private meta section  ::= <<p>> | D_COMMENT? <<indented <<list (<<p>> | D_COMMENT) EQD>>>>
+private meta optind   ::= <<p>> | <<indented <<p>>>>
+```
+
+The `CommentStmt` rule is a new rule that allows a documentation comment to appear as 
+a statement in a statement list. The `DocComment` rule is a new rule that allows a doc 
+comment to appear right after an element, or indented below it (we use the `optind` 
+meta rule for that). To support doc comments for let/var/constant sections, we updated 
+the `IdentDef` rule to include an optional `DocComment` at the end. Finally, we 
+updated the `section` rule to allow a doc comment token to optionally appear 
+interspersed with the declarations.
+
+Let's look at an example:
+
+```nim
+## this is a doc comment
+## that spans multiple lines
+
+block:              ## not meaningful
+  let               ## not meaningful
+    msg = "hello"   ## documents `msg`
+      ## continues to document `msg`
+
+    ## not meaningful
+    foo = "foo"
+      ## documents `foo`
+
+  echo msg
+  ## not meaningful
+  echo foo
+```
+
+As you can see, although doc comments can appear almost anywhere, they are usually 
+used to document declarations. I'm not sure why they are allowed in other places, but 
+typically they are not used there (a regular comment would suffice in those places).
+
+Let's test this out.
+
+![Documentation Comments](images/doc-comments.png =750x)
+
+Looks good. Notice that the case for the `msg` variable declaration, where the doc 
+comment starts at the end of the line, and continues on the next line, is handled as a 
+single doc comment.
+
+We now have full support for all kinds of Nim comments.

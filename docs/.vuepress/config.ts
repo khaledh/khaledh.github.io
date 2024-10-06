@@ -70,7 +70,7 @@ export default defineUserConfig({
             '10-rename-refactoring.md',
             '11-indentation.md',
             '12-decl-sections.md',
-//            '13-comments.md',
+            '13-comments.md',
           ],
         }
       ],
