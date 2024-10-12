@@ -71,6 +71,7 @@ export default defineUserConfig({
             '11-indentation.md',
             '12-decl-sections.md',
             '13-comments.md',
+            '14-numeric-lit.md',
           ],
         }
       ],
