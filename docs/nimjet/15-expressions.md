@@ -322,11 +322,18 @@ $foo` the `$` is a unary operator, while in `let c = a $ b` the `$` is a binary
 operator. Note that, in `a$ b` and `a$b` the `$` is also a binary operator.
 
 While we can recognize unary operators in the lexer, this will double the number of 
-operator tokens we have to handle in the parser. A simpler approach is to add an 
-external rule to the parser to check if an operator is unary by looking at the 
-whitespace around the operator token. Let's add this rule to the parser utility class.
+operator tokens we have to handle in the parser. A simpler approach is to customize 
+the parser to recognize if an operator is unary based on the surrounding whitespace. 
+
+Fortunately, Grammar-Kit supports adding custom methods to the parser as an escape hatch, 
+which can be invoked using the `<<method>>` notation in the grammar. Those are called 
+external rules. We can use this feature to call into a method that checks if an operator 
+is unary. Let's start by adding a parser utility class that will handle this.
 
 ```kt
+// src/main/kotlin/khaledh/nimjet/parser/NimParserUtil.kt
+...
+
 class NimParserUtil : GeneratedParserUtilBase() {
     companion object {
         ...
@@ -350,6 +357,12 @@ class NimParserUtil : GeneratedParserUtilBase() {
 }
 ```
 
+Note: The `@Suppress("UNUSED_PARAMETER")` annotation is used to suppress the warning
+about the unused `level` parameter (this is just the parser level, which we don't need).
+We use the `builder` parameter to get the current token type and advance the lexer
+when needed.
+
+
 The method should be self-explanatory. We make use of the `currentOffset` and 
 `originalText` properties of the `PsiBuilder` to check if the character before and after 
 the token is whitespace. We then return `true` if the operator has leading whitespace 
@@ -357,7 +370,12 @@ but no trailing whitespace.
 
 Let's add the external rule to the grammar and use it to handle unary operators. 
 
-```bnf {5,7,13,18}
+```bnf {3,10,12,18,23}
+{
+  ...    
+  parserUtilClass="khaledh.nimjet.parser.NimParserUtil"
+  ...
+}
 ...
 
 PrimaryExpr       ::= Literal
@@ -376,8 +394,12 @@ private OP_UNARY  ::= <<is_unary>> OP
 // external rules
 
 external is_unary       ::= isUnary
-...
 ```
+
+We first tell Grammar-Kit to use the `NimParserUtil` class for the parser utilities
+(i.e. external rules). The external rules are declared at the end using the `external`
+directive by assigning the rule name to the corresponding method in the parser utility
+class.
 
 We added a private `OP` rule that matches any operator, and an `OP_UNARY` rule that 
 uses the `<<is_unary>>` external rule to check if the operator is unary.
@@ -569,16 +591,10 @@ appear after an operator. The issue with this approach is that, after an express
 ends, we can't tell how many dedent tokens we need to skip to get back to the correct
 indentation level. We need a way to track the indentation level in the parser.
 
-Fortunately, Grammar-Kit supports adding custom methods to the parser, which can be
-invoked using the `<<method>>` notation in the grammar. Those are called external
-rules. We can use this feature to call into methods that handle indentation tracking,
-and once an expression ends, we can use the tracked indentation level to skip the
-right number of dedent tokens.
-
-Let's start by adding a parser utility class that will handle the indentation tracking.
+Let's add a few external rules to the parser utility class to handle this.
 
 ```kt
-// src/main/kotlin/khaledh/nimjet/parser/NimParserUtil.kt
+...
 
 class NimParserUtil : GeneratedParserUtilBase() {
 
@@ -621,6 +637,8 @@ class NimParserUtil : GeneratedParserUtilBase() {
             }
             return true
         }
+        
+        ...
     }
 
 }
@@ -642,21 +660,12 @@ expression. We define three methods:
   remaining `DED` tokens (if any) after the expression ends. It doesn't consume `EQD`
   (if any) since such a token would belong to the parent block, not the expression.
 
-Note: The `@Suppress("UNUSED_PARAMETER")` annotation is used to suppress the warning
-about the unused `level` parameter (this is just the parser level, which we don't need).
-We use the `builder` parameter to get the current token type and advance the lexer
-when needed.
-
 The idea here is to call `exprIndentStart` at the start of an expression, `exprIndent`
 after any operator within the expression, and `exprIndentEnd` at the end of the
 expression. Let's modify the grammar to use these external rules.
 
 ```bnf
-{
-  ...    
-  parserUtilClass="khaledh.nimjet.parser.NimParserUtil"
-  ...
-}
+...
 
 Expr              ::= <<expr_ind_start>> SimpleExpr <<expr_ind_end>>
 ...
@@ -669,16 +678,11 @@ Op10Expr          ::= SimpleExpr OP10 <<expr_ind>> SimpleExpr
 ...
 
 // external rules
-
+...
 external expr_ind_start ::= exprIndentStart
 external expr_ind       ::= exprIndent
 external expr_ind_end   ::= exprIndentEnd
 ```
-
-We first tell Grammar-Kit to use the `NimParserUtil` class for the parser utilities
-(i.e. external rules). The external rules are declared at the end using the `external`
-directive by assigning the rule name to the corresponding method in the parser utility
-class.
 
 We then use the `<<expr_ind_start>>` and `<<expr_ind_end>>` rules at the start and end
 of the `Expr` rule, respectively. This ensures that the indentation level is reset at
