@@ -72,6 +72,7 @@ export default defineUserConfig({
             '12-decl-sections.md',
             '13-comments.md',
             '14-numeric-lit.md',
+            '15-expressions.md',
           ],
         }
       ],
