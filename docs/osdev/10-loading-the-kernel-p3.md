@@ -54,9 +54,9 @@ Ideally we shouldn't pass the UEFI memory map as is to the kernel. The memory ma
 type
   MemoryType* = enum
     Free
-    KernelImage
+    KernelCode
+    KernelData
     KernelStack
-    KernelBootInfo
     Reserved
 
   MemoryMapEntry* = object
