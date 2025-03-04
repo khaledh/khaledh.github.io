@@ -1,5 +1,9 @@
 ---
 title: Khaled Hammouda
+head:
+  - - meta
+    - name: google-site-verification
+      content: r9SwWF3Dq1r2xj5PnVslkRUCPY76mKOhM5DNf8gEXE0
 ---
 
 Welcome to my little corner on the web. Here, you will find some of my software projects 
