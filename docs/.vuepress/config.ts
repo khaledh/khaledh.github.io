@@ -7,6 +7,7 @@ import { searchProPlugin } from "vuepress-plugin-search-pro"
 import { commentPlugin } from '@vuepress/plugin-comment'
 import { markdownImagePlugin } from '@vuepress/plugin-markdown-image'
 import { removeHtmlExtensionPlugin } from 'vuepress-plugin-remove-html-extension'
+import { sitemapPlugin } from '@vuepress/plugin-sitemap'
 import markdownItDeflist from 'markdown-it-deflist'
 
 export default defineUserConfig({
@@ -119,6 +120,9 @@ export default defineUserConfig({
       size: true,
     }),
     removeHtmlExtensionPlugin(),
+    sitemapPlugin({
+      hostname: 'https://0xc0ffee.netlify.app',
+    }),
   ],
   extendsMarkdown: (md) => {
     md.use(markdownItDeflist)
