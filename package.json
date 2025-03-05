@@ -20,5 +20,8 @@
     "vue": "^3.5.5",
     "vuepress": "2.0.0-rc.15",
     "vuepress-plugin-search-pro": "2.0.0-rc.52"
+  },
+  "dependencies": {
+    "vuepress-plugin-remove-html-extension": "^1.17.0"
   }
 }
