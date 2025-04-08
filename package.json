@@ -15,12 +15,15 @@
     "@vuepress/plugin-comment": "2.0.0-rc.43",
     "@vuepress/plugin-markdown-image": "2.0.0-rc.47",
     "@vuepress/plugin-search": "2.0.0-rc.43",
+    "@vuepress/plugin-sitemap": "2.0.0-rc.81",
     "@vuepress/theme-default": "2.0.0-rc.43",
     "markdown-it-deflist": "^3.0.0",
     "vue": "^3.5.5",
     "vuepress": "2.0.0-rc.15",
-    "vuepress-plugin-search-pro": "2.0.0-rc.52",
-    "@vuepress/plugin-sitemap": "2.0.0-rc.81",
-    "vuepress-plugin-remove-html-extension": "^1.17.0"
+    "vuepress-plugin-remove-html-extension": "^1.17.0",
+    "vuepress-plugin-search-pro": "2.0.0-rc.52"
+  },
+  "dependencies": {
+    "markdown-it-footnote": "^4.0.0"
   }
 }

@@ -9,6 +9,7 @@ import { markdownImagePlugin } from '@vuepress/plugin-markdown-image'
 import { removeHtmlExtensionPlugin } from 'vuepress-plugin-remove-html-extension'
 import { sitemapPlugin } from '@vuepress/plugin-sitemap'
 import markdownItDeflist from 'markdown-it-deflist'
+import markdownItFootnote from 'markdown-it-footnote'
 
 export default defineUserConfig({
   host: 'localhost',
@@ -52,6 +53,7 @@ export default defineUserConfig({
             '22-elf-loader-p2.md',
             '23-coop-multitasking.md',
             '24-system-library.md',
+            '25-interrupt-controller.md',
           ],
         },
       ],
@@ -126,6 +128,7 @@ export default defineUserConfig({
   ],
   extendsMarkdown: (md) => {
     md.use(markdownItDeflist)
+    md.use(markdownItFootnote)
   },
   bundler: viteBundler({
     viteOptions: {},
