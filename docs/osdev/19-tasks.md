@@ -1,10 +1,15 @@
 # Tasks
 
-We're starting to accumulate a number of things about the user program that the kernel needs to track: the user page table, the user stack, the kernel switch stack, and the user `rsp` when executing `syscall`. These are all currently tracked in global variables. Once we start having more than one user task, it will be hard to keep track of all these things.
+We're starting to accumulate a number of things about the user program that the kernel
+needs to track: the user page table, the user stack, the kernel switch stack, and the user
+`rsp` when executing `syscall`. These are all currently tracked in global variables. Once
+we start having more than one user task, it will be hard to keep track of all these
+things.
 
 ## Task definition
 
-Let's define a `Task` type to encapsulate all this information. This will prepare us for having multiple tasks. Let's create a new module `tasks.nim` for this.
+Let's define a `Task` type to encapsulate all this information. This will prepare us for
+having multiple tasks. Let's create a new module `tasks.nim` for this.
 
 ```nim
 # src/kernel/tasks.nim
@@ -29,13 +34,22 @@ var
   nextId*: uint64 = 0
 ```
 
-Each task has a unique `id`, a pointer to its page table, and two stacks: one for user mode and one for kernel mode. The `rsp` field is where the user stack pointer is stored when the task is executing in kernel mode (e.g. when executing a system call). We also define a `TaskStack` type to encapsulate the stack address, size, and the bottom of the stack (i.e. the address just beyond the end of the stack). The `nextId` variable will be used to assign unique IDs to each task.
+Each task has a unique `id`, a pointer to its page table, and two stacks: one for user
+mode and one for kernel mode. The `rsp` field is where the user stack pointer is stored
+when the task is executing in kernel mode (e.g. when executing a system call). We also
+define a `TaskStack` type to encapsulate the stack address, size, and the bottom of the
+stack (i.e. the address just beyond the end of the stack). The `nextId` variable will be
+used to assign unique IDs to each task.
 
-Before we can start creating tasks, we need a way to allocate virtual memory within an address space. Let's add a few things to the virtual memory manager to support this.
+Before we can start creating tasks, we need a way to allocate virtual memory within an
+address space. Let's add a few things to the virtual memory manager to support this.
 
 ## Address space abstraction
 
-For a particular address space, we need to track which regions are currently allocated, and a way to allocate more regions. We'll use this to allocate the user stack and kernel stack. To make it easy to refer to a particular address space, and track which regions are currently allocated in it, we'll define a `VMAddressSpace` type.
+For a particular address space, we need to track which regions are currently allocated,
+and a way to allocate more regions. We'll use this to allocate the user stack and kernel
+stack. To make it easy to refer to a particular address space, and track which regions are
+currently allocated in it, we'll define a `VMAddressSpace` type.
 
 ```nim
 # src/kernel/vmm.nim
@@ -52,9 +66,14 @@ type
     pml4*: ptr PML4Table
 ```
 
-Notice that I also defined a `VMRegion` type to represent a contiguous region of virtual memory. Notice also that I defined two fields `minAddress` and `maxAddress` in `VMAddressSpace` to track the minimum and maximum addresses in the address space. This will make it easy to confine the address space to the lower half (for user space) or upper half (for kernel space) of the virtual address space.
+Notice that I also defined a `VMRegion` type to represent a contiguous region of virtual
+memory. Notice also that I defined two fields `minAddress` and `maxAddress` in
+`VMAddressSpace` to track the minimum and maximum addresses in the address space. This
+will make it easy to confine the address space to the lower half (for user space) or upper
+half (for kernel space) of the virtual address space.
 
-Let's make a slight modification to the `Task` type to use the new `VMAddressSpace` type instead of a pointer to a `PML4Table`.
+Let's make a slight modification to the `Task` type to use the new `VMAddressSpace` type
+instead of a pointer to a `PML4Table`.
 
 ```nim{3}
   Task* = ref object
@@ -86,7 +105,7 @@ proc vmalloc*(
     virtAddr = region.start +! region.npages * PageSize
 
   # allocate physical memory and map it
-  let  physAddr = pmalloc(pageCount).get # TODO: handle allocation failure
+  let physAddr = pmalloc(pageCount).get # TODO: handle allocation failure
   mapRegion(space.pml4, virtAddr, physAddr, pageCount, pageAccess, pageMode)
 
   # add the region to the address space
@@ -98,9 +117,15 @@ proc vmalloc*(
   result = some virtAddr
 ```
 
-The `vmalloc` proc finds a free region in the address space, allocates physical memory, and maps it into the address space. It returns the virtual address of the allocated region. We then sort the regions by start address, so that we can easily find a free region in the future. (Ideally, the standard library should provide a sorted container that we can use here, but for now, we'll just sort the regions manually after adding a new one.)
+The `vmalloc` proc finds a free region in the address space, allocates physical memory,
+and maps it into the address space. It returns the virtual address of the allocated
+region. We then sort the regions by start address, so that we can easily find a free
+region in the future. (Ideally, the standard library should provide a sorted container
+that we can use here, but for now, we'll just sort the regions manually after adding a new
+one.)
 
-We also need a way to add existing VM regions to an address space. We'll need this to add the existing kernel VM regions (code/data and stack) to its address space.
+We also need a way to add existing VM regions to an address space. We'll need this to add
+the existing kernel VM regions (code/data and stack) to its address space.
 
 ```nim
 # src/kernel/vmm.nim
@@ -111,7 +136,8 @@ proc vmAddRegion*(space: var VMAddressSpace, start: VirtAddr, npages: uint64) =
 
 ## Kernel address space
 
-The kernel itself needs its own address space. Let's create a global variable `kspace` to track it.
+The kernel itself needs its own address space. Let's create a global variable `kspace` to
+track it.
 
 ```nim
 # src/kernel/vmm.nim
@@ -163,9 +189,11 @@ Creating a task involves the following steps:
 4. Allocating and mapping a user stack (in user space)
 5. Allocating and mapping a kernel stack (in kernel space)
 6. Creating an interrupt stack frame on the kernel stack (for switching to user mode)
-7. Setting the `rsp` field to the interrupt stack frame
+7. Setting the `rsp` field to point to the interrupt stack frame
 
-This seems like a lot of steps, but it's not too bad. Let's add a `createTask` proc to the `tasks` module to do all this. We'll also add a `createStack` helper proc to allocate a stack in a particular address space.
+This seems like a lot of steps, but it's not too bad. Let's add a `createTask` proc to the
+`tasks` module to do all this. We'll also add a `createStack` helper proc to allocate a
+stack in a particular address space.
 
 ```nim
 # src/kernel/tasks.nim
@@ -229,11 +257,15 @@ proc createTask*(
   result.rsp = cast[uint64](kstack.data[index - 5].addr)
 ```
 
-Most of this code is not new, we just put it together in one place. The only new thing is calling `vmalloc` to allocate the user stack and kernel stack (which in turn allocates the backing physical memory). We no longer need to create global arrays to statically allocate the stacks.
+Most of this code is not new; we just put it together in one place. The only new thing is
+calling `vmalloc` to allocate the user stack and kernel stack (which in turn allocates the
+backing physical memory). We no longer need to create global arrays to statically allocate
+the stacks.
 
 ## Switching to a task
 
-The part responsible for switching to a task was at the end of the `KernelMainInner` proc. Let's move it to the `tasks` module.
+The part responsible for switching to a task was at the end of the `KernelMainInner` proc.
+Let's move it to the `tasks` module.
 
 ```nim
 # src/kernel/tasks.nim
@@ -251,11 +283,15 @@ proc switchTo*(task: var Task) {.noreturn.} =
   """
 ```
 
-We update `tss.rsp0` to point to the kernel stack (so it can be used when the task switches to kernel mode), set the active page table to the task's page table, set the `rsp` register to the tasks's `rsp` field (which should point to the interrupt stack frame), and then execute `iretq` to switch to the task.
+We update `tss.rsp0` to point to the kernel stack (so it can be used when the task
+switches to kernel mode), set the active page table to the task's page table, set the
+`rsp` register to the task's `rsp` field (which should point to the interrupt stack
+frame), and then execute `iretq` to switch to the task.
 
 ## Trying it out
 
-We can now replace a big chunk of the code we had in `KernelMainInner` with a call to `createTask` and `switchTo`.
+We can now replace a big chunk of the code we had in `KernelMainInner` with a call to
+`createTask` and `switchTo`.
 
 ```nim
 # src/kernel/main.nim
@@ -295,13 +331,21 @@ syscall: num=1
 syscall: exit: code=0
 ```
 
-Great! It's nice to be able to encapsulate all the task information in a `Task` object, and to be able to create a task and switch to it with just a few lines of code.
+Great! It's nice to be able to encapsulate all the task information in a `Task` object,
+and to be able to create a task and switch to it with just a few lines of code.
 
-There's one thing that I still don't like, which is that we initialize the system calls with the kernel stack of the task. The system call entry point should be able to switch to the current task's kernel stack on its own, without relying on a global variable for the kernel stack. Once we start having multiple tasks, we have to be able to switch to the kernel stack of the current task.
+There's one thing that I still don't like, which is that we initialize the system calls
+with the kernel stack of the task. The system call entry point should be able to switch to
+the current task's kernel stack on its own, without relying on a global variable for the
+kernel stack. Once we start having multiple tasks, we need to be able to switch to the
+kernel stack of the current task.
 
 ## Tracking the current task
 
-We can solve this problem by tracking the current task in a global variable. Let's add a `currentTask` variable to the `tasks` module, and set it in the `switchTo` proc. One thing we'll do differently here is that we'll add the `exportc` pragma to this variable, so that we can access it from inline assembly later.
+We can solve this problem by tracking the current task in a global variable. Let's add a
+`currentTask` variable to the `tasks` module, and set it in the `switchTo` proc. One thing
+we'll do differently here is that we'll add the `exportc` pragma to this variable, so that
+we can access it from inline assembly later.
 
 ```nim
 # src/kernel/tasks.nim
@@ -314,7 +358,8 @@ proc switchTo*(task: var Task) {.noreturn.} =
   ...
 ```
 
-Now, we can change the system call entry point to switch to the current task's kernel stack.
+Now, we can change the system call entry point to switch to the current task's kernel
+stack.
 
 ```nim{9,23-24}
 # src/kernel/syscalls.nim
@@ -355,7 +400,9 @@ proc syscallInit*() =
   ...
 ```
 
-And make the corresponding change in `KernelMainInner`. Also, since we don't need the kernel stack to initialize system calls anymore, we can move the call to `syscallInit` before creating the task.
+And make the corresponding change in `KernelMainInner`. Also, since we don't need the
+kernel stack to initialize system calls anymore, we can move the call to `syscallInit`
+before creating the task.
 
 ```nim
 # src/kernel/main.nim
@@ -398,4 +445,11 @@ syscall: exit: code=0
 
 All good! We're in a much better place than we were before.
 
-Ideally, we should now be able to create multiple tasks and switch between them. But, since we're creating a single address space OS, we need to be able to load tasks at different virtual addresses. So far, we've been using a fixed virtual address for the user task; i.e. the task image is not relocatable. This means we have to link every user program at a different virtual address, which is not ideal. Traditional operating systems use a separate address space for each task, so linking the task image at a fixed virtual address is not a problem. In our case, we need to make the task image relocatable, so that we can load it at an arbitrary virtual address. That's what we'll do next.
+Ideally, we should now be able to create multiple tasks and switch between them. But,
+since we're creating a single address space OS, we need to be able to load tasks at
+different virtual addresses. So far, we've been using a fixed virtual address for the user
+task; i.e., the task image is not relocatable. This means we have to link every user
+program at a different virtual address, which is not ideal. Traditional operating systems
+use a separate address space for each task, so linking the task image at a fixed virtual
+address is not a problem. In our case, we need to make the task image relocatable, so that
+we can load it at an arbitrary virtual address. That's what we'll do next.

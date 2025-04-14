@@ -1,10 +1,19 @@
 # Physical Memory
 
-Managing physical memory involves being able to allocate and free physical page frames. We'll create a **Physical Memory Manager** (PMM) that will keep track of which physical pages are free and which are in use. There are many ways to implement a PMM, the most popular being a bitmap, a free list, and a free stack. I'll keep it simple and implement a free list.
+Managing physical memory involves being able to allocate and free physical page frames.
+We'll create a **Physical Memory Manager** (PMM) that will keep track of which physical
+pages are free and which are in use. There are many ways to implement a PMM, the most
+popular being a bitmap, a free list, and a free stack. I'll keep it simple and implement a
+free list.
 
 ## Free List
 
-The free list will be a linked list of free memory regions. We will store the address of the list head in a global variable. Each node will be stored at the beginning of a free region, and will contain the region size in terms of frames, and a `next` pointer to the next node in the list. This way we don't have to allocate memory for the list itself (except for the list head pointer), since we will use the free regions themselves to store the list nodes. Here's what it might look like after a few allocations and frees:
+The free list will be a linked list of free memory regions. We will store the address of
+the list head in a global variable. Each node will be stored at the beginning of a free
+region, and will contain the region size in terms of frames, and a `next` pointer to the
+next node in the list. This way we don't have to allocate memory for the list itself (
+except for the list head pointer), since we will use the free regions themselves to store
+the list nodes. Here's what it might look like after a few allocations and frees:
 
 ```text
      0                                         Physical Memory                                       max
@@ -17,9 +26,13 @@ next ├──┤            │░░░░░░░░░░░░├──┤
 head ─┘                                                                      └─▶ nil
 ```
 
-Allocating a page frame will involve finding a free region that is large enough, splitting it if necessary, and returning the starting address of the allocated region. Freeing a region will involve finding the correct place in the list to insert the region, and merging it with adjacent regions if necessary.
+Allocating a page frame will involve finding a free region that is large enough, splitting
+it if necessary, and returning the starting address of the allocated region. Freeing a
+region will involve finding the correct place in the list to insert the region, and
+merging it with adjacent regions if necessary.
 
-Let's start by creating a new module `src/kernel/pmm.nim` and defining the following types:
+Let's start by creating a new module `src/kernel/pmm.nim` and defining the following
+types:
 
 - `PhysAddr` to represent a physical address
 - `PMNode` to represent a node in the free list
@@ -54,7 +67,7 @@ var
   reservedRegions: seq[PMRegion]
 ```
 
-We'll also define serveral utility procs:
+We'll also define several utility procs:
 
 - `toPMNodePtr` to convert from `ptr PMNode` to `PhysAddr`
 - `toPhysAddr` to convert from `PhysAddr` to `ptr PMNode`
@@ -100,7 +113,9 @@ proc overlaps(region1, region2: PMRegion): bool =
   )
 ```
 
-Also, since we're going to do a lot of pointer arithmetic, let's define a `+!` operator for both `PhysAddr` and `ptr PMNode` that will allow us to add an offset to a physical address or a node pointer.
+Also, since we're going to do a lot of pointer arithmetic, let's define a `+!` operator
+for both `PhysAddr` and `ptr PMNode` that will allow us to add an offset to a physical
+address or a node pointer.
 
 ```nim
 # src/kernel/pmm.nim
@@ -114,7 +129,8 @@ proc `+!`*(node: ptr PMNode, offset: uint64): ptr PMNode {.inline.} =
 
 ## Initialization
 
-The kernel already has the memory map passed to it by the bootloader, so we'll use that to initialize the PMM.
+The kernel already has the memory map passed to it by the bootloader, so we'll use that to
+initialize the PMM.
 
 ```nim
 import common/bootinfo
@@ -157,12 +173,16 @@ proc pmInit*(memoryMap: MemoryMap) =
         ))
 ```
 
-The initialization procedure iterates over the memory map entries, and for each free region it either merges it with the previous region if they are contiguous, or creates a new node and adds it to the list. We also track a couple of things that will be useful for validating requests to free regions:
+The initialization procedure iterates over the memory map entries, and for each free
+region it either merges it with the previous region if they are contiguous, or creates a
+new node and adds it to the list. We also track a couple of things that will be useful for
+validating requests to free regions:
 
 - Reserved regions, either from the memory map or from gaps between memory map entries.
 - The maximum physical address, which is the end address of the last free region.
 
-To try it out and see if it works, we'll need a way to iterate over the list to print the nodes. Let's add an iterator for that.
+To try it out and see if it works, we'll need a way to iterate over the list to print the
+nodes. Let's add an iterator for that.
 
 ```nim
 # src/kernel/pmm.nim
@@ -229,11 +249,13 @@ kernel: Physical memory free regions
 kernel: Total free: 124328 KiB (121 MiB)
 ```
 
-The list is much shorter than the original memory map, since we merged contiguous regions. Our PMM is now initialized and ready to be used.
+The list is much shorter than the original memory map, since we merged contiguous regions.
+Our PMM is now initialized and ready to be used.
 
 ## Allocating Frames
 
-A memory manager is not very useful if we can't allocate and free memory. Let's start with adding a `pmAlloc` to allocate a contiguous region of physical memory.
+A memory manager is not very useful if we can't allocate and free memory. Let's start with
+adding a `pmAlloc` to allocate a contiguous region of physical memory.
 
 ```nim
 # src/kernel/pmm.nim
@@ -276,7 +298,10 @@ proc pmAlloc*(nframes: uint64): Option[PhysAddr] =
   result = some(curr.toPhysAddr)
 ```
 
-The procedure iterates over the list until it finds a region with enough frames, and then either splits the region if it's larger than necessary, or removes it from the list if it's an exact match. If there's no region large enough, it returns `none`. Let's try it out by allocating a few pages and printing the free regions.
+The procedure iterates over the list until it finds a region with enough frames, and then
+either splits the region if it's larger than necessary, or removes it from the list if
+it's an exact match. If there's no region large enough, it returns `none`. Let's try it
+out by allocating a few pages and printing the free regions.
 
 ```nim
 # src/kernel/main.nim
@@ -322,7 +347,9 @@ kernel: Physical memory free regions
 kernel: Total free: 124308 KiB (121 MiB)
 ```
 
-It looks like it worked. We can see that the first 4 pages are now allocated, and the free regions list is updated accordingly. Let's see what happens if we try to allocate more pages than available in the first free region.
+It looks like it worked. We can see that the first 4 pages are now allocated, and the free
+regions list is updated accordingly. Let's see what happens if we try to allocate more
+pages than available in the first free region.
 
 ```nim
   let paddr = pmAlloc(200)
@@ -355,7 +382,9 @@ kernel: Physical memory free regions
 kernel: Total free: 123524 KiB (120 MiB)
 ```
 
-The first region is skipped because it's not large enough, and the second region is used to allocate the pages, and its start address is updated and its size is reduced. Let's see what happens if we allocate exactly the number of pages in the first region (160 pages).
+The first region is skipped because it's not large enough, and the second region is used
+to allocate the pages, and its start address is updated and its size is reduced. Let's see
+what happens if we allocate exactly the number of pages in the first region (160 pages).
 
 ```nim
   let paddr = pmAlloc(160)
@@ -387,7 +416,8 @@ kernel: Physical memory free regions
 kernel: Total free: 123684 KiB (120 MiB)
 ```
 
-The first region is now completely used, so it's removed from the list. Finally, let's see what happens if we try to allocate more pages than available in any free region.
+The first region is now completely used, so it's removed from the list. Finally, let's see
+what happens if we try to allocate more pages than available in any free region.
 
 ```nim
   let paddr = pmAlloc(25000)
@@ -410,7 +440,7 @@ kernel: Allocating 25000 pages
 kernel: Allocation failed
 ```
 
-The allocation fails because there are no regions large enough to satisfy the request. 
+The allocation fails because there are no regions large enough to satisfy the request.
 
 ## Freeing Frames
 
@@ -604,8 +634,15 @@ Stack trace:
 /Users/khaledhammouda/src/github.com/khaledh/fusion/src/kernel/pmm.nim(164) pmFree
 ```
 
-First we allocate 8 frames (starting at 0x0000), then we free 2 frames at 0x2000, and finally we free 4 frames at 0x4000. The request to free the region at 0x2000 is not adjacent to any other free region, so it's inserted in the list. The second region being freed at 0x4000 is now exactly between the first free region (ending at 0x4000) and the second free region (starting at 0x8000), so it's merged with them.
+First we allocate 8 frames (starting at 0x0000), then we free 2 frames at 0x2000, and
+finally we free 4 frames at 0x4000. The request to free the region at 0x2000 is not
+adjacent to any other free region, so it's inserted in the list. The second region being
+freed at 0x4000 is now exactly between the first free region (ending at 0x4000) and the
+second free region (starting at 0x8000), so it's merged with them.
 
-In the last free request, we try to free 2 frames at 0xa0000, which is a reserved region, so an exception is raised, which is exactly what we want. I'm not going to show all possible scenarios here, but I tested them and they all work as expected.
+In the last free request, we try to free 2 frames at 0xa0000, which is a reserved region,
+so an exception is raised, which is exactly what we want. I'm not going to show all
+possible scenarios here, but I tested them and they all work as expected.
 
-Phew! That was a lot of work, but we now have a working PMM. In the next chapter, we'll start looking at virtual memory.
+Phew! That was a lot of work, but we now have a working PMM. In the next chapter, we'll
+start looking at virtual memory.

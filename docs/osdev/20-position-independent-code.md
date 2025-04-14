@@ -1,19 +1,41 @@
 # Position Independent Code
 
-Fusion is a single address space OS, which means that all tasks share the same address space. This requires the ability to load task images at arbitrary addresses (depending on the available virtual memory). Currently, when we compile and link a task, the linker will generate a binary that is not position independent; it has to be loaded at a pre-determined address. We need to change this and use position independent code (PIC) object files and position independent executables (PIE) instead.
+Fusion is a single address space OS, which means that all tasks share the same address
+space. This requires the ability to load task images at arbitrary addresses (depending on
+the available virtual memory). Currently, when we compile and link a task, the linker will
+generate a binary that is not position independent; it has to be loaded at a
+pre-determined address. We need to change this and use position independent code (PIC)
+object files and position independent executables (PIE) instead.
 
 ## What is PIC and PIE?
 
-A PIE is a binary that can be loaded at any address in memory. This is achieved by using relative addressing instead of absolute addressing. For example, instead of using the absolute address of a function, the compiler uses the offset from the current instruction pointer. This is called position independent code (PIC), and is typically used for shared libraries, since they can be loaded at any address in the process address space. To generate PIC object files, we need to use the `-fPIC` compiler flag. A PIE can be generated using the `--pie` linker flag, assuming that all object files are PIC.
+A PIE is a binary that can be loaded at any address in memory. This is achieved by using
+relative addressing instead of absolute addressing. For example, instead of using the
+absolute address of a function, the compiler uses the offset from the current instruction
+pointer. This is called position independent code (PIC), and is typically used for shared
+libraries, since they can be loaded at any address in the process address space. To
+generate PIC object files, we need to use the `-fPIC` compiler flag. A PIE can be
+generated using the `--pie` linker flag, assuming that all object files are PIC.
 
-In some cases, however, the linker cannot use relative addressing for some symbols. In particular, global variables that contain pointers to other global variables or functions cannot be resolved at link time. This is because the linker does not know the address of the target symbol at link time, and therefore cannot compute the offset. In this case, the linker will generate a relocation entry, which is a record that tells the loader to patch the binary at runtime. The loader will then resolve the relocation entries and patch the binary before starting the task.
+In some cases, however, the linker cannot use relative addressing for some symbols. In
+particular, global variables that contain pointers to other global variables or functions
+cannot be resolved at link time. This is because the linker does not know the address of
+the target symbol at link time, and therefore cannot compute the offset. In this case, the
+linker will generate a relocation entry, which is a record that tells the loader to patch
+the binary at runtime. The loader will then resolve the relocation entries and patch the
+binary before starting the task.
 
-This process is typical in loading shared libraries, but it is also used for PIEs. There are two types of PIEs: dynamic and static.
+This process is typical in loading shared libraries, but it is also used for PIEs. There
+are two types of PIEs: dynamic and static.
 
-- A **dynamic PIE** relies on the same dynamic linker as shared libraries, and therefore need to be loaded by the dynamic linker (typically `ld.so`).
-- A **static PIE**, on the other hand, does not need a dynamic linker. Instead, it relies on C runtime startup code that is linked into the binary (typically `Scrt1.o`). The startup code applies the relocation entries by patching the loaded binary in memory.
+- A **dynamic PIE** relies on the same dynamic linker as shared libraries, and therefore
+  needs to be loaded by the dynamic linker (typically `ld.so`).
+- A **static PIE**, on the other hand, does not need a dynamic linker. Instead, it relies
+  on C runtime startup code that is linked into the binary (typically `Scrt1.o`). The
+  startup code applies the relocation entries by patching the loaded binary in memory.
 
-What we want is a static PIE, but since we do not have a C runtime, we need to implement the relocation patching ourselves.
+What we want is a static PIE, but since we do not have a C runtime, we need to implement
+the relocation patching ourselves.
 
 ## Generating a static PIE
 
@@ -21,22 +43,21 @@ Let's modify the user task `nim.cfg` file to generate a static PIE.
 
 ```properties
 # src/user/nim.cfg
-
 ...
 --passc:"-fPIC"
-
 ...
 --passl:"--pie"
 ```
 
-Let's also remove the fixed address from the linker script, since the whole point of a PIE is to be able to load it at any address.
+Let's also remove the fixed address from the linker script, since the whole point of a PIE
+is to be able to load it at any address.
 
 ```ld
 /* src/user/utask.ld */
 
 SECTIONS
 {
-  . = 0x00000000040000000; /* 1 GiB */    <-- remove this line
+  . = 0x0000000040000000; /* 1 GiB */    <-- remove this line
   ...
 }
 ```
@@ -51,11 +72,13 @@ $ file build/user/utask.bin
 build/user/utask.bin: ELF 64-bit LSB pie executable, x86-64, version 1 (SYSV), static-pie linked, not stripped
 ```
 
-Good, we have a static PIE. Before we try it out, let's take a look at the generated sections in the binary. To do this, we need to temporarily comment out the use of the linker script and the binary output format to generate a vanilla ELF binary that we can inspect.
+Good, we have a static PIE. Before we try it out, let's take a look at the generated
+sections in the binary. To do this, we need to temporarily comment out the use of the
+linker script and the binary output format to generate a vanilla ELF binary that we can
+inspect.
 
 ```properties
 # src/user/nim.cfg
-
 ...
 #--passl:"-T src/user/utask.ld"
 #--passl:"--oformat=binary"
@@ -89,7 +112,11 @@ Section Headers:
   [17] .strtab           STRTAB          0000000000000000 00b9c9 001930 00      0   0  1
 ```
 
-There's a lot of sections here, but we'll focus on code (text) and data sections. In addition to the usual ones (`.text`, `.rodata`, `.data`, and `.bss`), a new data section shows up: `.data.rel.ro`. This is a read-only data section (similar to `.rodata`) that contains data that needs to be relocated. We'll look at relocations later, but for now let's just include this section in the linker script.
+There's a lot of sections here, but we'll focus on code (text) and data sections. In
+addition to the usual ones (`.text`, `.rodata`, `.data`, and `.bss`), a new data section
+shows up: `.data.rel.ro`. This is a read-only data section (similar to `.rodata`) that
+contains data that needs to be relocated. We'll look at relocations later, but for now
+let's just include this section in the linker script.
 
 ```ld{9}
 SECTIONS
@@ -100,8 +127,8 @@ SECTIONS
     *(.*text*)
   }
   .rodata      : { *(.*rodata*) }
-  .data        : { *(.*data*) *(.*bss) }
   .data.rel.ro : { *(.data.rel.ro) }
+  .data        : { *(.*data*) *(.*bss) }
 
   .shstrtab : { *(.shstrtab) } /* cannot be discarded */
   /DISCARD/ : { *(*) }
@@ -110,7 +137,8 @@ SECTIONS
 
 ## Trying it out
 
-Let's uncomment the lines we commented out earlier in the `nim.cfg` file (for the linker script and output format), and see what happens when we try to run it.
+Let's uncomment the lines we commented out earlier in the `nim.cfg` file (for the linker
+script and output format) and see what happens when we try to run it.
 
 ```sh-session
 $ just run
@@ -126,7 +154,9 @@ syscall: num=1
 syscall: exit: code=0
 ```
 
-It works, but there's no message printed from the user task (that we pass to the `print` syscall). Let's print the `arg1` argument value passed to the `print` syscall to see what address is being passed.
+It works, but there's no message printed from the user task (that we pass to the `print`
+syscall). Let's print the `arg1` argument value passed to the `print` syscall to see what
+address is being passed.
 
 ```nim
 # src/user/syscalls.nim
@@ -146,7 +176,9 @@ syscall: num=1
 syscall: exit: code=0
 ```
 
-The `arg1` looks like a valid address, but for some reason nothing is printed. If we look at the linker map file at that address we can see that it's the address of the `msg` string:
+The `arg1` looks like a valid address, but for some reason nothing is printed. If we look
+at the linker map file at that address we can see that it's the address of the `msg`
+string:
 
 ```text{5}
     VMA              LMA        Size Align Out     In      Symbol
@@ -156,7 +188,10 @@ The `arg1` looks like a valid address, but for some reason nothing is printed. I
     209ee8           209ee8       10     1                 msg__utask_u4
 ```
 
-This was very confusing to me before I learned about the need for relocation even in static PIEs. To understand what's going on, we need to look at how Nim defines its `string` type. The relevant definition is in `system/strs_v2.nim` in the Nim standard library.
+This was very confusing to me before I learned about the need for relocation even in
+static PIEs. To understand what's going on, we need to look at how Nim defines its
+`string` type. The relevant definition is in the `system/strs_v2.nim` file in the Nim
+standard library.
 
 ```nim
 type
@@ -171,7 +206,13 @@ type
     p: ptr NimStrPayload ## can be nil if len == 0.
 ```
 
-The `NimStrPayload` object contains the capacity of the string and the actual bytes making up the string. The `NimStringV2` object contains the length of the string and a **pointer** to a payload object (this is the `string` type normally used in Nim code). OK, so now we know that the `msg` variable is not the string itself, but a pair of length and pointer to the string. This is evident from the `Size` value in the linker map file: the `msg` variable takes up `0x10` (16) bytes: 8 bytes for the `len` field and 8 bytes for the `p` field.
+The `NimStrPayload` object contains the capacity of the string and the actual bytes making
+up the string. The `NimStringV2` object contains the length of the string and a
+**pointer** to a payload object (this is the `string` type normally used in Nim code). OK,
+so now we know that the `msg` variable is not the string itself, but a pair of length and
+pointer to the string. This is evident from the `Size` value in the linker map file: the
+`msg` variable takes up `0x10` (16) bytes: 8 bytes for the `len` field and 8 bytes for the
+`p` field.
 
 So, let's find out what's stored in the fields of the `msg` string variable.
 
@@ -191,14 +232,19 @@ kernel: Creating user task
 kernel: Switching to user mode
 syscall: num=2
 syscall: print (arg1=0x40209ee8)
-syscall: print: arg1[0]=21
-syscall: print: arg1[1]=0x0
+syscall: print: arg1.len = 21
+syscall: print: arg1.p   = 0x0
 
 syscall: num=1
 syscall: exit: code=0
 ```
 
-Well, the `len` field is correct, but the `p` field is `0x0`. This is the situation I talked about above: we have a global pointer (the `p` field of `NimStringV2`) that points to another global variable (the `NimStrPayload` object). The linker cannot resolve this at link time for a PIE, so it sets it to 0, and generates a relocation entry for the loader to use for patching that location at load time (once the actual location of the binary is known). That's what we need to do to make this work.
+Well, the `len` field is correct, but the `p` field is `0x0`. This is the situation I
+talked about above: we have a global pointer (the `p` field of `NimStringV2`) that points
+to another global variable (the `NimStrPayload` object). The linker cannot resolve this at
+link time for a PIE, so it sets it to 0, and generates a relocation entry for the loader
+to use for patching that location at load time (once the actual location of the binary is
+known). That's what we need to do to make this work.
 
 ## Understanding relocations
 
@@ -230,7 +276,10 @@ Section Headers:
   [17] .strtab           STRTAB          0000000000000000 00b9c9 001930 00      0   0  1
 ```
 
-This time we'll focus on the section containing the relocation entries: `.rela.dyn` (notice that its type is `RELA`, which is short for RELocations with Addend). Let's take a look at the relocation entries (I'll use `llvm-objdump -R` here instead of `llvm-readelf -r` since interpreting its output is more straightforward).
+This time we'll focus on the section containing the relocation entries: `.rela.dyn`
+(notice that its type is `RELA`, which is short for RELocations with Addend). Let's take a
+look at the relocation entries (I'll use `llvm-objdump -R` here instead of
+`llvm-readelf -r` since interpreting its output is more straightforward).
 
 ```sh-session
 $ llvm-objdump -R build/user/utask.bin
@@ -273,9 +322,14 @@ OFFSET           TYPE                     VALUE
 000000000000d050 R_X86_64_RELATIVE        *ABS*+0x590
 ```
 
-There are a lot of relocation entries here, but they all have the same type: `R_X86_64_RELATIVE`. Basically, this tells the loader to patch the binary at the given `OFFSET` by adding the addend `VALUE` to the base address where the binary is loaded (`*ABS*`). For example, the first entry tells the loader to patch the binary at offset `0xbd48` by adding the addend `0xd38` to the image base address.
+There are a lot of relocation entries here, but they all have the same type:
+`R_X86_64_RELATIVE`. Basically, this tells the loader to patch the binary at the given
+`OFFSET` by adding the addend `VALUE` to the base address where the binary is loaded
+(`*ABS*`). For example, the first entry tells the loader to patch the binary at offset
+`0xbd48` by adding the addend `0xd38` to the image base address.
 
-If we look at those offsets, we can see that the first 24 entries are in the `.data.rel.ro` section, and the last 6 entries are in the `.data` section.
+If we look at those offsets, we can see that the first 24 entries are in the
+`.data.rel.ro` section, and the last 8 entries are in the `.data` section.
 
 ```text
   [Nr] Name              Type            Address          Off    Size   ES Flg Lk Inf Al
@@ -285,7 +339,10 @@ If we look at those offsets, we can see that the first 24 entries are in the `.d
   [12] .data             PROGBITS        000000000000cf90 009f90 0000e0 00  WA  0   0  8
 ```
 
-The `.data.rel.ro` section contains read-only data that needs to be relocated (often called RELRO). But how can it be read-only if it needs to be patched? The idea is to make the section read-only _after_ the relocation entries have been applied. The `.data` section contains read-write data, some of which also needs to be relocated.
+The `.data.rel.ro` section contains read-only data that needs to be relocated (often
+called RELRO). But how can it be read-only if it needs to be patched? The idea is to make
+the section read-only _after_ the relocation entries have been applied. The `.data`
+section contains read-write data, some of which also needs to be relocated.
 
 Let's take a look at linker map file to see what is in these sections.
 
@@ -332,7 +389,11 @@ Let's take a look at linker map file to see what is in these sections.
     d038             d038       38     1                 NTIv2__CrB9bTWm1Xdf09bhlG9cbbyPA_
 ```
 
-The mangled symbols in the linker map file are Nim-generated C symbols, so it's hard to tell what they are. But let's take the one symbol defined in the `build/user/@mutask.nim.c.o` object file. If we look at the corresponding generated C code, we find that it's a pointer to a string struct (I included both the string struct and the pointer).
+The mangled symbols in the linker map file are Nim-generated C symbols, so it's hard to
+tell what they are. But let's take the one symbol defined in the
+`build/user/@mutask.nim.c.o` object file. If we look at the corresponding generated C
+code, we find that it's a pointer to a string struct (I included both the string struct
+and the pointer).
 
 ```c
 static const struct {
@@ -342,15 +403,22 @@ static const struct {
 static const NimStringV2 TM__ZYeLyBLx1ZJA3JEc71VOcA_3 = {21, (NimStrPayload*)&TM__ZYeLyBLx1ZJA3JEc71VOcA_2};
 ```
 
-These are the two types we saw above: `NimStrPayload` and `NimStringV2`: `TM__ZYeLyBLx1ZJA3JEc71VOcA_2` is an instance of the `NimStrPayload` type (which contains the actual char array), and `TM__ZYeLyBLx1ZJA3JEc71VOcA_3` is an instance of the `NimStringV2` type (which contains the length and a pointer to the payload object).
+These are the two types we saw above: `NimStrPayload` and `NimStringV2`:
+`TM__ZYeLyBLx1ZJA3JEc71VOcA_2` is an instance of the `NimStrPayload` type (which contains
+the actual char array), and `TM__ZYeLyBLx1ZJA3JEc71VOcA_3` is an instance of the
+`NimStringV2` type (which contains the length and a pointer to the payload object).
 
-Given that the address offset of the `NimStringV2` object is `0xbeb0` (as shown in the linker map file), and that the `p` field is at offset `8` in the struct (the `len` field takes 8 bytes), then the location to be patched is `0xbeb0 + 8 = 0xbeb8`. If we look at the relocation entries we saw above, indeed we can see an entry for this offset:
+Given that the address offset of the `NimStringV2` object is `0xbeb0` (as shown in the
+linker map file), and that the `p` field is at offset `8` in the struct (the `len` field
+takes 8 bytes), then the location to be patched is `0xbeb0 + 8 = 0xbeb8`. If we look at
+the relocation entries we saw above, indeed we can see an entry for this offset:
 
 ```text
 000000000000beb8 R_X86_64_RELATIVE        *ABS*+0x10e0
 ```
 
-So the loader is asked to patch that location by adding the addend `0x10e0` to the image base address. Let's see what's at that address in the linker map.
+So the loader is asked to patch that location by adding the addend `0x10e0` to the image
+base address. Let's see what's at that address in the linker map.
 
 ```text
     VMA              LMA     Size Align Out     In      Symbol
@@ -359,11 +427,21 @@ So the loader is asked to patch that location by adding the addend `0x10e0` to t
     10e0             10e0       20     1                 TM__ZYeLyBLx1ZJA3JEc71VOcA_2
 ```
 
-Lo and behold, it's the `NimStrPayload` object we saw above. So the loader will patch the `p` pointer at offset `0xbeb8` by adding `0x10e0` to the image base address, which will make it point to the `NimStrPayload` object. Voilà!
+Lo and behold, it's the `NimStrPayload` object we saw above. So the loader will patch the
+`p` pointer at offset `0xbeb8` by adding `0x10e0` to the image base address, which will
+make it point to the `NimStrPayload` object. Voilà!
 
 ## Raw binary with relocations
 
-We don't have ELF support in our kernel (at least not yet), and I don't want to distract myself by implementing it now. So, we'll keep it simple and update the linker script to include the `.rela.dyn` section in the binary, and use it to patch the binary at load time. There's one problem though: the loader needs to know where the relocation entries are in the binary, and how many there are. We can add our own metadata section, but there's already one available as part of the ELF format: the `.dynamic` section. This section contains a list of tags and values that are typically used by the dynamic linker, but we can also use it to locate the relocation entries. Let's take a quick look at that section using `llvm-readelf -d`.
+We don't have ELF support in our kernel (at least not yet), and I don't want to distract
+myself by implementing it now. So, we'll keep it simple and update the linker script to
+include the `.rela.dyn` section in the binary, and use it to patch the binary at load
+time. There's one problem though: the loader needs to know where the relocation entries
+are in the binary, and how many there are. We can add our own metadata section, but
+there's already one available as part of the ELF format: the `.dynamic` section. This
+section contains a list of tags and values that are typically used by the dynamic linker,
+but we can also use it to locate the relocation entries. Let's take a quick look at that
+section using `llvm-readelf -d`.
 
 ```sh-session{6-9}
 $ llvm-readelf -d build/user/utask.bin
@@ -384,9 +462,19 @@ Dynamic section at offset 0x9ec0 contains 13 entries:
   0x0000000000000000 (NULL)      0x0
 ```
 
-I highlighted the relevant entries. The `RELA` entry tells us where the relocation entries section (`.rela.dyn`) is located in the binary, the `RELASZ` entry tells us the size of that section, the `RELAENT` entry tells us the size of each relocation entry, and the `RELACOUNT` entry tells us how many relocation entries there are. It's exactly what we want. Also, notice that the last entry is always a NULL entry, so we can use that to locate the end of the section.
+I highlighted the relevant entries. The `RELA` entry tells us where the relocation entries
+section (`.rela.dyn`) is located in the binary, the `RELASZ` entry tells us the size of
+that section, the `RELAENT` entry tells us the size of each relocation entry, and the
+`RELACOUNT` entry tells us how many relocation entries there are. It's exactly what we
+want. Also, notice that the last entry is always a NULL entry, so we can use that to
+locate the end of the section.
 
-But where do we put the `.dynamic` section in the output image? If we put it in the middle (or end) of the image, we won't be able to locate it, so we'll need something else to locate it. Instead, we can just put it in the beginning of the image, followed by the relocation entries, followed by the text and data sections. We just have to adjust our assumption that the entry point is not at the beginning of the image, but rather comes after the `.rela.dyn` section. Let's update the linker script to do so.
+But where do we put the `.dynamic` section in the output image? If we put it in the
+middle (or end) of the image, we won't be able to locate it, so we'll need something else
+to locate it. Instead, we can just put it in the beginning of the image, followed by the
+relocation entries, followed by the text and data sections. We just have to adjust our
+assumption that the entry point is not at the beginning of the image, but rather comes
+after the `.rela.dyn` section. Let's update the linker script to do so.
 
 ```ld{3-4}
 SECTIONS
@@ -414,7 +502,10 @@ If we compile and link the task, we get the following error:
 ld.lld: error: section: .data.rel.ro is not contiguous with other relro sections
 ```
 
-Apparently, some loaders support loading only a single RELRO segment (a segment in ELF maps to one or more contiguous sections). Both the `.dynamic` and `.data.rel.ro` sections are RELRO sections, so we need to make sure they are contiguous. We can fix it by putting the `.data.rel.ro` right after the `.dynamic` section.
+Apparently, some loaders support loading only a single RELRO segment (a segment in ELF
+maps to one or more contiguous sections). Both the `.dynamic` and `.data.rel.ro` sections
+are RELRO sections, so we need to make sure they are contiguous. We can fix it by putting
+the `.data.rel.ro` right after the `.dynamic` section.
 
 ```ld{4}
 SECTIONS
@@ -436,7 +527,9 @@ SECTIONS
 }
 ```
 
-The user task should now compile and link successfully. If we look at the resulting sections, we should see the `.dynamic` section followed by the `.data.rel.ro` section followed by the `.rela.dyn` section.
+The user task should now compile and link successfully. If we look at the resulting
+sections, we should see the `.dynamic` section followed by the `.data.rel.ro` section
+followed by the `.rela.dyn` section.
 
 ```sh-session{7-9}
 $ llvm-readelf -S build/user/utask.bin
@@ -456,7 +549,11 @@ Section Headers:
 
 ## Applying the relocations
 
-We now have a binary with relocation entries, so let's start by parsing the `.dynamic` section at the beginning of the image. Let's create a `loader.nim` module and define a `DynamicEntry` type to represent each entry, and a `DanamicEntryType` enum to represent the different types of entries. We'll also define an `applyRelocations` proc to parse the dynamic section.
+We now have a binary with relocation entries, so let's start by parsing the `.dynamic`
+section at the beginning of the image. Let's create a `loader.nim` module and define a
+`DynamicEntry` type to represent each entry, and a `DynamicEntryType` enum to represent
+the different types of entries. We'll also define an `applyRelocations` proc to parse the
+dynamic section.
 
 ```nim
 # src/kernel/loader.nim
@@ -466,7 +563,7 @@ type
     tag: uint64
     value: uint64
 
-  DynmaicEntryType = enum
+  DynamicEntryType = enum
     Rela = 7
     RelaSize = 8
     RelaEntSize = 9
@@ -484,13 +581,13 @@ proc applyRelocations*(image: ptr UncheckedArray[byte]): uint64 =
   var i = 0
   while dyn[i].tag != 0:
     case dyn[i].tag
-    of DynmaicEntryType.Rela.uint64:
+    of DynamicEntryType.Rela.uint64:
       reloffset = dyn[i].value
-    of DynmaicEntryType.RelaSize.uint64:
+    of DynamicEntryType.RelaSize.uint64:
       relsize = dyn[i].value
-    of DynmaicEntryType.RelaEntSize.uint64:
+    of DynamicEntryType.RelaEntSize.uint64:
       relentsize = dyn[i].value
-    of DynmaicEntryType.RelaCount.uint64:
+    of DynamicEntryType.RelaCount.uint64:
       relcount = dyn[i].value
     else:
       discard
@@ -504,9 +601,13 @@ proc applyRelocations*(image: ptr UncheckedArray[byte]): uint64 =
     raise newException(Exception, "Invalid dynamic section. .rela.dyn size mismatch.")
 ```
 
-The proc iterates over the dynamic entries until it finds the entries we're interested in (the ones describing the `.rela.dyn` section). It then checks that the values are valid.
+The proc iterates over the dynamic entries until it finds the entries we're interested
+in (the ones describing the `.rela.dyn` section). It then checks that the values are
+valid.
 
-Now that we know where the relocation entries are, let's parse them. We'll define a `RelaEntry` type to represent each entry, and a `RelaEntryType` enum to represent the different types of entries. We'll use these types to parse the `.rela.dyn` section.
+Now that we know where the relocation entries are, let's parse them. We'll define a
+`RelaEntry` type to represent each entry, and a `RelType` enum to represent the different
+types of entries. We'll use these types to parse the `.rela.dyn` section.
 
 ```nim
 # src/kernel/loader.nim
@@ -516,11 +617,17 @@ type
 
   RelaEntry {.packed.} = object
     offset: uint64
-    info: uint64
+    info: RelaEntryInfo
     addend: int64
 
-  RelaEntryType = enum
-    Relative = 8
+  RelaEntryInfo {.packed.} = object
+    `type`: uint8
+    sym: uint8
+    unused1: uint16
+    unused2: uint32
+
+  RelType = enum
+    Relative = 8  # R_X86_64_RELATIVE
 
 proc applyRelocations*(image: ptr UncheckedArray[byte]): uint64 =
   ...
@@ -530,8 +637,11 @@ proc applyRelocations*(image: ptr UncheckedArray[byte]): uint64 =
 
   for i in 0 ..< relcount:
     let relent = rela[i]
-    if relent.info != RelaEntryType.Relative.uint64:
-      raise newException(Exception, "Only relative relocations are supported.")
+    if relent.info.type != RelType.Relative.uint8:
+      raise newException(
+        Exception,
+        &"Unsupported relocation type {relent.info.type:#x}. Only R_X86_64_RELATIVE is supported."
+      )
     # apply relocation
     let target = cast[ptr uint64](cast[uint64](image) + relent.offset)
     let value = cast[uint64](cast[int64](image) + relent.addend)
@@ -541,11 +651,18 @@ proc applyRelocations*(image: ptr UncheckedArray[byte]): uint64 =
   return cast[uint64](image) + reloffset + relsize
 ```
 
-The proc iterates over the relocation entries and applies each one. The only type of relocation we support for now is relative relocation. For each relocation entry, we add the addend to the image base address and store the result at the offset specified by the relocation entry.
+The proc iterates over the relocation entries and applies each one. The only type of
+relocation we support for now is relative relocation. For each relocation entry, we add
+the addend to the image base address and store the result at the offset specified by the
+relocation entry.
 
-Finally, we return the entry point address, which comes right after the `.rela.dyn` section. This is the address we'll use to jump to user mode, instead of the fixed addess we had before.
+Finally, we return the entry point address, which comes right after the `.rela.dyn`
+section. This is the address we'll use to jump to user mode, instead of the fixed address
+we had before.
 
-Let's modify the `createTask` proc in `tasks.nim` to use the new `applyRelocations` proc. We'll remove the `entryPoint` argument (passed in `main.nim`), and use the return value of `applyRelocations` as the entry point address.
+Let's modify the `createTask` proc in `tasks.nim` to use the new `applyRelocations` proc.
+We'll remove the `entryPoint` argument (passed in `main.nim`), and use the return value of
+`applyRelocations` as the entry point address.
 
 ```nim
 # src/kernel/tasks.nim
@@ -605,14 +722,17 @@ kernel: Applying relocations to user image
 kernel: Switching to user mode
 syscall: num=2
 syscall: print (arg1=0x4020a298)
-syscall: print: arg1[0]=21
-syscall: print: arg1[1]=0x40009d00
+syscall: print: arg1.len = 21
+syscall: print: arg1.p   = 0x40009d00
 Hello from user mode!
 syscall: num=1
 syscall: exit: code=0
 ```
 
-It works! The message from the user task is printed correctly. We can see that the `arg1.p` value is now `0x40009d00` instead of `0`, which means that the relocation was applied correctly. To verify that we can load the task at any address, let's change the `UserImageVirtualBase` to something other than `0x40000000` and see if it still works.
+It works! The message from the user task is printed correctly. We can see that the
+`arg1.p` value is now `0x40009d00` instead of `0`, which means that the relocation was
+applied correctly. To verify that we can load the task at any address, let's change the
+`UserImageVirtualBase` to something other than `0x40000000` and see if it still works.
 
 ```nim
 # src/kernel/main.nim
@@ -627,18 +747,23 @@ kernel: Applying relocations to user image
 kernel: Switching to user mode
 syscall: num=2
 syscall: print (arg1=0x8020a298)
-syscall: print: arg1[0]=21
-syscall: print: arg1[1]=0x80009d00
+syscall: print: arg1.len = 21
+syscall: print: arg1.p   = 0x80009d00
 Hello from user mode!
 syscall: num=1
 syscall: exit: code=0
 ```
 
-It still works! Notice that the `arg1.p` value is now `0x80009d00` instead of `0x40009d00`, which proves that we can now load the user task at any address.
+It still works! Notice that the `arg1.p` value is now `0x80009d00` instead of
+`0x40009d00`, which proves that we can now load the user task at any address.
 
 ## Dynamic virtual memory allocation
 
-So far we've been telling the kernel where to load the user task, but we want to be able to load tasks at any available address. The VMM keeps track of the available virtual memory, so we can leverage that to dynamically allocate virtual memory for the user task. Let's remove the `imageVirtAddr` argument from the `createTask` proc, and use the VMM to allocate the virtual memory for the user task.
+So far we've been telling the kernel where to load the user task, but we want to be able
+to load tasks at any available address. The VMM keeps track of the available virtual
+memory, so we can leverage that to dynamically allocate virtual memory for the user task.
+Let's remove the `imageVirtAddr` argument from the `createTask` proc, and use the VMM to
+allocate the virtual memory for the user task.
 
 ```nim
 # src/kernel/tasks.nim
@@ -680,7 +805,8 @@ proc KernelMain(bootInfo: ptr BootInfo) {.exportc.} =
   ...
 ```
 
-If we compile and run the kernel, we should see the same output as before, with the user task being loaded at a different address.
+If we compile and run the kernel, we should see the same output as before, with the user
+task being loaded at a different address.
 
 ```sh-session
 kernel: Creating user task
@@ -688,15 +814,23 @@ kernel: Applying relocations to user image
 kernel: Switching to user mode
 syscall: num=2
 syscall: print (arg1=0x415678)
-syscall: print: arg1[0]=21
-syscall: print: arg1[1]=0x2150e0
+syscall: print: arg1.len = 21
+syscall: print: arg1.p   = 0x2150e0
 Hello from user mode!
 syscall: num=1
 syscall: exit: code=0
 ```
 
-It works! The user task is now loaded at a different address that was dynamically allocated, and the message is printed correctly.
+It works! The user task is now loaded at a different address that was dynamically
+allocated, and the message is printed correctly.
 
-This is another milestone; this means we can now load PIE tasks at any address, depending on the available virtual memory, and they all share the same address space. Keep in mind that we still need to have protection between tasks, so each task will still have its own page table mappings, but we won't have to rely on pre-arranging shared memory pages for inter-task communication. We'll get to that in a later section once we start tackling capabilities.
+This is another milestone; this means we can now load PIE tasks at any address, depending
+on the available virtual memory, and they all share the same address space. Keep in mind
+that we still need to have protection between tasks, so each task will still have its own
+page table mappings, but we won't have to rely on pre-arranging shared memory pages for
+inter-task communication. We'll get to that in a later section once we start tackling
+capabilities.
 
-In the next section, we'll try to get two copies of the user task running at the same time, and try to switch between them using cooperative multitasking (we'll get to preemptive multitasking later).
+In the next section, we'll try to get two copies of the user task running at the same
+time, and try to switch between them using cooperative multitasking (we'll get to
+preemptive multitasking later).

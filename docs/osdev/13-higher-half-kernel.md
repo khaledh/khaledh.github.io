@@ -1,10 +1,20 @@
 # Higher Half Kernel
 
-The kernel is currently linked at address `0x100000`, not at the higher half of the address space. The UEFI environment does have paging enabled, but we need to build our own page tables, and map the kernel at the higher half of the address space. This needs to be done in the bootloader, before we jump to the kernel (since we'll change the kernel to be linked at the higher half). Once we're in the kernel, we can set up different page tables that fit our needs.
+The kernel is currently linked at address `0x100000`, not at the higher half of the
+address space. The UEFI environment does have paging enabled, but we need to build our own
+page tables, and map the kernel at the higher half of the address space. This needs to be
+done in the bootloader, before we jump to the kernel (since we'll change the kernel to be
+linked at the higher half). Once we're in the kernel, we can set up different page tables
+that fit our needs.
 
 ## Linking the kernel
 
-To link the kernel at the higher half of the address space, we need to change the base address of the kernel in the linker script. However, instead of linking the kernel at exactly `0xFFFF800000000000`, we'll link it at 1 MiB above that address, i.e. `0xFFFF800000100000`. This will make virtual addresses and physical addresses line up nicely, and we can compare them visually by just looking at least significant bytes of the address, which makes debugging page table mappings easier.
+To link the kernel at the higher half of the address space, we need to change the base
+address of the kernel in the linker script. However, instead of linking the kernel at
+exactly `0xFFFF800000000000`, we'll link it at 1 MiB above that address, i.e.
+`0xFFFF800000100000`. This will make virtual addresses and physical addresses line up
+nicely, and we can compare them visually by just looking at the least significant bytes of
+the address, which makes debugging page table mappings easier.
 
 ```ld{5}
 /* src/kernel/kernel.ld */
@@ -34,16 +44,21 @@ ld.lld: error: .../fusion/build/@mmain.nim.c.o:(function KernelMainInner__main_u
 ...
 ```
 
-The problem here is that the compiler has something called a "code model", which determines how it generates code. The default code model is `small`, which means that the compiler assumes that the code and data are linked in the lower 2 GiB of the address space. What we need here is the `large` code model, which assumes that the code and data are linked anywhere in the address space. We can specify the code model using the `-mcmodel` flag, so let's add it to the kernel's `nim.cfg` file.
+The problem here is that the compiler has something called a "code model", which
+determines how it generates code. The default code model is `small`, which means that the
+compiler assumes that the code and data are linked in the lower 2 GiB of the address
+space. What we need here is the `large` code model, which assumes that the code and data
+are linked anywhere in the address space. We can specify the code model using the
+`-mcmodel` flag, so let's add it to the kernel's `nim.cfg` file.
 
 ```properties
 # src/kernel/nim.cfg
 ...
-
 --passc:"-mcmodel=large"
 ```
 
-Now the kernel should compile and link successfully. Let's take a quick look at the linker map.
+Now the kernel should compile and link successfully. Let's take a quick look at the linker
+map.
 
 ```sh-session
 $ head -n 10 build/kernel.map
@@ -59,7 +74,8 @@ ffff800000102810 ffff800000102810       9b     1                 nimFrame
 ffff8000001028b0 ffff8000001028b0       25    16         .../fusion/build/@mmain.nim.c.o:(.ltext.nimErrorFlag)
 ```
 
-Looks good. Before we start setting up paging, let's add a few utility procs to prepare the `BootInfo` structure with the physical memory map and the virtual memory map.
+Looks good. Before we start setting up paging, let's add a few utility procs to prepare
+the `BootInfo` structure with the physical memory map and the virtual memory map.
 
 ## Preparing BootInfo
 
@@ -69,7 +85,9 @@ We need to pass a few things to the kernel, including:
 - The virtual memory map
 - The virtual address where physical memory is mapped
 
-We already have a `convertUefiMemoryMap` proc that converts the UEFI memory map to our own format. Let's add a proc to create a virtual memory map as well, which will contain the virtual address space regions that we'll map.
+We already have a `convertUefiMemoryMap` proc that converts the UEFI memory map to our own
+format. Let's add a proc to create a virtual memory map as well, which will contain the
+virtual address space regions that we'll map.
 
 ```nim
 # src/boot/bootx64.nim
@@ -150,7 +168,9 @@ proc createBootInfo(
   result = bootInfo
 ```
 
-Finally, we'll call these procs from `EfiMainInner`. We'll also get the `maxPhysAddr` (which is the highest usable physical address) and use it to calculate the number of physical memory pages.
+Finally, we'll call these procs from `EfiMainInner`. We'll also get the `maxPhysAddr`
+(which is the highest usable physical address) and use it to calculate the number of
+physical memory pages.
 
 ```nim
 # src/boot/bootx64.nim
@@ -185,7 +205,12 @@ proc EfiMainInner(imgHandle: EfiHandle, sysTable: ptr EFiSystemTable): EfiStatus
 
 ## Bootloader paging setup
 
-We know we need to map the kernel to the higher half. But since we're going to be changing the paging structures in the bootloader, we'll need to identity-map the bootloader image itself. The reason is that the bootloader code is currently running from the bootloader image, which is mapped to the lower half of the address space. If we change the page tables, the bootloader code will no longer be accessible, and we'll get a page fault. Here's a list of things we need to map:
+We know we need to map the kernel to the higher half. But since we're going to be changing
+the paging structures in the bootloader, we'll need to identity-map the bootloader image
+itself. The reason is that the bootloader code is currently running from the bootloader
+image, which is mapped to the lower half of the address space. If we change the page
+tables, the bootloader code will no longer be accessible, and we'll get a page fault.
+Here's a list of things we need to map:
 
 - The bootloader image (identity-mapped)
 - The boot info structure
@@ -193,7 +218,9 @@ We know we need to map the kernel to the higher half. But since we're going to b
 - The kernel stack
 - All physical memory
 
-We'll create a new page table structure and map all of the above regions (including physical memory), and install it before jumping to the kernel. Let's create a new proc to do the mapping.
+We'll create a new page table structure and map all of the above regions (including
+physical memory), and install it before jumping to the kernel. Let's create a new proc to
+do the mapping.
 
 ```nim
 # src/boot/bootx64.nim
@@ -250,9 +277,16 @@ proc createPageTable(
   result = pml4
 ```
 
-Notice the `AlignedPage` type and the inner proc`bootAlloc`. This is a temporary proc that we'll use to allow the VMM to allocate physical memory for the page tables (the pages must be aligned to 4 KiB, hence the `AlignedPage` type). It works because the UEFI environment is identity-mapped, so allocating using the `new` operator will return an address of a page that we can use for the page tables. In the kernel, we'll rely on the physical memory manager to allocate physical memory for the page tables.
+Notice the `AlignedPage` type and the inner proc `bootAlloc`. This is a temporary proc
+that we'll use to allow the VMM to allocate physical memory for the page tables (the pages
+must be aligned to 4 KiB, hence the `AlignedPage` type). It works because the UEFI
+environment is identity-mapped, so allocating using the `new` operator will return an
+address of a page that we can use for the page tables. In the kernel, we'll rely on the
+physical memory manager to allocate physical memory for the page tables.
 
-Now, let's put everything together in `EfiMainInner`. Notice that we added an assembly instruction to load the new page tables into the `cr3` register. This is the register that holds the physical address of the PML4 table.
+Now, let's put everything together in `EfiMainInner`. Notice that we added an assembly
+instruction to load the new page tables into the `cr3` register. This is the register that
+holds the physical address of the PML4 table.
 
 ```nim
 # src/boot/bootx64.nim
@@ -318,7 +352,11 @@ proc EfiMainInner(imgHandle: EfiHandle, sysTable: ptr EFiSystemTable): EfiStatus
 
 ## Initializing the PMM and VMM
 
-Now that physical memory is not identity-mapped anymore, we need to update the PMM to know about the new virtual address of physical memory. To access a `PMNode` as a physical address, we subtract the physical memory virtual base address from the pointer. To access a physical address as a `PMNode`, we add the physical memory virtual base address to the address.
+Now that physical memory is not identity-mapped anymore, we need to update the PMM to know
+about the new virtual address of physical memory. To access a `PMNode` as a physical
+address, we subtract the physical memory virtual base address from the pointer. To access
+a physical address as a `PMNode`, we add the physical memory virtual base address to the
+address.
 
 ```nim{6,9-10,14,17}
 # src/kernel/pmm.nim
@@ -340,7 +378,9 @@ proc toPMNodePtr(p: PhysAddr): ptr PMNode {.inline.} =
   result = cast[ptr PMNode](cast[uint64](p) + physicalMemoryVirtualBase)
 ```
 
-The VMM already takes a parameter for the physical memory virtual base (in the bootloader we set it to `0`, since physical memory is identity-mapped there). We just need to pass it from the kernel. Let's initialize both the PMM and the VMM with this parameter.
+The VMM already takes a parameter for the physical memory virtual base (in the bootloader
+we set it to `0`, since physical memory is identity-mapped there). We just need to pass it
+from the kernel. Let's initialize both the PMM and the VMM with this parameter.
 
 ```nim{7-13}
 # src/kernel/main.nim
@@ -428,7 +468,8 @@ proc KernelMainInner(bootInfo: ptr BootInfo) =
   ...
 ```
 
-Let's compile and run the kernel. If everything goes well, we should see the following output:
+Let's compile and run the kernel. If everything goes well, we should see the following
+output:
 
 ```sh-session
 kernel: Fusion Kernel
@@ -453,8 +494,13 @@ kernel: Virtual memory regions
      0xffff800200000000   KernelData           130000       32500
 ```
 
-Great! Our kernel is now running at the higher half of the address space. This is another big milestone.
+Great! Our kernel is now running at the higher half of the address space. This is another
+big milestone.
 
-There are many things we can tackle next, but one important thing we need to take care of before we add more code is handling CPU exceptions. The reason is that sooner or later our kernel will crash, and we won't know why. Handling CPU exceptions gives us a way to print a debug message and halt the CPU, so we can see what went wrong.
+There are many things we can tackle next, but one important thing we need to take care of
+before we add more code is handling CPU exceptions. The reason is that sooner or later our
+kernel will crash, and we won't know why. Handling CPU exceptions gives us a way to print
+a debug message and halt the CPU, so we can see what went wrong.
 
-But before we can do that, we need to set up the **Global Descriptor Table** (GDT), which we'll look at in the next section.
+But before we can do that, we need to set up the **Global Descriptor Table** (GDT), which
+we'll look at in the next section.

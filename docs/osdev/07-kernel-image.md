@@ -1,10 +1,17 @@
 # Kernel Image
 
-To start simple, we'll build a flat binary kernel image instead of using an executable format like PE or ELF. This makes the job of the bootloader easier, since it doesn't have to parse a complex executable format or fix up relocations. All it has to do is load the kernel image into memory and jump to the entry point.
+To start simple, we'll build a flat binary kernel image instead of using an executable
+format like PE or ELF. This makes the job of the bootloader easier, since it doesn't have
+to parse a complex executable format or fix up relocations. All it has to do is load the
+kernel image into memory and jump to the entry point.
 
 ## Project structure
 
-Before we start writing the kernel, let's organize our project to separate the kernel from the bootloader modules, so that we can build them separately. Under the `src` directory we'll create a `boot` directory for the bootloader modules, and a `kernel` directory for the kernel modules. We'll also create a `common` directory for shared modules. Here's what the project structure looks like:
+Before we start writing the kernel, let's organize our project to separate the kernel from
+the bootloader modules, so that we can build them separately. Under the `src` directory
+we'll create a `boot` directory for the bootloader modules, and a `kernel` directory for
+the kernel modules. We'll also create a `common` directory for shared modules. Here's what
+the project structure looks like:
 
 ```
 .
@@ -16,7 +23,13 @@ Before we start writing the kernel, let's organize our project to separate the k
 └── nim.cfg
 ```
 
-Now let's move the existing modules into their respective directories. Let's also create an empty `nim.cfg` file in the `boot` and `kernel` directories. We'll use these files to customize the build for the bootloader and the kernel. Nim will automatically pick up the `nim.cfg` file in the directory of the module that we're compiling. It also will recursively look for `nim.cfg` files in the parent directories. This allows us to have a common `nim.cfg` file in the project root directory, and provide specific configurations in the `nim.cfg` files in the `boot` and `kernel` directories.
+Now let's move the existing modules into their respective directories. Let's also create
+an empty `nim.cfg` file in the `boot` and `kernel` directories. We'll use these files to
+customize the build for the bootloader and the kernel. Nim will automatically pick up the
+`nim.cfg` file in the directory of the module that we're compiling. It also will
+recursively look for `nim.cfg` files in the parent directories. This allows us to have a
+common `nim.cfg` file in the project root directory, and provide specific configurations
+in the `nim.cfg` files in the `boot` and `kernel` directories.
 
 ```
 .
@@ -35,14 +48,13 @@ Now let's move the existing modules into their respective directories. Let's als
 └── nim.cfg
 ```
 
-Let's move the following part of the `nim.cfg` file into the `nim.cfg` file in the `boot` directory:
+Let's move the following part of the `nim.cfg` file into the `nim.cfg` file in the `boot`
+directory:
 
 ```properties
 # src/boot/nim.cfg
-
 --passc:"-target x86_64-unknown-windows"
 --passc:"-ffreestanding"
-
 --passl:"-target x86_64-unknown-windows"
 --passl:"-fuse-ld=lld-link"
 --passl:"-nostdlib"
@@ -50,18 +62,19 @@ Let's move the following part of the `nim.cfg` file into the `nim.cfg` file in t
 --passl:"-Wl,-subsystem:efi_application"
 ```
 
-Let's also tell Nim to add the `src` directory to its search path, so that we can import modules from `boot`, `common`, and `kernel` without using relative paths. We'll put this in the top-level `nim.cfg` file:
+Let's also tell Nim to add the `src` directory to its search path, so that we can import
+modules from `boot`, `common`, and `kernel` without using relative paths. We'll put this
+in the top-level `nim.cfg` file:
 
 ```properties
 # nim.cfg
 ...
-
 --path:src
 ```
 
 We'll work on what to use in the kernel's `nim.cfg` file later.
 
-Let's also add a task in our `justfile` to build the the kernel:
+Let's also add a task in our `justfile` to build the kernel:
 
 ```justfile{8-9}
 # justfile
@@ -87,9 +100,18 @@ run: bootloader
 
 ## Debug output
 
- We cannot rely on any UEFI services in the kernel; the bootloader will exit UEFI Boot Services before jumping to the kernel. This means that we will not be able to use the UEFI console to print to the screen. The kernel will have to write directly to the graphics framebuffer, but we'll get to that later.
+We cannot rely on any UEFI services in the kernel; the bootloader will exit UEFI Boot
+Services before jumping to the kernel. This means that we will not be able to use the UEFI
+console to print to the screen. The kernel will have to write directly to the graphics
+framebuffer, but we'll get to that later.
 
-Typically, at this early stage of the kernel startup, the serial port is used to print debug messages. But I don't want to implement a serial port driver yet. Since we're using QEMU, we can leverage its debug console `debugcon` to print messages by configuring it to send its output to `stdio` using the switch `-debugcon stdio`. This will print the debug messages to the terminal that we're running QEMU from. The way this feature works is by sending characters to port `0xE9`, which is the debug port. Let's create a `debugcon` module implement procedures that prints a string to the debug console:
+Typically, at this early stage of the kernel startup, the serial port is used to print
+debug messages. But I don't want to implement a serial port driver yet. Since we're using
+QEMU, we can leverage its debug console `debugcon` to print messages by configuring it to
+send its output to `stdio` using the switch `-debugcon stdio`. This will print the debug
+messages to the terminal that we're running QEMU from. The way this feature works is by
+sending characters to port `0xE9`, which is the debug port. Let's create a `debugcon`
+module to implement procedures that print a string to the debug console:
 
 ```nim
 # src/debugcon.nim
@@ -116,11 +138,14 @@ proc debugln*(msgs: varargs[string]) =
   debug("\r\n")
 ```
 
-We can now use the `debug` and `debugln` procedures to print messages to the debug console.
+We can now use the `debug` and `debugln` procedures to print messages to the debug
+console.
 
 ## Entry point
 
-The kernel entry point is the first function that is executed by the bootloader. We'll call this function `KernelMain`. For now, it will just print a message to the debug console and halt the CPU.
+The kernel entry point is the first function that is executed by the bootloader. We'll
+call this function `KernelMain`. For now, it will just print a message to the debug
+console and halt the CPU.
 
 ```nim
 # src/kernel/main.nim
@@ -132,52 +157,85 @@ proc KernelMain() {.exportc.} =
   quit()
 ```
 
-Similar to what we did in the bootloader, we import `libc` and `malloc` since we're compiling for a freestanding environment. Now let's see how we can compile this minimal kernel.
+Similar to what we did in the bootloader, we import `libc` and `malloc` since we're
+compiling for a freestanding environment. Now let's see how we can compile this minimal
+kernel.
 
 ## C compiler options
 
-Compiling a kernel is not the same as compiling a regular application. The C compiler has some default behaviour that will cause problems for us.
+Compiling a kernel is not the same as compiling a regular application. The C compiler has
+some default behaviour that will cause problems for us.
 
-The first one is the way it saves and restores registers during function calls. By default, the compiler saves an extensive set of registers, including the SSE registers. This is not necessary for our kernel, since we're using only integer instructions and registers. This can be turned off using the `-mgeneral-regs-only` switch.
+The first one is the way it saves and restores registers during function calls. By
+default, the compiler saves an extensive set of registers, including the SSE registers.
+This is not necessary for our kernel, since we're using only integer instructions and
+registers. This can be turned off using the `-mgeneral-regs-only` switch.
 
-The other one is so-called red zone. Normally, the compiler allocates a stack frame for each function call. This stack frame is used to store local variables and function arguments. This is done by subtracting the necessary space from the `rsp` register. However, when the compiler detects that a function is a leaf function, i.e. it doesn't call any other functions, it does not allocate a stack frame (i.e. it doesn't subtract from `rsp`). Instead, it uses the 128 bytes below `rsp` as a scratch space for local variables. This is called the red zone, a performance optimization to avoid the overhead of allocating a stack frame. This is not a problem for regular applications, but for a kernel, if an interrupt is triggered while we're in kernel mode, the CPU will use the same stack, and will overwrite the red zone. This corrupts the state of the kernel, and can be extremely difficult to debug. To avoid this, we'll disable the red zone using the `-mno-red-zone` switch.
+The other one is the so-called red zone. Normally, the compiler allocates a stack frame
+for each function call. This stack frame is used to store local variables and function
+arguments. This is done by subtracting the necessary space from the `rsp` register.
+However, when the compiler detects that a function is a leaf function, i.e., it doesn't
+call any other functions, it does not allocate a stack frame (i.e., it doesn't subtract
+from `rsp`). Instead, it uses the 128 bytes below `rsp` as a scratch space for local
+variables. This is called the red zone, a performance optimization to avoid the overhead
+of allocating a stack frame. This is not a problem for regular applications, but for a
+kernel, if an interrupt is triggered while we're in kernel mode, the CPU will use the same
+stack, and will overwrite the red zone. This corrupts the state of the kernel and can be
+extremely difficult to debug. To avoid this, we'll disable the red zone using the
+`-mno-red-zone` switch.
 
 Let's add these switches to the compiler arguments in the kernel's `nim.cfg`:
 
 ```properties
 # src/kernel/nim.cfg
 ...
-
 --passc:"-mgeneral-regs-only"
 --passc:"-mno-red-zone"
 ```
 
 ## Linking the kernel
 
-Our goal is to build a raw binary kernel image. We can do this by passing the `--oformat=binary` switch to the linker. But before we do this, we have to understand how the bootloader will load the kernel image into memory and jump to the entry point.
+Our goal is to build a raw binary kernel image. We can do this by passing the
+`--oformat=binary` switch to the linker. But before we do this, we have to understand how
+the bootloader will load the kernel image into memory and jump to the entry point.
 
-A flat binary image doesn't have metadata to specify an entry point, so the bootloader and the kernel have to agree on a convention. The convention that we'll use is to place the entry point at the beginning of the image. This means that the bootloader will load the kernel image into memory and jump to the beginning of the image. Since the binary image is not relocatable, the kernel has to be linked at a specific address. We'll use the address `0x100000` (1 MiB) for the kernel image. The reason for this particular address is that below this address (specifically the region between 640 KiB to 1 MiB) is reserved for legacy BIOS compatibility (VGA memory, BIOS ROM, etc.) and is not accessible as RAM.
+A flat binary image doesn't have metadata to specify an entry point, so the bootloader and
+the kernel have to agree on a convention. The convention that we'll use is to place the
+entry point at the beginning of the image. This means that the bootloader will load the
+kernel image into memory and jump to the beginning of the image. Since the binary image is
+not relocatable, the kernel has to be linked at a specific address. We'll use the address
+`0x100000` (1 MiB) for the kernel image. The reason for this particular address is that
+below this address (specifically the region between 640 KiB to 1 MiB) is reserved for
+legacy BIOS compatibility (VGA memory, BIOS ROM, etc.) and is not accessible as RAM.
 
-OK, how do we tell the linker to link the kernel at a specific address? We use a linker script. A linker script is a text file that tells the linker how to map sections from the input object files to sections in the output image, and in what order, and at what address. But before we use a linker script let's link the kernel without one, and see what sections are included in the output image.
+OK, how do we tell the linker to link the kernel at a specific address? We use a linker
+script. A linker script is a text file that tells the linker how to map sections from the
+input object files to sections in the output image, and in what order, and at what
+address. But before we use a linker script let's link the kernel without one, and see what
+sections are included in the output image.
 
-The `lld-link` linker that we've been using so far (to generate a PE image) doesn't seem to support linker scripts (at least I couldn't find a way to do it). That's OK; we don't want the PE format anymore, it was only needed for the UEFI bootloader. So for the kernel, we'll switch to using the `ld.lld` linker, which is the LLVM linker for Unix systems. The most widely used executable format on Unix systems is ELF, so we'll use that as well. We'll come back later to building a raw binary image.
+The `lld-link` linker that we've been using so far (to generate a PE image) doesn't seem
+to support linker scripts (at least I couldn't find a way to do it). That's OK; we don't
+want the PE format anymore, it was only needed for the UEFI bootloader. So for the kernel,
+we'll switch to using the `ld.lld` linker, which is the LLVM linker for Unix systems. The
+most widely used executable format on Unix systems is ELF, so we'll use that as well.
+We'll come back later to building a raw binary image.
 
-Let's add some arguments in `src/kernel/nim.cfg` to use `ld.lld` and generate an ELF executable:
+Let's add some arguments in `src/kernel/nim.cfg` to use `ld.lld` and generate an ELF
+executable:
 
 ```properties
 # src/kernel/nim.cfg
-
-amd64.any.clang.linkerexe = "ld.lld"
-
+amd64.any.clang.linkerexe="ld.lld"
 --passc:"-target x86_64-unknown-elf"
 --passc:"-ffreestanding"
-
 --passl:"-nostdlib"
 --passl:"-Map=build/kernel.map"
 --passl:"-entry KernelMain"
 ```
 
-We're also passing the `-Map` switch to generate a linker map file. This is useful for showing us the address of each symbol in the output file. Now let's compile the kernel:
+We're also passing the `-Map` switch to generate a linker map file. This is useful for
+showing us the address of each symbol in the output file. Now let's compile the kernel:
 
 ```sh-session
 $ just kernel
@@ -186,7 +244,8 @@ $ file build/kernel.bin
 build/kernel.bin: ELF 64-bit LSB executable, x86-64, version 1 (SYSV), statically linked, not stripped
 ```
 
-Great! We have an ELF executable kernel image. Let's see what's in it using `llvm-readelf` (I've highlighted the interesting parts):
+Great! We have an ELF executable kernel image. Let's see what's in it using
+`llvm-readelf` (I've highlighted the interesting parts):
 
 ```sh-session{12,27-30,48-50,56-58}
 $ llvm-readelf --headers build/kernel.bin
@@ -253,11 +312,21 @@ Program Headers:
 
 Here's what we can see from the output:
 
-- The entry point is at address `0x20D580`, which is not what we wanted. We wanted the entry point to be at address `0x100000`. We'll fix this later.
-- The sections that we're interested in are `.text`, `.rodata`, `.data`, and `.bss`. The `.text` section contains the code, the `.rodata` section contains read-only data, the `.data` section contains initialized data, and the `.bss` section contains uninitialized data. These are the sections that we want to include in the kernel image.
-- There are other sections that we're not interested in (`.comment`, `.symtab`, `.shstrtab`, and `.strtab`). These sections are used for debugging information, and we don't need them in the output image. We'll discard these sections later.
+- The entry point is at address `0x20D580`, which is not what we wanted. We wanted the
+  entry point to be at address `0x100000`. We'll fix this later.
+- The sections that we're interested in are `.text`, `.rodata`, `.data`, and `.bss`. The
+  `.text` section contains the code, the `.rodata` section contains read-only data, the
+  `.data` section contains initialized data, and the `.bss` section contains uninitialized
+  data. These are the sections that we want to include in the kernel image.
+- There are other sections that we're not interested in (`.comment`, `.symtab`,
+  `.shstrtab`, and `.strtab`). These sections are used for debugging information, and we
+  don't need them in the output image. We'll discard these sections later.
 
-Keep in mind that these are the output sections as generated by the linker. The inputs sections from the object files are mapped to these output sections. So in order to write our own linker script, we need to know what sections are generated by the compiler for each object file. Let's take a look at one of the object files that were generated by the compiler:
+Keep in mind that these are the output sections as generated by the linker. The input
+sections from the object files are mapped to these output sections. So in order to write
+our own linker script, we need to know what sections are generated by the compiler for
+each object file. Let's take a look at one of the object files that were generated by the
+compiler:
 
 ```sh-session{9,11-12}
 $ llvm-objdump --section-headers build/@mmain.nim.c.o
@@ -279,9 +348,13 @@ Idx Name            Size     VMA              Type
  10 .symtab         00000270 0000000000000000 
 ```
 
-We can see that there are two read-only data sections (`.rodata.str1.1` and `.rodata`). The `rodata.str1.1` section contains string literals, so we'll need to include it in the kernel image. The other sections (other than `.text`) are not relevant to us.
+We can see that there are two read-only data sections (`.rodata.str1.1` and `.rodata`).
+The `.rodata.str1.1` section contains string literals, so we'll need to include it in the
+kernel image. The other sections (other than `.text`) are not relevant to us.
 
-OK, let's create a linker script called `kernel.ld` in the kernel directory, and map the sections that we're interested in to the output sections that we saw earlier, and discard all other sections:
+OK, let's create a linker script called `kernel.ld` in the kernel directory, and map the
+sections that we're interested in to the output sections that we saw earlier, and discard
+all other sections:
 
 ```ld
 /* src/kernel/kernel.ld */
@@ -298,13 +371,14 @@ SECTIONS
 }
 ```
 
-This tells the linker that the image will be loaded at address `0x100000`, and that the `.text` section (from all object files), the `.data` section, the `.rodata`, and the `.bss` section should be placed in the output file, in this order.
+This tells the linker that the image will be loaded at address `0x100000`, and that the
+`.text` section (from all object files), the `.data` section, the `.rodata`, and the
+`.bss` section should be placed in the output file, in this order.
 
 Let's add the linker script to the linker arguments in `nim.cfg`:
 
 ```properties
 # src/kernel/nim.cfg
-
 --passl:"-T src/kernel/kernel.ld"
 ```
 
@@ -316,7 +390,9 @@ $ just kernel
 ld.lld: error: discarding .shstrtab section is not allowed
 ```
 
-Oops, we can't discard the `.shstrtab` section. This section contains the names of the sections, and is required to identify the sections in the output file. Let's add an entry for it in the linker script:
+Oops, we can't discard the `.shstrtab` section. This section contains the names of the
+sections, and is required to identify the sections in the output file. Let's add an entry
+for it in the linker script:
 
 ```ld
 /* src/kernel/kernel.ld */
@@ -393,7 +469,9 @@ Program Headers:
    None   .shstrtab
 ```
 
-OK, it looks like the section mapping worked as expected, but the entry point (`KernelMain`) is at `0x10B590` instead of `0x100000`. Let's take a look at the linker map file:
+OK, it looks like the section mapping worked as expected, but the entry point (
+`KernelMain`) is at `0x10B590` instead of `0x100000`. Let's take a look at the linker map
+file:
 
 ```sh-session
 $ head -n 10 build/kernel.map
@@ -409,7 +487,12 @@ $ head -n 10 build/kernel.map
   100140           100140       38     1                 eqtrace___system_u4980
 ```
 
-We can see that the first object file in the output `.text` section is from Nim's standard library module `system/exceptions.nim`. This is because the linker uses the order of the object files in the command line to determine the order in the output image. We don't have much control over the order of the object files in the command line, since Nim generates the command line for us. What we can do is adjust the linker script a bit to tell it to put the kernel object file first.
+We can see that the first object file in the output `.text` section is from Nim's standard
+library module `system/exceptions.nim`. This is because the linker uses the order of the
+object files in the command line to determine the order in the output image. We don't have
+much control over the order of the object files in the command line, since Nim generates
+the command line for us. What we can do is adjust the linker script a bit to tell it to
+put the kernel object file first.
 
 ```ld{6}
 /* src/kernel/kernel.ld */
@@ -427,7 +510,8 @@ SECTIONS
 }
 ```
 
-I'm using a wildcard pattern for the kernel object file, since the name is mangled. Let's compile the kernel again and see what the linker map file looks like:
+I'm using a wildcard pattern for the kernel object file, since the name is mangled. Let's
+compile the kernel again and see what the linker map file looks like:
 
 ```sh-session
 $ head -n 10 build/kernel.map
@@ -443,12 +527,22 @@ $ head -n 10 build/kernel.map
     100240           100240       19     1                 popFrame
 ```
 
-Great! The kernel object file is now the first object file in the image, and our `KernelMain` proc is exactly at address `0x100000`. This should work, but there's a hidden issue here. The fact that the linker decided to put `KernelMain` at the beginning of the `.text` section is an implementation detail of the linker. If we add more code to the kernel, the linker might decide to put `KernelMain` at a different address. So how do we tell the linker to always put `KernelMain` at the beginning of the `.text` section? Linker scripts work at a section level, so we can't tell the linker to put a specific symbol at a specific address. One thing we can do is use a C compiler flag called `-ffunction-sections`, which tells the compiler to put each function in its own section. The generated section names are in the form `.text.<function name>`. This way we can tell the linker to put the `.text.KernelMain` section at the beginning of the `.text` section. Let's add this flag to the compiler arguments in `nim.cfg`:
+Great! The kernel object file is now the first object file in the image, and our
+`KernelMain` proc is exactly at address `0x100000`. This should work, but there's a hidden
+issue here. The fact that the linker decided to put `KernelMain` at the beginning of the
+`.text` section is an implementation detail of the linker. If we add more code to the
+kernel, the linker might decide to put `KernelMain` at a different address. So how do we
+tell the linker to always put `KernelMain` at the beginning of the `.text` section? Linker
+scripts work at a section level, so we can't tell the linker to put a specific symbol at a
+specific address. One thing we can do is use a C compiler flag called
+`-ffunction-sections`, which tells the compiler to put each function in its own section.
+The generated section names are in the form `.text.<function name>`. This way we can tell
+the linker to put the `.text.KernelMain` section at the beginning of the `.text` section.
+Let's add this flag to the compiler arguments in `nim.cfg`:
 
 ```properties
 # src/kernel/nim.cfg
 ...
-
 --passc:"-ffunction-sections"
 ```
 
@@ -474,7 +568,11 @@ Idx Name                          Size     VMA              Type
 ...
 ```
 
-Looks good. We can now update the linker script to put the `.text.KernelMain` section at the beginning of the `.text` section. We'll follow it with the other function sections from the kernel main object file, and then all other function sections. The reason for this is that we want to keep the code from the kernel main object file together for better cache locality.
+Looks good. We can now update the linker script to put the `.text.KernelMain` section at
+the beginning of the `.text` section. We'll follow it with the other function sections
+from the kernel main object file, and then all other function sections. The reason for
+this is that we want to keep the code from the kernel main object file together for better
+cache locality.
 
 ```ld{6-10}
 /* src/kernel/kernel.ld */
@@ -512,15 +610,17 @@ $ head -n 10 build/kernel.map
           100110           100110       ad    16         .../fusion/build/@mmain.nim.c.o:(.text.quit__system_u6343)
 ```
 
-Looks good. Now we're guaranteed that `KernelMain` will always be at the beginning of the `.text` section. The order of other sections is not important to us (unless we want to optimize for cache locality, but let's not pre-optimize for now).
+Looks good. Now we're guaranteed that `KernelMain` will always be at the beginning of the
+`.text` section. The order of other sections is not important to us (unless we want to
+optimize for cache locality, but let's not pre-optimize for now).
 
 ## Building a raw binary
 
-We have an ELF executable kernel image, but we want a raw binary image. Let's add the `--output-format=binary` switch to the linker arguments in `nim.cfg`:
+We have an ELF executable kernel image, but we want a raw binary image. Let's add the
+`--output-format=binary` switch to the linker arguments in `nim.cfg`:
 
 ```properties
 # src/kernel/nim.cfg
-
 ...
 --passl:"--oformat=binary"
 ```
@@ -534,14 +634,23 @@ $ file build/kernel.bin
 build/kernel.bin: data
 ```
 
-Great! We have a raw binary kernel image. But there's one more thing. Let's take a look at the size of the kernel image:
+Great! We have a raw binary kernel image. But there's one more thing. Let's take a look at
+the size of the kernel image:
 
 ```sh-session
 $ wc -c build/kernel.bin
   51104 build/kernel.bin
 ```
 
-The kernel image is about 51 KiB. But remember that we have a 1 MiB heap in the `malloc.nim` module. This is not persisted in the image, since it's in the `.bss` section, which is uninitialized data. This poses a problem for the bootloader, since we don't have section metadata in the image. Part of the reason for building a raw binary image is to make it dead simple for the loader to load it into memory without having to worry about initializing sections. One way to solve this problem is to move the `.bss` section into the output `.data` section. This will cause the linker to allocate space for the `.bss` section in the output file. Obviously this will increase the size of the image, but it's a price we're willing to pay to keep the bootloader simple.
+The kernel image is about 51 KiB. But remember that we have a 1 MiB heap in the
+`malloc.nim` module. This is not persisted in the image, since it's in the `.bss` section,
+which is uninitialized data. This poses a problem for the bootloader, since we don't have
+section metadata in the image. Part of the reason for building a raw binary image is to
+make it dead simple for the loader to load it into memory without having to worry about
+initializing sections. One way to solve this problem is to move the `.bss` section into
+the output `.data` section. This will cause the linker to allocate space for the `.bss`
+section in the output file. Obviously this will increase the size of the image, but it's a
+price we're willing to pay to keep the bootloader simple.
 
 Let's modify the linker script to move the `.bss` section into the `.data` section:
 
@@ -573,9 +682,12 @@ $ wc -c build/kernel.bin
   1100880 build/kernel.bin
 ```
 
-The image is now about 1.1 MiB, which means that the `.bss` section is now included in the image. Now the bootloader will be able to load the image into memory without having to worry about initializing sections.
+The image is now about 1.1 MiB, which means that the `.bss` section is now included in the
+image. Now the bootloader will be able to load the image into memory without having to
+worry about initializing sections.
 
-Let's update our `justfile` to copy the kernel image to the disk image in a place where the bootloader can find it:
+Let's update our `justfile` to copy the kernel image to the disk image in a place where
+the bootloader can find it:
 
 ```justfile{11-13,15}
 # justfile
@@ -601,5 +713,6 @@ run: bootloader kernel
     -net none
 ```
 
-
-In the next section we will continue working on our bootloader. Specifically we will try to use UEFI services to locate the kernel image file, load it into memory address `0x100000`, and jump to it.
+In the next section we will continue working on our bootloader. Specifically we will try
+to use UEFI services to locate the kernel image file, load it into memory address
+`0x100000`, and jump to it.

@@ -1,13 +1,29 @@
 # Task State Segment
 
-While running in user mode, an interrupt/exception or a system call causes the CPU to switch to kernel mode. This causes a change in privilege level (from CPL=3 to CPL=0). The CPU cannot use the user stack while in kernel mode, since the interrupt could have been caused by something that makes the stack unusable, e.g. a page fault caused by running out of stack space. So, the CPU needs to switch to a known good stack. This is where the Task State Segment (TSS) comes in.
+While running in user mode, an interrupt/exception or a system call causes the CPU to
+switch to kernel mode. This causes a change in privilege level (from CPL=3 to CPL=0). The
+CPU cannot use the user stack while in kernel mode, since the interrupt could have been
+caused by something that makes the stack unusable, e.g. a page fault caused by running out
+of stack space. So, the CPU needs to switch to a known good stack. This is where the Task
+State Segment (TSS) comes in.
 
-The TSS originally was designed to support hardware task switching. This is a feature that allows the CPU to switch between multiple tasks (each having its own TSS) without software intervention. This feature is not used in modern operating systems, which rely on software task switching, but the TSS is still used to switch stacks when entering kernel mode.
+The TSS originally was designed to support hardware task switching. This is a feature that
+allows the CPU to switch between multiple tasks (each having its own TSS) without software
+intervention. This feature is not used in modern operating systems, which rely on software
+task switching, but the TSS is still used to switch stacks when entering kernel mode.
 
 The TSS on x64 contains two sets of stack pointers:
 
-* One set holds three stack pointers, `RSP0`, `RSP1`, and `RSP2`, to use when switching to CPL=0, CPL=1, and CPL=2, respectively. Typically, only `RSP0` is used when switching from user mode to kernel mode, since rings 1 and 2 are not used in modern operating systems.
-* The other set holds so-called Interrupt Stack Table, which can hold up to seven stack pointers, `IST1` through `IST7`, to use when handling interrupts. The decision to use one of those stacks is made by the Interrupt Descriptor Table entry for the interrupt. The stack pointer to use is stored in the `IST` field of the IDT entry. This means that different interrupts can use different stacks. If an IDT entry doesn't specify a stack, the CPU uses the stack pointed to by `RSP0`.
+* One set holds three stack pointers, `RSP0`, `RSP1`, and `RSP2`, to use when switching to
+  CPL=0, CPL=1, and CPL=2, respectively. Typically, only `RSP0` is used when switching
+  from user mode to kernel mode, since rings 1 and 2 are not used in modern operating
+  systems.
+* The other set holds the so-called Interrupt Stack Table, which can hold up to seven
+  stack pointers, `IST1` through `IST7`, to use when handling interrupts. The decision to
+  use one of those stacks is made by the Interrupt Descriptor Table entry for the
+  interrupt. The stack pointer to use is stored in the `IST` field of the IDT entry. This
+  means that different interrupts can use different stacks. If an IDT entry doesn't
+  specify a stack, the CPU uses the stack pointed to by `RSP0`.
 
 Here's a diagram of the TSS structure:
 
@@ -51,7 +67,9 @@ Here's a diagram of the TSS structure:
   └─────────────────────────────────────────────────┘
 ```
 
-So, how does the CPU find the TSS? There's a special register called `TR` (Task Register) that holds the segment selector of the TSS. The CPU uses this selector to find the TSS in the GDT. So, what we need to do is to create a TSS and load its selector into `TR`.
+So, how does the CPU find the TSS? There's a special register called `TR` (Task Register)
+that holds the segment selector of the TSS. The CPU uses this selector to find the TSS in
+the GDT. So, what we need to do is to create a TSS and load its selector into `TR`.
 
 ## Creating a TSS
 
@@ -79,7 +97,8 @@ type
     iomapBase: uint16
 ```
 
-We'll need to define a new descriptor type for the TSS, so that we can add it to the GDT. This will be a system descriptor (as opposed to a code or data descriptor).
+We'll need to define a new descriptor type for the TSS, so that we can add it to the GDT.
+This will be a system descriptor (as opposed to a code or data descriptor).
 
 ```nim
 # src/kernel/gdt.nim
@@ -105,7 +124,8 @@ type
     reserved2 {.bitsize: 19.}: uint32 = 0
 ```
 
-Now, let's create an instance of the TSS and a descriptor for it. Later, we'll create a kernel stack and set `RSP0` to point to it.
+Now, let's create an instance of the TSS and a descriptor for it. Later, we'll create a
+kernel stack and set `RSP0` to point to it.
 
 ```nim
 # src/kernel/gdt.nim
@@ -127,7 +147,9 @@ let
   tssDescriptorHi = (cast[ptr uint64](cast[uint64](tssDescriptor.addr) + 8))[]
 ```
 
-Finally, let's add the descriptor to the GDT and define its selector. Notice that the GDT entry occupies two 64-bit slots (since the TSS descriptor is 128 bits long). The selector points to the first slot (the low 64 bits).
+Finally, let's add the descriptor to the GDT and define its selector. Notice that the GDT
+entry occupies two 64-bit slots (since the TSS descriptor is 128 bits long). The selector
+points to the first slot (the low 64 bits).
 
 ```nim{8,18-19}
 # src/kernel/gdt.nim
@@ -154,7 +176,8 @@ let
 
 ## Loading the TSS
 
-To tell the CPU to use the TSS, we need to load its selector into `TR` (Task Register). We'll do this as part of the `gdtInit` proc.
+To tell the CPU to use the TSS, we need to load its selector into `TR` (Task Register).
+We'll do this as part of the `gdtInit` proc.
 
 ```nim{9-10,19}
 # src/kernel/gdt.nim
@@ -182,7 +205,8 @@ proc gdtInit*() {.asmNoStackFrame.} =
 
 ## Kernel Switch Stack
 
-We now need to define a new stack to use when switching to kernel mode. Let's allocate a page for it, map it, and set the `RSP0` field of the TSS to point to it.
+We now need to define a new stack to use when switching to kernel mode. Let's allocate a
+page for it, map it, and set the `RSP0` field of the TSS to point to it.
 
 ```nim{10-22}
 # src/kernel/main.nim
@@ -212,11 +236,14 @@ proc KernelMain(bootInfo: ptr BootInfo) {.exportc.} =
   ...
 ```
 
-Everything is now ready for the switch to kernel mode. There are a few ways to try this out.
+Everything is now ready for the switch to kernel mode. There are a few ways to try this
+out.
 
 ## Switching to Kernel Mode
 
-One way to test this is to have the user task try to execute a privileged instruction, such as `hlt`. This should cause a General Protection Fault exception, which will trigger the switch to kernel mode. Let's try this out.
+One way to test this is to have the user task try to execute a privileged instruction,
+such as `hlt`. This should cause a General Protection Fault exception, which will trigger
+the switch to kernel mode. Let's try this out.
 
 ```nim
 # src/user/utask.nim
@@ -250,7 +277,9 @@ Traceback (most recent call last)
 /Users/khaledhammouda/src/github.com/khaledh/fusion/src/kernel/idt.nim(65) cpuGeneralProtectionFaultHandler
 ```
 
-As expected, the CPU switched to kernel mode and executed the General Protection Fault handler! Let's try another way. Let's cause a page fault by trying to access a page that's not mapped.
+As expected, the CPU switched to kernel mode and executed the General Protection Fault
+handler! Let's try another way. Let's cause a page fault by trying to access a page that's
+not mapped.
 
 ```nim
 # src/user/utask.nim
@@ -279,7 +308,8 @@ Traceback (most recent call last)
 /Users/khaledhammouda/src/github.com/khaledh/fusion/src/kernel/idt.nim(57) cpuPageFaultHandler
 ```
 
-Great! OK, one more way. Let's try to access an address within kernel space. This should also cause a Page Fault exception, even though the address is mapped.
+Great! OK, one more way. Let's try to access an address within kernel space. This should
+also cause a Page Fault exception, even though the address is mapped.
 
 ```nim
 # src/user/utask.nim
@@ -311,7 +341,8 @@ Great! This demonstrates that kernel memory is protected from access by user cod
 
 ## Invoking Interrupts from User Mode
 
-Finally, let's try to invoke an interrupt from user mode. Let's reuse the `isr100` interrupt handler we used for testing earlier.
+Finally, let's try to invoke an interrupt from user mode. Let's reuse the `isr100`
+interrupt handler we used for testing earlier.
 
 ```nim
 # src/kernel/idt.nim
@@ -353,9 +384,14 @@ Traceback (most recent call last)
 /Users/khaledhammouda/src/github.com/khaledh/fusion/src/kernel/idt.nim(66) cpuGeneralProtectionFaultHandler
 ```
 
-The reason has to do with the `DPL` of the interrupt gate. Recall that the `DPL` of the interrupt gate must be greater than or equal to the `CPL` of the code that invokes the interrupt. In this case, the `DPL` of the interrupt gate is 0, while the `CPL` of the user code is 3. So, the CPU raises a General Protection Fault exception.
+The reason has to do with the `DPL` of the interrupt gate. Recall that the `DPL` of the
+interrupt gate must be greater than or equal to the `CPL` of the code that invokes the
+interrupt. In this case, the `DPL` of the interrupt gate is 0, while the `CPL` of the user
+code is 3. So, the CPU raises a General Protection Fault exception.
 
-Let's fix this by allowing the `isr100` handler to be called from user mode. We need to do a couple of modifications in the `idt.nim` module to allow setting the `dpl` field of the interrupt gate.
+Let's fix this by allowing the `isr100` handler to be called from user mode. We need to do
+a couple of modifications in the `idt.nim` module to allow setting the `dpl` field of the
+interrupt gate.
 
 ```nim{3,9,12-13,20}
 ...
@@ -388,4 +424,5 @@ kernel: Switching to user mode
 Hello from isr100
 ```
 
-Great! We can call interrupts from user mode. We're now ready to start looking into system calls.
+Great! We can call interrupts from user mode. We're now ready to start looking into system
+calls.

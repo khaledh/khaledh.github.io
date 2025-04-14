@@ -2,8 +2,9 @@
 
 The legacy x86 architecture featured a single interrupt controller, the 8259A Programmable
 Interrupt Controller (PIC), responsible for managing hardware interrupts. The PIC is a
-simple device that is limited to 8 interrupts (15 if cascaded with another PIC), and is
-limited in terms of interrupt priority, routing flexibility, and multiprocessor support.
+simple device that is limited to 8 interrupts per controller (15 interrupts total when
+cascaded with another PIC, as one interrupt line is used for the cascade), and is limited
+in terms of interrupt priority, routing flexibility, and multiprocessor support.
 
 The PIC is now considered obsolete, and modern x86 systems use the Advanced Programmable
 Interrupt Controller (APIC) architecture. The APIC architecture consists of two main
@@ -19,7 +20,7 @@ reason, we will focus on the Local APIC in this section.
 The Local APIC is responsible for managing interrupts delivered to its associated core.
 The interrupts it delivers can originate from internal sources, such as its timer, thermal
 sensors, and performance monitoring counters, or from external sources, such as the I/O
-APIC and Inter-Processor Interrupts (IPI).
+APIC and Inter-Processor Interrupts (IPIs).
 
 The following is a simplified diagram of the relevant components of the Local APIC (there
 are more components, but we won't need them for now):
@@ -74,9 +75,9 @@ of this MSR:
 ```
 
 The APIC is programmed by writing to its registers, which are 32 bits wide and located at
-fixed offsets from the base address. The registers occupy one frame of physical memory
-address space, from `0xFEE00000` to `0xFEEFFFFF`, although currently not all this space is
-used.
+fixed offsets from the base address. The registers occupy a 4KB page of physical memory
+address space, from `0xFEE00000` to `0xFEE00FFF`, with each register aligned on a 16-byte
+boundary.
 
 Since the base address we get from the `IA32_APIC_BASE` MSR is a physical address, we
 can't use it directly; we need to map a page of virtual memory to it first, and then use
@@ -118,7 +119,7 @@ var
   apicBaseAddress: uint64
 
 proc initBaseAddress() =
-  let apicBaseMsr = cast[Ia32ApicBaseMsr](readMSR(IA32_APIC_BASE))
+  let apicBaseMsr = cast[IA32ApicBaseMsr](readMSR(IA32_APIC_BASE))
   let apicPhysAddr = (apicBaseMsr.baseAddress shl 12).PhysAddr
   # by definition, apicPhysAddr is aligned to a page boundary, so we map it directly
   let apicVMRegion = vmalloc(kspace, 1)
@@ -211,9 +212,9 @@ spurious-interrupt vector register.
 ```
 
 The bits we are interested in are the APIC software enable/disable bit (bit 8) and the
-spurious interrupt vector (bits 7-0). The vector is set to `0xFF` by default, which we
-will keep as is, and will add a new interrupt handler for. Let's create type for the
-spurious interrupt vector register so we can easily access its fields.
+spurious interrupt vector (bits 7-0). The vector is set to `0xFF` by the CPU by default,
+which we will keep as is, and will add a new interrupt handler for. Let's create a type
+for the spurious interrupt vector register so we can easily access its fields.
 
 ```nim
 type

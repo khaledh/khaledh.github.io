@@ -34,7 +34,7 @@ proc print*(pstr: ptr string) =
     syscall
     :
     : "i" (`SysPrint`), "m" (`pstr`)
-    : "rdi", "rsi"
+    : "rdi", "rsi", "rcx", "r11"
   """
 ```
 
@@ -53,7 +53,7 @@ proc yld*() =
     syscall
     :
     : "i" (`SysYield`)
-    : "rdi"
+    : "rdi", "rcx", "r11"
   """
 
 proc exit*(code: int) =
@@ -63,7 +63,7 @@ proc exit*(code: int) =
     syscall
     :
     : "i" (`SysExit`), "r" (`code`)
-    : "rdi", "rsi"
+    : "rdi", "rsi", "rcx", "r11"
   """
 ```
 
@@ -124,8 +124,8 @@ sched: no tasks to run, halting
 ```
 
 No surprises, everything works as expected. We have successfully abstracted the system
-calls into a library, making it easier to write user tasks without worry about the details
-of system calls. We can now add more system calls to the library as we need them.
+calls into a library, making it easier to write user tasks without worrying about the
+details of system calls. We can now add more system calls to the library as we need them.
 
 In the next few sections I'd like to tackle preemptive multitasking. This will require
 receiving interrupts from a hardware timer. So far our interrupt support is limited to

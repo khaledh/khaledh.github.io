@@ -13,7 +13,7 @@ Let's get started!
 
 ## Fusion OS
 
-As any hobby OS project, it needs a name. I decided to call it **Fusion OS**, for no
+As with any hobby OS project, it needs a name. I decided to call it **Fusion OS**, for no
 particular reason. I just like the name :-) You can find the source code on
 GitHub: [https://github.com/khaledh/fusion](https://github.com/khaledh/fusion).
 

@@ -1,26 +1,29 @@
 # ELF Loader (Part 1)
 
-So far we used a flat binary format for our user task. But it's becoming more difficult as we have
-to manually specify the layout of the binary using a linker script, and arrange the sections in a
-fixed way so that the kernel can load them, apply relocations, and jump to the entry point. We also
-haven't told the kernel what sections should be marked as read-only, read-write, and/or executable.
-This is where the ELF format comes in.
+So far we used a flat binary format for our user task. But it's becoming more difficult as
+we have to manually specify the layout of the binary using a linker script, and arrange
+the sections in a fixed way so that the kernel can load them, apply relocations, and jump
+to the entry point. We also haven't told the kernel what sections should be marked as
+read-only, read-write, and/or executable. This is where the ELF format comes in.
 
-ELF is a self-describing format that contains all the information needed to load and run a program.
-Although implementing an ELF loader is more complex than a flat binary loader, it's more flexible
-and and will save us a lot of time in the long run. Let's go ahead and implement an ELF loader.
+ELF is a self-describing format that contains all the information needed to load and run a
+program. Although implementing an ELF loader is more complex than a flat binary loader,
+it's more flexible and will save us a lot of time in the long run. Let's go ahead and
+implement an ELF loader.
 
 ## ELF Format
 
-ELF files contain executable code and data, as well as metadata about the file so that the loader
-can load the file into memory and run it. The parts of the ELF format that are relevant to us are:
+ELF files contain executable code and data, as well as metadata about the file so that the
+loader can load the file into memory and run it. The parts of the ELF format that are
+relevant to us are:
 
 **ELF Header**
-: Contains metadata about the file, such as the target architecture, the entry point,
-and the offsets of the other sections.
+: Contains metadata about the file, such as the target architecture, the entry point, and
+the offsets of the other sections.
 
 **Program Header Table**
-: Contains a list of segments to be loaded into memory. Each segment can contain one or more sections.
+: Contains a list of segments to be loaded into memory. Each segment can contain one or
+more sections.
 
 **Section Header Table**
 : Contains a list of sections, which are used for debugging and linking.
@@ -39,10 +42,11 @@ and the offsets of the other sections.
 
 ## Building an ELF binary
 
-Let's modify our user program to build an ELF binary instead of a flat binary. We previously used a
-linker script to have control over the binary layout, such that the kernel could load the binary in
-a straightforward way. To produce an ELF binary, we'll simply remove the linker script and let the
-compiler and linker generate a default ELF binary.
+Let's modify our user program to build an ELF binary instead of a flat binary. We
+previously used a linker script to have control over the binary layout, such that the
+kernel could load the binary in a straightforward way. To produce an ELF binary, we'll
+simply remove the linker script and let the compiler and linker generate a default ELF
+binary.
 
 ```sh-session
 $ rm src/user/linker.ld
@@ -125,24 +129,29 @@ Program Headers:
    07     
 ```
 
-We can see there are many sections and serveral segments. The last part shows how the sections are
-mapped to the segments. We are mainly interested in the segments of type `LOAD`, which are the ones
-to be loaded into memory. We also need the `DYNAMIC` segment for applying relocations. The nice
-thing here is that we don't need to worry about which section is code, data, or bss. The segments
-include a flags field that tells us the permissions of the segment (read, write, execute). We'll use
-this information to set the correct permissions on the virtual memory regions.
+We can see there are many sections and several segments. The last part shows how the
+sections are mapped to the segments. We are mainly interested in the segments of type
+`LOAD`, which are the ones to be loaded into memory. We also need the `DYNAMIC` segment
+for applying relocations. The nice thing here is that we don't need to worry about which
+section is code, data, or bss. The segments include a flags field that tells us the
+permissions of the segment (read, write, execute). We'll use this information to set the
+correct permissions on the virtual memory regions.
 
-Notice also that the `VirtAddr` of some segments doesn't necessarily start on a page boundary.
-However, their `Align` field tells us that the first page of the segment should be aligned to a page
-boundary (I'm making a simplifying assumption here that `Align` values are always equal to x86-64's page size, i.e. 4KiB). Thus, a segment's start page is the segment's `VirtAddr` rounded down to the nearest page boundary.
+Notice also that the `VirtAddr` of some segments doesn't necessarily start on a page
+boundary. However, their `Align` field tells us that the first page of the segment should
+be aligned to a page boundary (I'm making a simplifying assumption here that `Align`
+values are always equal to x86-64's page size, i.e. 4KiB). Thus, a segment's start page is
+the segment's `VirtAddr` rounded down to the nearest page boundary.
 
 ## ELF Reader
 
-To keep the loader simple, we'll implement a separate ELF reader module that provides an interface
-to iterate over the sections and segments of an ELF file. Let's add a new file `elf.nim` to the
-`kernel` directory, which will contain the various types and procedures needed to read an ELF file.
+To keep the loader simple, we'll implement a separate ELF reader module that provides an
+interface to iterate over the sections and segments of an ELF file. Let's add a new file
+`elf.nim` to the `kernel` directory, which will contain the various types and procedures
+needed to read an ELF file.
 
-We'll start by defining an `ElfImage` and `ElfHeader` types, along with supporting types.
+We'll start by defining two types: `ElfImage` and `ElfHeader`, along with supporting
+types.
 
 ```nim
 # src/kernel/elf.nim
@@ -213,8 +222,8 @@ type
 
 This should be straightforward. The following fields in `ElfHeader` are relevant to us:
 
-- `entry`: The virtual address of the entry point. We'll use this to jump to the user task once it's
-  loaded.
+- `entry`: The virtual address of the entry point. We'll use this to jump to the user task
+  once it's loaded.
 - `phoff`: The offset of the program header table.
 - `phentsize`: The size of each entry in the program header table.
 - `phnum`: The number of entries in the program header table.
@@ -248,7 +257,7 @@ type
     Tls = (7, "TLS")
   
   ElfProgramHeaderFlag = enum
-    Executable = (0, "E")
+    Executable = (0, "X")
     Writable   = (1, "W")
     Readable   = (2, "R")
   ElfProgramHeaderFlags {.size: sizeof(uint32).} = set[ElfProgramHeaderFlag]
@@ -256,17 +265,17 @@ type
 
 The `ElfProgramHeader` type contains the following fields:
 
-- `type`: The type of the segment. We're only interested in `LOAD` segments (to be loaded into
-  memory) and `DYNAMIC` segments (for applying relocations).
-- `flags`: The permissions of the segment. We'll use this to mark the segments as read-only,
-  read-write, or executable.
+- `type`: The type of the segment. We're only interested in `LOAD` segments (to be loaded
+  into memory) and `DYNAMIC` segments (for applying relocations).
+- `flags`: The permissions of the segment. We'll use this to mark the segments as
+  read-only, read-write, or executable.
 - `offset`: The offset of the segment in the file.
-- `vaddr`: The virtual address of the segment. This is the address where the segment should be
-  loaded into memory relative to the base address.
+- `vaddr`: The virtual address of the segment. This is the address where the segment
+  should be loaded into memory relative to the base address.
 - `paddr`: The physical address of the segment. This is not used in our case.
 - `filesz`: The size of the segment in the file.
-- `memsz`: The size of the segment in memory. This can be larger than `filesz` if the segment
-  contains uninitialized data (e.g. `bss` section).
+- `memsz`: The size of the segment in memory. This can be larger than `filesz` if the
+  segment contains uninitialized data (e.g. `bss` section).
 - `align`: The alignment of the segment in memory.
 
 Next, let's define the `ElfSectionHeader` type.
@@ -305,12 +314,13 @@ type
     SymTabShndx = (18, "SYMTAB_SHNDX")
 ```
 
-Sections are mostly relevant to the linker, not the loader (which deals with segments). I'm just
-including it for the sake of completeness.
+Sections are mostly relevant to the linker, not the loader (which deals with segments).
+I'm just including it for the sake of completeness.
 
-Now, let's add a proc to initialize an `ElfImage` object from a pointer to the ELF image in memory.
-We'll validate some assumptions about the ELF image (e.g. the magic number, the architecture, etc.)
-and raise an error if the image is not a valid ELF file or if it doesn't meet our expectations.
+Now, let's add a proc to initialize an `ElfImage` object from a pointer to the ELF image
+in memory. We'll validate some assumptions about the ELF image (e.g. the magic number, the
+architecture, etc.) and raise an error if the image is not a valid ELF file or if it
+doesn't meet our expectations.
 
 ```nim
 type
@@ -330,17 +340,18 @@ proc initElfImage(image: pointer): ElfImage =
     raise newException(UnsupportedElfImage, "Only little-endian ELF files are supported")
 
   if result.header.ident.version != ElfVersion.Current:
-    raise newException(UnsupportedElfImage, &"Only ELF version {ElfVersion.Current} is supported.")
+    raise newException(UnsupportedElfImage, &"Only ELF version {ElfVersion.Current} is supported")
 
   if result.header.type != ElfType.Shared:
-    raise newException(UnsupportedElfImage, "Only PIE type ELF files are supported.")
+    raise newException(UnsupportedElfImage, "Only position-independent executable ELF files are supported")
 
   if result.header.machine != ElfMachine.X86_64:
-    raise newException(UnsupportedElfImage, "Only x86-64 ELF files are supported.")
+    raise newException(UnsupportedElfImage, "Only x86-64 ELF files are supported")
 ```
 
-Next, let's add an iterator to iterate over the segments (i.e. program headers) of the ELF image.
-The iterator will yield a tuple containing the index of the program header and the program header itself.
+Next, let's add an iterator to iterate over the segments (i.e. program headers) of the ELF
+image. The iterator will yield a tuple containing the index of the program header and the
+program header itself.
 
 ```nim
 iterator segments(image: ElfImage): tuple[i: uint16, ph: ptr ElfProgramHeader] =
@@ -355,7 +366,7 @@ iterator segments(image: ElfImage): tuple[i: uint16, ph: ptr ElfProgramHeader] =
     yield (i, ph)
 ```
 
-Similarily, let's add an iterator to iterate over the section headers of the ELF image.
+Similarly, let's add an iterator to iterate over the section headers of the ELF image.
 
 ```nim
 iterator sections(image: ElfImage): tuple[i: uint16, sh: ptr ElfSectionHeader] =
@@ -370,5 +381,5 @@ iterator sections(image: ElfImage): tuple[i: uint16, sh: ptr ElfSectionHeader] =
     yield (i, sh)
 ```
 
-That's it for the ELF reader. In the next part, we'll use this module to load the loadable segments
-of an ELF file into memory, apply relocations, and jump to the entry point.
+That's it for the ELF reader. In the next part, we'll use this module to load the loadable
+segments of an ELF file into memory, apply relocations, and jump to the entry point.
