@@ -551,9 +551,8 @@ proc KernelMainInner(bootInfo: ptr BootInfo) =
 
 Stack terminology can be confusing. The stack grows downwards, so the bottom of the stack
 is the highest address. This is why we set `userStackBottom` to the highest address of the
-stack region. Now, in order to manipulate the stack region from the kernel, we reverse map
-the stack's physical address to a virtual address, and cast it to a pointer to an array of
-512
+stack region. Now, to manipulate the stack region from the kernel, we reverse-map the
+stack's physical address to a virtual address, and cast it to a pointer to an array of 512
 `uint64` values (remember that `UserStackVirtualBase` is valid only in the user page
 table, not the kernel page table). We then populate the five entries at the bottom of the
 stack, and set `rsp` to point to the top entry. This simulates pushing the interrupt stack

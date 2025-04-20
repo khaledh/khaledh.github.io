@@ -25,15 +25,15 @@ these:
 - `rdi`: system call number
 - `rsi`: first argument
 - `rdx`: second argument
-- `rcx`: third argument
-- `r8`: fourth argument
-- `r9`: fifth argument
+- `r8`: third argument
+- `r9`: fourth argument
+- `r10`: fifth argument
 
-We'll use `rax` for the return value.
-
-When executing `syscall`, the CPU stores the user `RIP` and `RFLAGS` in `rcx` and `r11`
-respectively. Upon returning to user mode, the CPU restores `RIP` and `RFLAGS` from `rcx`
-and `r11`. So we have to make sure that `rcx` and `r11` are preserved across system calls.
+We'll use `rax` for the return value. Notice that we're not using `rcx` or `r11` in the
+system call interface. This is because when executing `syscall`, the CPU stores the user
+`rip` and `rflags` in `rcx` and `r11`, respectively. Upon returning to user mode, the CPU
+restores `rip` and `rflags` from `rcx` and `r11`. So we have to make sure that `rcx` and
+`r11` are preserved across system calls.
 
 Also, the CPU doesn't switch stacks for us when executing `syscall`. We have to do that
 ourselves. This is in contrast with interrupts, where the CPU switches to the kernel stack
@@ -105,14 +105,18 @@ proc syscallInit*() =
   writeMSR(IA32_EFER, readMSR(IA32_EFER) or 1)  # Bit 0: SYSCALL Enable
 
   # set up segment selectors in IA32_STAR (Syscall Target Address Register)
-  # note that for SYSCALL, the kernel segment selectors are:
-  #   CS: IA32_STAR[47:32]
-  #   SS: IA32_STAR[47:32] + 8
+  #
+  # we use KernelCodeSegmentSelector for both parts of the register (47:32 and 63:48)
+  # so for SYSCALL, the kernel segment selectors are:
+  #   CS: IA32_STAR[47:32]         <-- KernelCodeSegmentSelector
+  #   SS: IA32_STAR[47:32] + 8     <-- DataSegmentSelector (shared)
+  #
   # and for SYSRET, the user segment selectors are:
-  #   CS: IA32_STAR[63:48] + 16
-  #   SS: IA32_STAR[63:48] + 8
+  #   CS: IA32_STAR[63:48] + 16    <-- UserCodeSegmentSelector
+  #   SS: IA32_STAR[63:48] + 8     <-- DataSegmentSelector (shared)
+  #
   # thus, setting both parts of the register to KernelCodeSegmentSelector
-  # satisfies both requirements (+0 is kernel CS, +8 is data segment, +16 is user CS)
+  # satisfies both requirements (+0 is kernel CS, +8 is shared data segment, +16 is user CS)
   let star = (
     (KernelCodeSegmentSelector.uint64 shl 32) or
     (KernelCodeSegmentSelector.uint64 shl 48)
@@ -333,18 +337,19 @@ Now, let's modify `syscallEntry` to switch to the kernel stack and save the user
 We'll also push `rcx` and `r11` (user `rip` and `rflags`, respectively) on the kernel
 stack and restore them before calling `sysretq` to return to user mode.
 
-```nim{5-11,15-20,23-24}
+```nim
 # src/kernel/syscalls.nim
 
 proc syscallEntry() {.asmNoStackFrame.} =
   asm """
-    # switch to kernel stack
+    # save user stack pointer
     mov %0, rsp
+
+    # switch to kernel stack
     mov rsp, %1
 
-    # save user rip and rflags    
-    push rcx
-    push r11
+    push r11  # user rflags
+    push rcx  # user rip
 
     # TODO: dispatch system call
 
@@ -376,9 +381,13 @@ to `SyscallArgs` and returns a `uint64` as the return value.
 # src/kernel/syscalls.nim
 
 type
-  SyscallArgs* = object
-    num: uint64
-    arg1, arg2, arg3, arg4, arg5: uint64
+  SyscallArgs = object
+    num: uint64   # rdi
+    arg1: uint64  # rsi
+    arg2: uint64  # rdx
+    arg3: uint64  # r8
+    arg4: uint64  # r9
+    arg5: uint64  # r10
 
 ...
 
@@ -394,41 +403,44 @@ Now, let's modify `syscallEntry` to call `syscall` with the system call number a
 arguments. We'll create the `SyscallArgs` object on the kernel stack by pushing the
 appropriate registers, and pass its address to `syscall`.
 
-```nim{13-30}
+```nim{15-33,45}
 # src/kernel/syscalls.nim
 ...
 
 proc syscallEntry() {.asmNoStackFrame.} =
   asm """
-    # switch to kernel stack
+    # save user stack pointer
     mov %0, rsp
+
+    # switch to kernel stack
     mov rsp, %1
 
     push r11  # user rflags
     push rcx  # user rip
 
-    # create SyscallArgs on stack
+    # create SyscallArgs on the stack
+    push r10
     push r9
     push r8
-    push rcx
     push rdx
     push rsi
     push rdi
 
-    mov rdi, rsp  # address of SyscallArgs
+    # rsp is now pointing to SyscallArgs, pass it to syscall
+    mov rdi, rsp
     call syscall
 
-    # restore registers
+    # pop SyscallArgs
     pop rdi
     pop rsi
     pop rdx
-    pop rcx
     pop r8
     pop r9
+    pop r10
 
-    # prepare for sysret
-    pop rcx  # rip
-    pop r11  # rflags
+    # prepare for sysretq
+    pop rcx  # user rip
+    pop r11  # user rflags
 
     # switch to user stack
     mov rsp, %0
@@ -436,7 +448,7 @@ proc syscallEntry() {.asmNoStackFrame.} =
     sysretq
     : "+r"(`userRsp`)
     : "m"(`kernelStackAddr`)
-    : "rcx", "r11", "rdi", "rsi", "rdx", "r8", "r9", "rax"
+    : "rcx", "r11", "rdi", "rsi", "rdx", "r8", "r9", "r10", "rax"
   """
 ```
 

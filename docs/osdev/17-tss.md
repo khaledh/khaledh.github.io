@@ -157,9 +157,9 @@ points to the first slot (the low 64 bits).
 
 const
   KernelCodeSegmentSelector* = 0x08
-  UserCodeSegmentSelector* = 0x10 or 3 # RPL = 3
-  DataSegmentSelector* = 0x18 or 3     # RPL = 3
-  TaskStateSegmentSelector* = 0x20
+  DataSegmentSelector*       = 0x10 or 3 # RPL = 3
+  UserCodeSegmentSelector*   = 0x18 or 3 # RPL = 3
+  TaskStateSegmentSelector*  = 0x20
 
 let
   ...
@@ -167,8 +167,8 @@ let
   gdtEntries = [
     NullSegmentDescriptor.value,
     CodeSegmentDescriptor(dpl: 0).value, # Kernel code segment
+    DataSegmentDescriptor(dpl: 3).value, # Data segment (shared)
     CodeSegmentDescriptor(dpl: 3).value, # User code segment
-    DataSegmentDescriptor(dpl: 3).value, # Data segment
     tssDescriptorLo,                     # Task state segment (low 64 bits)
     tssDescriptorHi,                     # Task state segment (high 64 bits)
   ]
@@ -262,10 +262,10 @@ kernel: Fusion Kernel
 ...
 kernel: Creating kernel switch stack
 kernel: Creating interrupt stack frame
-            SS: 0x1b
+            SS: 0x13
            RSP: 0x50001000
         RFLAGS: 0x202
-            CS: 0x13
+            CS: 0x1b
            RIP: 0x40000000
 kernel: Switching to user mode
 
