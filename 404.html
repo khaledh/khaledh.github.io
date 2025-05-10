@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en-US">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="generator" content="VuePress 2.0.0-rc.15" />
+    <style>
+      :root {
+        --vp-c-bg: #fff;
+      }
+
+      [data-theme='dark'] {
+        --vp-c-bg: #22272e;
+      }
+
+      html,
+      body {
+        background-color: var(--vp-c-bg);
+      }
+    </style>
+    <script>
+      const userMode = localStorage.getItem('vuepress-color-scheme')
+      const systemDarkMode =
+        'matchMedia' in window
+          ? window.matchMedia('(prefers-color-scheme: dark)').matches
+          : false
+
+      if (userMode === 'light') {
+        document.documentElement.dataset.theme = 'light'
+      } else if (userMode === 'dark' || systemDarkMode) {
+        document.documentElement.dataset.theme = 'dark'
+      }
+    </script>
+    <title>Khaled Hammouda</title><meta name="description" content="Building a 64-bit operating system from scratch in Nim">
+    <link rel="preload" href="/assets/style-DUyqL3SU.css" as="style"><link rel="stylesheet" href="/assets/style-DUyqL3SU.css">
+    <link rel="modulepreload" href="/assets/app-B3GCxV8y.js"><link rel="modulepreload" href="/assets/404.html-DEvNYpOz.js">
+    <link rel="prefetch" href="/assets/index.html-DK-MlcmR.js" as="script"><link rel="prefetch" href="/assets/01-mm.html-CcoPcul8.js" as="script"><link rel="prefetch" href="/assets/index.html-XbrSuNHx.js" as="script"><link rel="prefetch" href="/assets/01-intro.html-C0eSLM7V.js" as="script"><link rel="prefetch" href="/assets/02-setup.html-m0NwexfC.js" as="script"><link rel="prefetch" href="/assets/03-filetype.html-D4DZm7-w.js" as="script"><link rel="prefetch" href="/assets/04-lexer.html-JqaJGW6a.js" as="script"><link rel="prefetch" href="/assets/05-parser.html-Ve3Og-Gd.js" as="script"><link rel="prefetch" href="/assets/06-parser-p2.html-CFOELFLA.js" as="script"><link rel="prefetch" href="/assets/07-grammarkit.html-CJO2smcj.js" as="script"><link rel="prefetch" href="/assets/08-go-to-decl.html-Bxd0gphs.js" as="script"><link rel="prefetch" href="/assets/09-scopes.html-WaDEBAVp.js" as="script"><link rel="prefetch" href="/assets/10-rename-refactoring.html-BH54o025.js" as="script"><link rel="prefetch" href="/assets/11-indentation.html-C9ho6p2b.js" as="script"><link rel="prefetch" href="/assets/12-decl-sections.html-CgjmaHXe.js" as="script"><link rel="prefetch" href="/assets/13-comments.html-C-hGkKJN.js" as="script"><link rel="prefetch" href="/assets/14-numeric-lit.html-B5LHTsOu.js" as="script"><link rel="prefetch" href="/assets/15-expressions.html-D0yKZvZd.js" as="script"><link rel="prefetch" href="/assets/99-tmp.html-Cm2wAUBa.js" as="script"><link rel="prefetch" href="/assets/index.html-CRlOoQdC.js" as="script"><link rel="prefetch" href="/assets/01-intro.html-B5kw-Tlx.js" as="script"><link rel="prefetch" href="/assets/02-environment-setup.html-DTWOMB9a.js" as="script"><link rel="prefetch" href="/assets/03-targeting-uefi-p1.html-DoKMzlYC.js" as="script"><link rel="prefetch" href="/assets/04-targeting-uefi-p2.html-DrVbk0Aj.js" as="script"><link rel="prefetch" href="/assets/05-bootloader-p1.html-DllULUdH.js" as="script"><link rel="prefetch" href="/assets/06-bootloader-p2.html-B_QqfN4W.js" as="script"><link rel="prefetch" href="/assets/07-kernel-image.html-DUNJdUxl.js" as="script"><link rel="prefetch" href="/assets/08-loading-the-kernel-p1.html-B700Kuwz.js" as="script"><link rel="prefetch" href="/assets/09-loading-the-kernel-p2.html-DhUMf2Y8.js" as="script"><link rel="prefetch" href="/assets/10-loading-the-kernel-p3.html-DD4fzyIC.js" as="script"><link rel="prefetch" href="/assets/11-physical-memory.html-Dli_cMlQ.js" as="script"><link rel="prefetch" href="/assets/12-virtual-memory.html-DNLlshyV.js" as="script"><link rel="prefetch" href="/assets/13-higher-half-kernel.html-KjzhZcpP.js" as="script"><link rel="prefetch" href="/assets/14-memory-segments.html-D7dzbarE.js" as="script"><link rel="prefetch" href="/assets/15-interrupts.html-OYdWbUXF.js" as="script"><link rel="prefetch" href="/assets/16-user-mode.html-CsinRAR0.js" as="script"><link rel="prefetch" href="/assets/17-tss.html-qQUVVLu5.js" as="script"><link rel="prefetch" href="/assets/18-system-calls.html-DQ8iA_Ck.js" as="script"><link rel="prefetch" href="/assets/19-tasks.html-DzmOeMRT.js" as="script"><link rel="prefetch" href="/assets/20-position-independent-code.html-D63_gdmw.js" as="script"><link rel="prefetch" href="/assets/21-elf-loader-p1.html-DiymmV01.js" as="script"><link rel="prefetch" href="/assets/22-elf-loader-p2.html-Cmxpt9X4.js" as="script"><link rel="prefetch" href="/assets/23-coop-multitasking.html-BPV-wPDw.js" as="script"><link rel="prefetch" href="/assets/24-system-library.html-BsL_OhEQ.js" as="script"><link rel="prefetch" href="/assets/25-interrupt-controller.html-Dc_yT4uZ.js" as="script"><link rel="prefetch" href="/assets/index.html-BnOc_Hzu.js" as="script"><link rel="prefetch" href="/assets/SearchResult-CmqzDqH9.js" as="script">
+  </head>
+  <body>
+    <div id="app"><!--[--><div class="vp-theme-container" vp-container data-v-b04f5e86><main class="page" data-v-b04f5e86><div class="theme-default-content" vp-content data-v-b04f5e86><h1 data-v-b04f5e86>404</h1><blockquote data-v-b04f5e86>Looks like we&#39;ve got some broken links.</blockquote><a class="route-link" href="/" data-v-b04f5e86>Take me home</a></div></main></div><!--[--><!----><!----><!--]--><!--]--></div>
+    <script type="module" src="/assets/app-B3GCxV8y.js" defer></script>
+  </body>
+</html>
