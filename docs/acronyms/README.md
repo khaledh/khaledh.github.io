@@ -6,24 +6,41 @@ sidebarDepth: 1
 # Computing Acronyms
 
 Acronyms common in computing, hacker culture, and everyday software engineering conversations. This
-section collects concise definitions and quick examples to help you grok the jargon fast.
+section collects concise definitions and quick examples to help you grok the jargon fast. A note
+about the legacy/historical subsections:
+
+- **Legacy**: outdated but still in use.
+- **Historical**: obsolete, mostly of historical interest.
 
 <div class="acronyms">
+
+## Software Architecture
+
+| Acronym | Meaning | Example |
+| --- | --- | --- |
+| CQRS | Command Query Responsibility Segregation — separate writes/reads. | Write model emits events; read model is a projection. |
+| EDA | Event-Driven Architecture — async event-based systems. | Publish domain events to Kafka; services react. |
+| ES | Event Sourcing — persist state changes as an append‑only log of events and rebuild current state by replaying them. | Order aggregate applies `OrderPlaced`/`ItemAdded` events; projections update read models. |
+| SOA | Service-Oriented Architecture — collaborating services. | Decompose monolith into services. |
+| **Legacy** {colspan=3} |
+| COM | Component Object Model — Microsoft binary-interface standard for reusable components with reference counting and interface-based polymorphism. | Query `IUnknown`/`IDispatch`; register COM servers; Office automation via COM. |
+| DCOM | Distributed COM — extension of COM for inter-process and cross-machine communication using RPC. | Remote COM server activation/config over the network using DCOMCNFG. |
+| ESB | Enterprise Service Bus — centralized integration/message bus with mediation, routing, and governance typical of classic SOA; considered heavyweight today. | Hub‑and‑spoke integration; replaced by microservices and event streaming (Kafka). |
+| SOAP | XML-based messaging protocol for web services. | Enterprise integrations over SOAP. |
+| **Historical** {colspan=3} |
+| CORBA | Common Object Request Broker Architecture — OMG standard for language- and platform-neutral distributed objects communicating via an Object Request Broker. | Define interfaces in IDL; ORB uses IIOP for interop between stubs and skeletons.
 
 ## Software Design
 
 | Acronym | Meaning | Example |
 | --- | --- | --- |
 | CPS | Continuation-Passing Style — express control flow by passing an explicit continuation function instead of returning normally. | `f(x, k)` calls `k(result)`; enables tail calls, trampolines, async composition. |
-| CQRS | Command Query Responsibility Segregation — separate writes/reads. | Write model emits events; read model is a projection. |
 | CSP | Communicating Sequential Processes — formal concurrency model where independent processes interact solely via message‑passing over channels (no shared memory). | Go channels/`select` and occam are CSP‑inspired; model systems as processes and rendezvous on channels. |
 | DDD | Domain-Driven Design — model around the domain. | Ubiquitous language in code and docs. |
 | DI | Dependency Injection — provide dependencies from the outside rather than creating them inside. | Pass a `Logger` to a service constructor instead of instantiating it. |
 | DIP | Dependency Inversion Principle — depend on abstractions, not concretions. | Accept a `Logger` interface, not a concrete `ConsoleLogger`. |
 | DRY | Don't Repeat Yourself — avoid duplicating knowledge in code and docs. | Extract a function instead of pasting the same block twice. |
 | DTO | Data Transfer Object — simple data container. | Map entities to DTOs for API responses. |
-| EDA | Event-Driven Architecture — async event-based systems. | Publish domain events to Kafka; services react. |
-| ES | Event Sourcing — persist state changes as an append‑only log of events and rebuild current state by replaying them. | Order aggregate applies `OrderPlaced`/`ItemAdded` events; projections update read models. |
 | FRP | Functional Reactive Programming — model time‑varying values and event streams with functional operators. | UI state as RxJS Observables using `map/merge/switchMap`. |
 | ISP | Interface Segregation Principle — prefer many small, client‑specific interfaces. | Use `Readable`/`Writable` instead of a bloated `File` interface. |
 | KISS | Keep It Simple, Stupid — prefer simple solutions that meet requirements. | Use a plain function instead of a custom class hierarchy. |
@@ -31,7 +48,6 @@ section collects concise definitions and quick examples to help you grok the jar
 | MVC | Model–View–Controller — separate data, presentation, and control flow. | Controllers orchestrate; Views render; Models hold domain data. |
 | MVVM | Model–View–ViewModel — bind UI to a ViewModel that exposes state/actions. | Two-way binding in front-end frameworks. |
 | OCP | Open/Closed Principle — open for extension, closed for modification. | Add a new strategy class instead of editing a switch. |
-| SOA | Service-Oriented Architecture — collaborating services. | Decompose monolith into services. |
 | SoC | Separation of Concerns — isolate responsibilities into distinct modules. | Keep validation, business logic, and persistence in separate layers. |
 | SOLID | Five OO design principles: SRP, OCP, LSP, ISP, DIP. | Extract interfaces and inject dependencies via constructors. |
 | SRP | Single Responsibility Principle — one reason to change. | Split parsing and rendering into separate classes. |
@@ -95,7 +111,6 @@ section collects concise definitions and quick examples to help you grok the jar
 | REST | Representational State Transfer — resource APIs. | `GET /posts/42` returns a Post. |
 | RTL | Right-To-Left — text direction where writing proceeds from right to left; used by scripts like Arabic and Hebrew. | HTML `dir="rtl"`; use logical CSS properties (`margin-inline-start`) for bidi layouts.
 | SEO | Search Engine Optimization — improve visibility/traffic. | Add metadata; optimize content. |
-| SOAP | XML-based messaging protocol for web services. | Enterprise integrations over SOAP. |
 | SPA | Single Page Application — dynamic single page. | React/Vue app with client routing. |
 | SSR | Server-Side Rendering — render HTML on server. | Next.js SSR pages. |
 | TS | TypeScript — typed superset of JavaScript that compiles to plain JS. | Add static types/interfaces; transpile with `tsc` or bundlers. |
@@ -122,7 +137,6 @@ section collects concise definitions and quick examples to help you grok the jar
 | CLR | Common Language Runtime — .NET VM. | Runs C# assemblies. |
 | CRUD | Create, Read, Update, Delete — basic data ops. | REST endpoints map to CRUD on `users`. |
 | CUI | Character User Interface — text/character-based UI typically rendered in terminals with limited graphics; overlaps with TUI. | Installer wizards and ncurses-style menus in a terminal. |
-| DCOM | Distributed COM — extension of COM for inter-process and cross-machine communication using RPC. | Remote COM server activation/config over the network using DCOMCNFG. |
 | DSL | Domain-Specific Language — tailored language. | SQL, Regex, build DSLs. |
 | EOF | End Of File — no more data to read. | Read returns EOF on file end. |
 | FFI | Foreign Function Interface — mechanism to call functions across language/ABI boundaries. | Rust `extern "C"` to call C; Python `ctypes`/`cffi` bindings. |
@@ -157,9 +171,8 @@ section collects concise definitions and quick examples to help you grok the jar
 | UTC | Coordinated Universal Time — global time standard. | Timestamps/logs in UTC. |
 | WYSIWYG | What You See Is What You Get — direct-manipulation editor. | Rich text editors. |
 | **Legacy** {colspan=3} |
-| COM | Component Object Model — Microsoft binary-interface standard for reusable components with reference counting and interface-based polymorphism. | Query `IUnknown`/`IDispatch`; register COM servers; Office automation via COM. |
 | **Historical** {colspan=3} |
-| CORBA | Common Object Request Broker Architecture — OMG standard for language- and platform-neutral distributed objects communicating via an Object Request Broker. | Define interfaces in IDL; ORB uses IIOP for interop between stubs and skeletons.
+| RMI | Remote Method Invocation — Java's distributed objects technology enabling method calls on remote JVMs via stubs/skeletons over JRMP (or IIOP for RMI‑IIOP). | Early Java distributed systems; largely supplanted by HTTP/REST, gRPC, and message queues.
 
 ## Compilers
 
@@ -177,6 +190,7 @@ section collects concise definitions and quick examples to help you grok the jar
 | JIT | Just-In-Time compilation — runtime optimization. | HotSpot JIT compiles hot methods. |
 | LICM | Loop-Invariant Code Motion — hoist computations whose operands don’t change within a loop to preheaders, and sink post‑loop where safe. | Move `len(arr)`/`c*2` out of the loop body to reduce work. |
 | LLVM | Low Level Virtual Machine — modular compiler toolchain and IR used by many languages. | Clang/LLVM backends, `llc`, `opt`, and LLVM IR. |
+| LTO | Link Time Optimization — whole‑program optimization performed at link time across translation units, typically by linking IR/bitcode and running interprocedural passes. | `-flto` in Clang/GCC; enables cross‑TU inlining, DCE, devirtualization, ICF/WPO.
 | PRE | Partial Redundancy Elimination — inserts computations to make partially redundant expressions fully redundant, then removes duplicates (often via Lazy Code Motion/SSA-PRE). | If `a+b` happens on some paths and later unconditionally, place it optimally so all uses share one computed value. |
 | SSA | Static Single Assignment — IR form where each variable is assigned exactly once, using φ (phi) functions at merge points; simplifies data‑flow analysis and optimization. | Convert to SSA to enable efficient DCE, copy propagation, and value numbering; SSA in LLVM IR. |
 | TCO | Tail Call Optimization — reuse the current stack frame for a tail call to avoid stack growth and enable efficient tail recursion. | Compilers transform tail-recursive functions into loops; mandated in some languages (Scheme), optional in others. |
