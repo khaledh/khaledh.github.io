@@ -10,6 +10,7 @@ import { removeHtmlExtensionPlugin } from 'vuepress-plugin-remove-html-extension
 import { sitemapPlugin } from '@vuepress/plugin-sitemap'
 import markdownItDeflist from 'markdown-it-deflist'
 import markdownItFootnote from 'markdown-it-footnote'
+import tableCellSpanPlugin from './tableCellSpanPlugin'
 
 export default defineUserConfig({
   host: 'localhost',
@@ -20,8 +21,9 @@ export default defineUserConfig({
     navbar: [
       { text: 'Home', link: '/' },
       { text: 'Fusion OS', link: '/osdev/' },
-      { text: 'NimJet', link: '/nimjet/' },
-//    { text: 'Nim', link: '/nim/' },
+      // { text: 'NimJet', link: '/nimjet/' },
+      // { text: 'Nim', link: '/nim/' },
+      { text: 'Computing Acronyms', link: '/acronyms/' },
     ],
     sidebar: {
       '/osdev/': [
@@ -80,6 +82,12 @@ export default defineUserConfig({
           ],
         }
       ],
+      '/acronyms/': [
+        {
+          text: 'Computing Acronyms',
+          link: '/acronyms/',
+        }
+      ],
       '/nim/': [
         {
           text: 'Nim',
@@ -129,6 +137,7 @@ export default defineUserConfig({
   extendsMarkdown: (md) => {
     md.use(markdownItDeflist)
     md.use(markdownItFootnote)
+    md.use(tableCellSpanPlugin)
   },
   bundler: viteBundler({
     viteOptions: {},

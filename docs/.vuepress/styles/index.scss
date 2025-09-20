@@ -69,8 +69,47 @@ dd {
   line-height: 1.5;
 }
 
+dt {
+  font-weight: 700;
+}
+
+/* Show anchor link on hover for definition terms */
+/* Removed custom dt anchors; using built-in heading anchors instead */
+
+/* Computing Acronyms page tighter spacing */
+.theme-default-content .acronyms h3 {
+  /* Override theme anchor offset padding for dense lists, but keep a little space */
+  padding-top: 0.8em !important;
+  /* Use scroll-margin-top for anchor navigation instead */
+  scroll-margin-top: calc(var(--navbar-height) + 0.25rem);
+  margin-top: 0.4rem;
+  margin-bottom: 0.3em;
+}
+.theme-default-content .acronyms h3 + p {
+  margin-top: 0.05rem;
+}
+.theme-default-content .acronyms p {
+  margin: 0 0 0.2rem;
+}
+.theme-default-content .acronyms p + h3 {
+  margin-top: 0.25rem;
+}
+
 p:has(img) {
   text-align: center !important;
+}
+
+:root {
+  /* Slightly reduce table text size for denser acronym pages */
+}
+
+/* Make tables a bit more compact/readable */
+.theme-default-content table {
+  font-size: 0.94em;
+}
+.theme-default-content table th,
+.theme-default-content table td {
+  line-height: 1.35;
 }
 
 :root {
@@ -139,7 +178,7 @@ p:has(img) {
   // --navbar-padding-h: 1.5rem;
   // --sidebar-width: 20rem;
   // --sidebar-width-mobile: calc(var(--sidebar-width) * 0.82);
-  --content-width: 820px;
+  --content-width: 984px; /* widened by ~20% */
   // --homepage-width: 960px;
 
   --code-word-highlight-bg-color: rgb(220 220 220 / 15%);

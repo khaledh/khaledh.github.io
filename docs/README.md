@@ -6,17 +6,15 @@ head:
       content: r9SwWF3Dq1r2xj5PnVslkRUCPY76mKOhM5DNf8gEXE0
 ---
 
-Welcome to my little corner on the web. Here, you will find some of my software projects 
-and tutorials.
+Welcome to my little corner on the web. Here, you will find some of my software projects and
+tutorials.
 
 ## [Fusion OS](osdev/)
 
-This is both a documentation of my journey and a tutorial for building a modern x64
-operating system from scratch in Nim. You can find the source code on GitHub:
+This is both a documentation of my journey and a tutorial for building a modern x64 operating system
+from scratch in Nim. You can find the source code on GitHub:
 [https://github.com/khaledh/fusion](https://github.com/khaledh/fusion)
 
-## [NimJet](nimjet/)
+## [Computing Acronyms](acronyms/)
 
-NimJet is a plugin for the JetBrains IDEs that provides support for the [Nim 
-programming language](https://nim-lang.org/). It is currently in development and is 
-not yet available in the JetBrains plugin marketplace.
+A growing glossary of computing acronyms and initialisms with concise definitions and examples.
