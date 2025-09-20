@@ -14,7 +14,9 @@ section collects concise definitions and quick examples to help you grok the jar
 
 | Acronym | Meaning | Example |
 | --- | --- | --- |
+| CPS | Continuation-Passing Style — express control flow by passing an explicit continuation function instead of returning normally. | `f(x, k)` calls `k(result)`; enables tail calls, trampolines, async composition. |
 | CQRS | Command Query Responsibility Segregation — separate writes/reads. | Write model emits events; read model is a projection. |
+| CSP | Communicating Sequential Processes — formal concurrency model where independent processes interact solely via message‑passing over channels (no shared memory). | Go channels/`select` and occam are CSP‑inspired; model systems as processes and rendezvous on channels. |
 | DDD | Domain-Driven Design — model around the domain. | Ubiquitous language in code and docs. |
 | DI | Dependency Injection — provide dependencies from the outside rather than creating them inside. | Pass a `Logger` to a service constructor instead of instantiating it. |
 | DIP | Dependency Inversion Principle — depend on abstractions, not concretions. | Accept a `Logger` interface, not a concrete `ConsoleLogger`. |
@@ -60,10 +62,10 @@ section collects concise definitions and quick examples to help you grok the jar
 | PoC | Proof of Concept — quick prototype to validate feasibility. | Spike code to test a new database driver. |
 | PR | Pull Request — propose code change for review/merge. | Open a PR for CI checks and team review. |
 | QA | Quality Assurance — practices to ensure product quality via process and testing. | Test plans, manual/exploratory testing, and sign-off before release. |
-| SCM | Source Control Management — processes/tools for tracking changes to source code and related assets; often used interchangeably with VCS. | Git as an SCM; branching strategies, code reviews, and CI integration.
 | RAD | Rapid Application Development — iterative, prototyping‑focused approach emphasizing quick delivery and user feedback over heavy upfront planning. | Build a working prototype with low‑code/4GL tools and iterate with users. |
 | RC | Release Candidate — build believed to be release‑ready, pending final validation. | Ship RC to staging for UAT and smoke tests. |
 | RFC | Request For Comments — proposal/spec for feedback before adoption. | RFC for a breaking API change. |
+| SCM | Source Control Management — processes/tools for tracking changes to source code and related assets; often used interchangeably with VCS. | Git as an SCM; branching strategies, code reviews, and CI integration.
 | SDLC | Software Development Life Cycle — structured process for planning, designing, building, testing, deploying, and maintaining software. | Phases: requirements → design → implementation → testing → deployment → maintenance. |
 | SWE | Software Engineer — practitioner who designs, builds, tests, and maintains software systems. | Full‑stack SWE implementing features, writing tests, and doing code reviews. |
 | TDD | Test-Driven Development — write a failing test, pass it, refactor. | Red → Green → Refactor per behavior. |
@@ -114,16 +116,13 @@ section collects concise definitions and quick examples to help you grok the jar
 | --- | --- | --- |
 | ADT | Abstract Data Type — specification of behavior independent of implementation. | Stack/queue ADTs with array- or list-based implementations. |
 | ADT | Algebraic Data Type — composite types formed by sums (variants) and products (fields), enabling expressive, type-safe modeling. | Rust enums/Haskell data types; Option/Either in FP. |
-| AOT | Ahead-Of-Time compilation — compile before runtime. | Angular AOT compiles templates during build. |
 | API | Application Programming Interface — a defined surface for one piece of software to interact with another. | POSIX file APIs, a graphics library API, or an HTTP endpoint. |
-| AST | Abstract Syntax Tree — structured tree representation of parsed source code used by compilers and tooling. | AST nodes for statements/expressions in parsers/linters.
 | CAS | Compare-And-Swap — atomic operation that updates a memory location only if it still equals an expected value; foundation for lock‑free algorithms. | CAS loop for a lock‑free stack push; beware the ABA problem. |
 | CLI | Command-Line Interface — text-based commands. | `git`, `kubectl`, custom CLIs. |
 | CLR | Common Language Runtime — .NET VM. | Runs C# assemblies. |
 | CRUD | Create, Read, Update, Delete — basic data ops. | REST endpoints map to CRUD on `users`. |
 | CUI | Character User Interface — text/character-based UI typically rendered in terminals with limited graphics; overlaps with TUI. | Installer wizards and ncurses-style menus in a terminal. |
 | DCOM | Distributed COM — extension of COM for inter-process and cross-machine communication using RPC. | Remote COM server activation/config over the network using DCOMCNFG. |
-| DFA | Deterministic Finite Automaton — finite-state machine with exactly one transition per symbol for each state; used in lexers/pattern matching. | Tokenizer state machine generated from regular languages. |
 | DSL | Domain-Specific Language — tailored language. | SQL, Regex, build DSLs. |
 | EOF | End Of File — no more data to read. | Read returns EOF on file end. |
 | FFI | Foreign Function Interface — mechanism to call functions across language/ABI boundaries. | Rust `extern "C"` to call C; Python `ctypes`/`cffi` bindings. |
@@ -131,33 +130,28 @@ section collects concise definitions and quick examples to help you grok the jar
 | FP | Functional Programming — pure functions/immutability. | Map/filter/reduce pipelines. |
 | FSM | Finite State Machine — computational model with a finite number of states and transitions driven by inputs/events. | UI workflows, protocol handlers, and parsers modeled as FSMs. |
 | GC | Garbage Collection — automatic memory management. | JVM/CLR collectors free unused objects. |
-| GCC | GNU Compiler Collection — suite of compilers for C/C++/Fortran and more. | `gcc`/`g++` toolchains for building software. |
 | gRPC | High-performance RPC over HTTP/2 with Protobuf. | Define `.proto`; generate client/server stubs. |
 | GUI | Graphical User Interface — visual interaction. | Desktop app windows, buttons. |
+| I/O | Input/Output — transfer of data to/from a program and external systems or devices. | File I/O, network I/O; blocking vs non‑blocking/async I/O. |
 | IDE | Integrated Development Environment — all-in-one dev app. | IntelliJ, VS Code (w/ extensions). |
 | IDL | Interface Definition Language — specification language to describe interfaces and data types for generating cross-language bindings and IPC stubs. | Define COM interfaces in MIDL or CORBA IDL; generate proxies/stubs for RPC.
 | IIFE | Immediately Invoked Function Expression. | `(function(){ })()` in JS. |
-| I/O | Input/Output — transfer of data to/from a program and external systems or devices. | File I/O, network I/O; blocking vs non‑blocking/async I/O. |
-| IR | Intermediate Representation — compiler/transformation-friendly program form between source and machine code. | LLVM IR, SSA-based IRs used for optimization. |
 | JDBC | Java Database Connectivity — DB API. | `DriverManager.getConnection(...)`. |
 | JDK | Java Development Kit — Java dev tools. | `javac`, `jar`. |
-| ODBC | Open Database Connectivity — cross-platform C API and driver model for accessing relational databases. | Configure DSNs; apps connect via ODBC drivers to SQL Server/MySQL/Postgres. |
-| PCRE | Perl Compatible Regular Expressions — regex libraries and syntax compatible with Perl's regex engine (PCRE/PCRE2). | `grep -P`, nginx, PHP use PCRE/PCRE2 for advanced regex features.
-| JIT | Just-In-Time compilation — runtime optimization. | HotSpot JIT compiles hot methods. |
 | JRE | Java Runtime Environment — run Java apps. | `java -jar app.jar`. |
 | JVM | Java Virtual Machine — runs bytecode. | JVM-based languages (Kotlin, Scala). |
-| NOP | No Operation — instruction or operation that intentionally does nothing; used for timing, alignment, patching, or as a placeholder. | CPU `NOP` instruction; inserting a no‑op in pipelines or bytecode. |
-| LLVM | Low Level Virtual Machine — modular compiler toolchain and IR used by many languages. | Clang/LLVM backends, `llc`, `opt`, and LLVM IR. |
 | LRU | Least Recently Used — cache eviction policy that discards the least recently accessed items first. | LRU caches/maps in memory-constrained systems. |
 | LSP | Language Server Protocol — standard JSON-RPC protocol between editors and language servers for code intelligence. | VS Code/Neovim language servers for hover, completion, diagnostics. |
+| NOP | No Operation — instruction or operation that intentionally does nothing; used for timing, alignment, patching, or as a placeholder. | CPU `NOP` instruction; inserting a no‑op in pipelines or bytecode. |
+| ODBC | Open Database Connectivity — cross-platform C API and driver model for accessing relational databases. | Configure DSNs; apps connect via ODBC drivers to SQL Server/MySQL/Postgres. |
 | OLE | Object Linking and Embedding — Microsoft technology (built on COM) for embedding and linking documents/objects between applications. | Embed an Excel sheet in a Word doc; OLE automation for Office apps. |
 | OOM | Out Of Memory — condition where available memory is exhausted and allocations fail. | Linux OOM killer terminates processes; runtime throws OOM error. |
 | OOP | Object-Oriented Programming — encapsulation/inheritance/polymorphism. | Classes, interfaces, virtual methods. |
+| PCRE | Perl Compatible Regular Expressions — regex libraries and syntax compatible with Perl's regex engine (PCRE/PCRE2). | `grep -P`, nginx, PHP use PCRE/PCRE2 for advanced regex features.
 | RAII | Resource Acquisition Is Initialization — lifetime control. | C++ locks released at scope end. |
 | REPL | Read–Eval–Print Loop — interactive shell. | Python/Node REPL. |
 | RPC | Remote Procedure Call — call functions on a service. | gRPC `CreateUser` method. |
 | SDK | Software Development Kit — tools/libs for a platform. | AWS SDK for programmatic access. |
-| TCO | Tail Call Optimization — reuse stack frames. | Optimized tail recursion. |
 | TLS | Thread-Local Storage — per-thread storage for data that gives each thread its own instance of a variable. | C/C++ `thread_local`/`__thread`, POSIX `pthread_key_create`; Rust `thread_local!`.
 | TUI | Text-based User Interface — terminal UI. | `htop`, `ncurses` apps. |
 | UTC | Coordinated Universal Time — global time standard. | Timestamps/logs in UTC. |
@@ -166,6 +160,26 @@ section collects concise definitions and quick examples to help you grok the jar
 | COM | Component Object Model — Microsoft binary-interface standard for reusable components with reference counting and interface-based polymorphism. | Query `IUnknown`/`IDispatch`; register COM servers; Office automation via COM. |
 | **Historical** {colspan=3} |
 | CORBA | Common Object Request Broker Architecture — OMG standard for language- and platform-neutral distributed objects communicating via an Object Request Broker. | Define interfaces in IDL; ORB uses IIOP for interop between stubs and skeletons.
+
+## Compilers
+
+| Acronym | Meaning | Example |
+| --- | --- | --- |
+| AOT | Ahead-Of-Time compilation — compile before runtime. | Angular AOT compiles templates during build. |
+| AST | Abstract Syntax Tree — structured tree representation of parsed source code used by compilers and tooling. | AST nodes for statements/expressions in parsers/linters. |
+| CFG | Control Flow Graph — directed graph of basic blocks and edges representing possible control transfers within a function/program; foundation for data‑flow analysis and many optimizations. | Build CFG to compute dominators/loops; enable DCE, SSA construction, and liveness. |
+| CSE | Common Subexpression Elimination — remove repeated identical expressions by computing once and reusing the value within a region. | Within a block, compute `x+y` once and reuse; global variants extend across blocks. |
+| DCE | Dead Code Elimination — remove code shown by analysis to have no effect on program outputs/side effects, improving size and performance. | Eliminate unused assignments/branches after liveness/constant propagation; `-O2` passes in LLVM/GCC. |
+| DFA | Deterministic Finite Automaton — finite-state machine with exactly one transition per symbol for each state; used in lexers/pattern matching. | Tokenizer state machine generated from regular languages. |
+| GCC | GNU Compiler Collection — suite of compilers for C/C++/Fortran and more. | `gcc`/`g++` toolchains for building software. |
+| GVN | Global Value Numbering — discover semantically equivalent computations (beyond syntactic equality) to eliminate redundancies across the dominator tree. | Treat `t=x; z=t+y` as `x+y`; coalesce values through copies/φ nodes in SSA. |
+| IR | Intermediate Representation — compiler/transformation-friendly program form between source and machine code. | LLVM IR, SSA-based IRs used for optimization. |
+| JIT | Just-In-Time compilation — runtime optimization. | HotSpot JIT compiles hot methods. |
+| LICM | Loop-Invariant Code Motion — hoist computations whose operands don’t change within a loop to preheaders, and sink post‑loop where safe. | Move `len(arr)`/`c*2` out of the loop body to reduce work. |
+| LLVM | Low Level Virtual Machine — modular compiler toolchain and IR used by many languages. | Clang/LLVM backends, `llc`, `opt`, and LLVM IR. |
+| PRE | Partial Redundancy Elimination — inserts computations to make partially redundant expressions fully redundant, then removes duplicates (often via Lazy Code Motion/SSA-PRE). | If `a+b` happens on some paths and later unconditionally, place it optimally so all uses share one computed value. |
+| SSA | Static Single Assignment — IR form where each variable is assigned exactly once, using φ (phi) functions at merge points; simplifies data‑flow analysis and optimization. | Convert to SSA to enable efficient DCE, copy propagation, and value numbering; SSA in LLVM IR. |
+| TCO | Tail Call Optimization — reuse the current stack frame for a tail call to avoid stack growth and enable efficient tail recursion. | Compilers transform tail-recursive functions into loops; mandated in some languages (Scheme), optional in others. |
 
 ## Operating Systems
 
@@ -182,6 +196,7 @@ section collects concise definitions and quick examples to help you grok the jar
 | OS | Operating System — system software that manages hardware resources and provides common services for programs. | Linux, Windows, macOS; kernel, drivers, processes, filesystems. |
 | PE | Portable Executable — Windows binary format for executables, DLLs, and object files. | Inspect with `dumpbin`/`objdump`; sections, import/export tables. |
 | POSIX | Portable OS Interface — Unix-like standard APIs. | `fork`, `exec`, `pthread` APIs. |
+| PTY | Pseudo Terminal — virtual terminal pair (master/slave) used by terminal emulators and remote sessions to emulate a real TTY. | `/dev/pts/*`, `ssh -t`, `forkpty`, `tmux`.
 | RTOS | Real-Time Operating System — OS designed for deterministic response and bounded latency, with priority-based scheduling and real-time primitives. | FreeRTOS, Zephyr, VxWorks on microcontrollers/embedded systems; hard vs soft real-time. |
 | SO | Shared Object — Unix/Linux shared library format loaded by the dynamic linker. | `libfoo.so` via ld.so/`dlopen`; sonames and rpaths. |
 | SUS | Single UNIX Specification — standard defining UNIX interfaces and behavior maintained by The Open Group, ensuring POSIX compliance and application portability. | SUS/POSIX APIs (`unistd.h`, signals, threads); conformant systems like AIX, HP‑UX, macOS. |
@@ -205,8 +220,8 @@ section collects concise definitions and quick examples to help you grok the jar
 | BOM | Byte Order Mark — optional Unicode signature at the start of a text stream indicating endianness/encoding (UTF‑8/UTF‑16/UTF‑32). | Avoid UTF‑8 BOM in Unix scripts; UTF‑16 LE files start with FE FF. |
 | CRLF | Carriage Return + Line Feed — sequence `\r\n` used by Windows and many network protocols as a line terminator. | HTTP headers and CSV on Windows use CRLF line endings. |
 | CSV | Comma-Separated Values — plain text tabular format. | `users.csv` exports/imports. |
-| DTD | Document Type Definition — schema language defining the legal structure/elements/attributes of SGML/XML documents. | Validate XML with a DTD; `<!DOCTYPE ...>` declarations; legacy vs XML Schema/Relax NG. |
 | DER | Distinguished Encoding Rules — binary ASN.1 encoding used for certificates/keys. | `.cer/.der` X.509 certs; binary form of ASN.1 structures. |
+| DTD | Document Type Definition — schema language defining the legal structure/elements/attributes of SGML/XML documents. | Validate XML with a DTD; `<!DOCTYPE ...>` declarations; legacy vs XML Schema/Relax NG. |
 | EBCDIC | Extended Binary Coded Decimal Interchange Code — 8‑bit character encoding used primarily on IBM mainframes; incompatible with ASCII. | Converting EBCDIC files to ASCII/UTF‑8 when integrating with mainframe systems. |
 | GUID | Globally Unique Identifier — Microsoft’s term for UUID. | `{3F25...C3301}` COM-style format. |
 | JSON | JavaScript Object Notation — data format. | `{ "id": 1 }` payloads. |
@@ -217,17 +232,17 @@ section collects concise definitions and quick examples to help you grok the jar
 | MSB | Most Significant Bit — the bit with the highest positional value; often used as the sign bit in signed integers. | In 0b1011, the MSB is 1; big‑endian stores MSB byte first. |
 | PDF | Portable Document Format — fixed‑layout document format combining text, vector graphics, and images. | Generate reports/invoices; fillable forms; print‑ready docs. |
 | PEM | Privacy-Enhanced Mail — Base64 (PEM) encoding with header/footer lines for certs/keys. | `-----BEGIN CERTIFICATE-----` blocks; `.pem/.crt/.key` files. |
-| RLE | Run-Length Encoding — simple lossless compression that replaces runs of repeated symbols with a count and value. | Bitmap/scanline compression (e.g., BMP RLE, fax/CCITT variants); good for large uniform areas.
 | PNG | Portable Network Graphics — lossless raster image format with DEFLATE compression, alpha transparency, and gamma/metadata support. | `.png` UI assets/screenshots; better compression than BMP; supports transparency.
 | PS | PostScript — page description language and programming language used primarily in desktop publishing and printing workflows. | Generate vector/print-ready `.ps` files; printers interpret PostScript directly; PDF evolved from it.
 | RDF | Resource Description Framework — W3C model for describing and linking data using triples (subject–predicate–object), often serialized as Turtle/RDF/XML/JSON‑LD. | Knowledge graphs, linked data; schema.org markup via JSON‑LD.
+| RLE | Run-Length Encoding — simple lossless compression that replaces runs of repeated symbols with a count and value. | Bitmap/scanline compression (e.g., BMP RLE, fax/CCITT variants); good for large uniform areas.
+| SGML | Standard Generalized Markup Language — meta-language for defining markup languages; foundation for HTML/XML; rarely used directly today. | SGML-based HTML 2.0/3.2 era; modern stacks use XML/HTML5 instead.
 | SVG | Scalable Vector Graphics — XML-based vector image format for resolution-independent graphics. | Inline icons/diagrams in HTML; CSS/SMIL animations. |
 | TOML | Tom's Obvious, Minimal Language — minimal configuration format with clear semantics. | `pyproject.toml`, `Cargo.toml` tool configs. |
-| TTF | TrueType Font — outline font format using quadratic Bézier curves; widely supported across operating systems and browsers. | `.ttf` fonts for desktop/web (often inside `.ttc` collections or wrapped as WOFF/WOFF2 for the web).
 | TSV | Tab-Separated Values — plain text tabular format using tabs as delimiters. | `users.tsv` exports with tab‑delimited fields. |
-| UTF | Unicode Transformation Format — encodings of Unicode code points (e.g., UTF‑8/UTF‑16/UTF‑32). | UTF‑8 is the dominant encoding on the web and in APIs. |
+| TTF | TrueType Font — outline font format using quadratic Bézier curves; widely supported across operating systems and browsers. | `.ttf` fonts for desktop/web (often inside `.ttc` collections or wrapped as WOFF/WOFF2 for the web).
 | UCS | Universal Character Set — ISO/IEC 10646 standard defining the full repertoire of Unicode code points; Unicode is kept synchronized with UCS. | UCS-2/UCS-4 historical encodings map to UTF‑16/UTF‑32; code points vs encodings distinction.
-| SGML | Standard Generalized Markup Language — meta-language for defining markup languages; foundation for HTML/XML; rarely used directly today. | SGML-based HTML 2.0/3.2 era; modern stacks use XML/HTML5 instead.
+| UTF | Unicode Transformation Format — encodings of Unicode code points (e.g., UTF‑8/UTF‑16/UTF‑32). | UTF‑8 is the dominant encoding on the web and in APIs. |
 | UUID | Universally Unique Identifier — 128-bit unique ID. | UUID v4 random, v5 namespace. |
 | XML | Extensible Markup Language — verbose structured data. | XML configs, SOAP payloads. |
 | YAML | Human-friendly serialization format. | `docker-compose.yml` files. |
@@ -340,6 +355,7 @@ section collects concise definitions and quick examples to help you grok the jar
 | ARP | Address Resolution Protocol — map IP addresses to MAC addresses on a LAN. | ARP cache; gratuitous ARP. |
 | BGP | Border Gateway Protocol — inter-domain routing protocol of the internet. | ISP peering and route advertisements. |
 | BPF | Berkeley Packet Filter — kernel-level virtual machine for packet filtering/observability (eBPF on modern kernels). | Capture packets with tcpdump; eBPF programs for tracing. |
+| CIDR | Classless Inter-Domain Routing — notation for IP prefixes and aggregation. | `10.0.0.0/16` VPC; subnetting `/24`; route summarization. |
 | CNAME | Canonical Name — DNS record that aliases one hostname to another. | `www` CNAME to `example.com`; avoid at zone apex without ALIAS/ANAME. |
 | DHCP | Dynamic Host Configuration Protocol — automatic IP configuration. | DHCP assigns IP/gateway/DNS. |
 | DoH | DNS over HTTPS — perform DNS resolution over HTTPS for privacy/integrity. | `https://dns.google/dns-query` DoH endpoint. |
@@ -369,9 +385,9 @@ section collects concise definitions and quick examples to help you grok the jar
 | TCP/IP | Transmission Control Protocol / Internet Protocol — foundational internet protocol suite encompassing transport, network, and related layers. | Classic network stack model; "TCP/IP networking" on UNIX systems. |
 | TLD | Top-Level Domain — the highest level in the DNS hierarchy, forming the rightmost label of a domain name. | `.com`, `.org`, country-code TLDs like `.uk`; ICANN-managed root zone. |
 | TTL | Time To Live — lifetime for packets/cached records. | DNS TTL controls cache duration. |
-| UPnP | Universal Plug and Play — discovery and control protocols for devices/services on a local network; includes IGD for NAT port mappings. | Home routers auto‑open ports via UPnP IGD; device discovery/control on LANs. |
 | UDP | User Datagram Protocol — connectionless, low-latency. | DNS, streaming. |
 | UNC | Universal Naming Convention — Windows network path notation for accessing resources by server/share. | `\\\\server\\share\\folder\\file.txt`; used with SMB. |
+| UPnP | Universal Plug and Play — discovery and control protocols for devices/services on a local network; includes IGD for NAT port mappings. | Home routers auto‑open ports via UPnP IGD; device discovery/control on LANs. |
 | VLAN | Virtual Local Area Network — Layer 2 network segmentation on a switch, isolating broadcast domains; tagging via IEEE 802.1Q. | VLAN 10/20 on access/trunk ports; tagged vs untagged frames. |
 | WAN | Wide Area Network — network spanning large geographic areas interconnecting LANs over provider links or the public internet. | MPLS links, SD‑WAN, site‑to‑site VPN between offices. |
 | WS | WebSocket — full-duplex over single TCP connection. | `ws://example.com/socket`. |
@@ -379,12 +395,12 @@ section collects concise definitions and quick examples to help you grok the jar
 | **Legacy** {colspan=3} |
 | FTP | File Transfer Protocol — legacy, unencrypted by default. | `ftp` client for file transfers. |
 | FTPS | FTP over TLS — encrypted FTP. | Implicit/explicit FTPS modes. |
+| iPXE | Open-source network boot firmware/bootloader extending PXE with HTTP(S), iSCSI, FCoE, AoE, scripts, and TLS. | Chainload iPXE via PXE; fetch an HTTPS boot script to load kernel/initrd.
 | IRC | Internet Relay Chat — real-time text messaging protocol and networks for group channels and direct messages. | Join #project on Libera Chat using irssi or WeeChat. |
 | NNTP | Network News Transfer Protocol — application protocol for distributing, querying, and posting Usenet articles over TCP. | Connect to Usenet servers on 119 (or 563 for NNTPS) to read/post news.
 | POP3 | Post Office Protocol v3 — simple email retrieval. | Fetch-and-delete mailbox flow. |
 | PPP | Point-to-Point Protocol — data link layer protocol for encapsulating network traffic over serial links; supports authentication, compression, and multilink. | Dial-up links; PPPoE for broadband; CHAP/PAP authentication. |
 | PXE | Preboot Execution Environment — standard for network booting clients using DHCP/BOOTP to obtain boot info and TFTP/HTTP to fetch boot loaders/images. | PXE boot a workstation from a provisioning server into an installer.
-| iPXE | Open-source network boot firmware/bootloader extending PXE with HTTP(S), iSCSI, FCoE, AoE, scripts, and TLS. | Chainload iPXE via PXE; fetch an HTTPS boot script to load kernel/initrd.
 | RIP | Routing Information Protocol — distance-vector interior gateway protocol using hop count as its metric with periodic full-table updates. | RIP v2 on small LANs; max 15 hops; split horizon/poison reverse to mitigate loops. |
 | RLOGIN | Remote Login — BSD plaintext remote login protocol; superseded by SSH. | `rlogin host` for interactive sessions on legacy UNIX systems. |
 | RSH | Remote Shell — BSD plaintext remote command execution; superseded by SSH. | `rsh host command` on legacy UNIX; avoid due to lack of security. |
@@ -393,21 +409,21 @@ section collects concise definitions and quick examples to help you grok the jar
 | ARPANET | Advanced Research Projects Agency Network — pioneering packet‑switched network and direct precursor to the modern Internet. | 1969 UCLA–SRI link; IMPs; 1983 cutover from NCP to TCP/IP. |
 | BBS | Bulletin Board System — pre‑web dial‑up systems. | Modem dial‑ins for forums/files before the web. |
 | BOOTP | Bootstrap Protocol — assigns IP configuration to diskless clients at boot, predecessor to DHCP. | Network boot ROM requests IP/gateway/TFTP server; largely replaced by DHCP. |
+| DECnet | Digital Equipment Corporation's proprietary network protocol suite for DEC systems; largely superseded by TCP/IP. | VAX/VMS clusters and DEC systems communicating over DECnet Phase IV/V. |
+| IPX | Internetwork Packet Exchange — Novell's network-layer protocol used with SPX and NetWare; replaced by IP in modern networks. | Legacy NetWare LANs using IPX addressing and routing. |
 | ISDN | Integrated Services Digital Network — circuit‑switched digital telephony offering voice and data over PSTN with separate bearer/signaling channels. | BRI (2B+D) for small sites; PRI (23B+D NA / 30B+D EU) for trunks. |
 | NCP | NetWare Core Protocol — Novell NetWare file/print service protocol suite running over IPX/SPX (later IP). | Legacy NetWare clients mapping drives/printers via NCP.
 | NCP | Network Control Program — early ARPANET host protocol providing a transport layer and flow control prior to the adoption of TCP/IP. | Used until the 1983 flag day cutover to TCP/IP; sockets over NCP.
-| IPX | Internetwork Packet Exchange — Novell's network-layer protocol used with SPX and NetWare; replaced by IP in modern networks. | Legacy NetWare LANs using IPX addressing and routing. |
 | NDS | Novell Directory Services — directory service for managing identities, resources, and access in Novell NetWare environments (later evolved into eDirectory). | Centralized users/groups/policies across NetWare; replaced/renamed as eDirectory.
+| PUP | PARC Universal Packet — early internetworking protocol suite developed at Xerox PARC that influenced XNS and later networking concepts. | Historical LAN internetworking; precursor to concepts adopted in later stacks.
 | RARP | Reverse Address Resolution Protocol — legacy protocol for discovering an IP address given a MAC address. | Early diskless boot; superseded by BOOTP/DHCP. |
-| XNS | Xerox Network Systems — Xerox's network protocol suite from PARC that influenced later protocols (e.g., IPX/SPX, AppleTalk). | Historical LAN stack alongside SNA/DECnet; precursor ideas to modern networking.
 | SLIP | Serial Line Internet Protocol — simple encapsulation of IP over serial links; lacks features like authentication, negotiation, and error detection. | Early dial-up IP connectivity; superseded by PPP. |
 | SNA | Systems Network Architecture — IBM's proprietary networking architecture for mainframes and enterprise networks; largely superseded by TCP/IP. | IBM 3270/5250 terminals and LU types; later SNA over IP via Enterprise Extender. |
 | SPX | Sequenced Packet Exchange — Novell's transport-layer protocol running over IPX, analogous to TCP; superseded by TCP/IP. | NetWare clients/servers using IPX/SPX for file/print services. |
-| DECnet | Digital Equipment Corporation's proprietary network protocol suite for DEC systems; largely superseded by TCP/IP. | VAX/VMS clusters and DEC systems communicating over DECnet Phase IV/V. |
-| X.25 | ITU-T legacy packet-switched WAN protocol using virtual circuits over carrier networks; superseded by Frame Relay/ATM/IP. | Early bank/pos/leased-line links using X.25 PADs and PVC/SVC connections. |
-| WAIS | Wide Area Information Servers — early distributed document indexing/search and retrieval system predating modern web search; used client/server over Z39.50. | 1990s internet search across WAIS servers before mainstream web engines.
-| PUP | PARC Universal Packet — early internetworking protocol suite developed at Xerox PARC that influenced XNS and later networking concepts. | Historical LAN internetworking; precursor to concepts adopted in later stacks.
 | UUCP | Unix-to-Unix Copy Protocol — store-and-forward system for transferring files, email, and netnews over dial-up/serial links; pre-internet era networking. | Early email/news via bang paths (uucp!host!user); largely replaced by SMTP/NNTP over IP.
+| WAIS | Wide Area Information Servers — early distributed document indexing/search and retrieval system predating modern web search; used client/server over Z39.50. | 1990s internet search across WAIS servers before mainstream web engines.
+| X.25 | ITU-T legacy packet-switched WAN protocol using virtual circuits over carrier networks; superseded by Frame Relay/ATM/IP. | Early bank/pos/leased-line links using X.25 PADs and PVC/SVC connections. |
+| XNS | Xerox Network Systems — Xerox's network protocol suite from PARC that influenced later protocols (e.g., IPX/SPX, AppleTalk). | Historical LAN stack alongside SNA/DECnet; precursor ideas to modern networking.
 
 ## Security
 
@@ -421,6 +437,7 @@ section collects concise definitions and quick examples to help you grok the jar
 | BYOK | Bring Your Own Key — customer-managed encryption keys used with a cloud provider’s services instead of provider‑managed keys. | Store CMKs in KMS/HSM; configure services to use them; rotate regularly. |
 | CA | Certificate Authority — issues digital certificates (X.509). | Let's Encrypt TLS certs. |
 | CCPA | California Consumer Privacy Act — US privacy law granting rights to access, delete, and opt out of sale of personal data. | Add Do Not Sell link; handle access/deletion requests. |
+| CFI | Control-Flow Integrity — restricts indirect branches/returns to valid targets to thwart code‑reuse attacks (ROP/JOP). | LLVM/Clang CFI, Intel CET/IBT, ARM Pointer Authentication (PAC) harden control flow. |
 | CORS | Cross-Origin Resource Sharing — control cross-site requests. | Allow specific origins/headers. |
 | CSP | Content Security Policy — control resource loading; mitigate XSS. | `default-src 'self'`. |
 | CSRF | Cross-Site Request Forgery — unintended actions by a victim. | CSRF tokens, same-site cookies. |
@@ -445,8 +462,8 @@ section collects concise definitions and quick examples to help you grok the jar
 | OIDC | OpenID Connect — identity layer over OAuth 2.0. | ID token for login. |
 | OTP | One-Time Password — short‑lived code used for authentication; delivered or generated per login. | App‑generated TOTP/HOTP codes; avoid SMS OTP when possible. |
 | PGP | Pretty Good Privacy — encryption/signing format. | Email encryption/signing. |
-| PKCS | Public-Key Cryptography Standards — RSA-led standards defining formats and algorithms used in public-key crypto. | PKCS #1 (RSA), #7/CMS (cryptographic messages), #8 (private keys), #12 (PFX/P12), #5 (PBES), #10 (CSR). |
 | PII | Personally Identifiable Information — data that can identify an individual; subject to privacy laws and safeguards. | Names, emails, SSNs; apply minimization, masking, and access controls. |
+| PKCS | Public-Key Cryptography Standards — RSA-led standards defining formats and algorithms used in public-key crypto. | PKCS #1 (RSA), #7/CMS (cryptographic messages), #8 (private keys), #12 (PFX/P12), #5 (PBES), #10 (CSR). |
 | PKI | Public Key Infrastructure — system of CAs, certs, keys, and policies. | Issue and validate X.509 certs. |
 | RBAC | Role-Based Access Control — role-granted permissions. | Admin/Editor/Viewer roles. |
 | RCE | Remote Code Execution — run arbitrary code remotely. | Deserialization exploit. |
@@ -505,6 +522,7 @@ section collects concise definitions and quick examples to help you grok the jar
 | APIC | Advanced Programmable Interrupt Controller — modern local/IO APICs providing scalable interrupt delivery in SMP systems. | LAPIC per core and IOAPIC for external IRQs on x86. |
 | ATX | Advanced Technology eXtended — PC motherboard and power supply form factor standard defining board sizes, mounting, I/O shield, and power connectors. | ATX/mATX/ITX cases; 24‑pin ATX, 8‑pin EPS12V, PCIe 6/8‑pin/12VHPWR.
 | AVX | Advanced Vector Extensions — x86 SIMD instruction set extensions for wide vector operations (256/512-bit in AVX/AVX-512). | AVX2 for integer ops; AVX-512 for HPC workloads. |
+| CHERI | Capability Hardware Enhanced RISC Instructions — architectural extensions that add tagged, unforgeable capabilities to enforce fine‑grained memory safety and compartmentalization. | CHERI‑RISC‑V/MIPS; pointers carry bounds/permissions; safer C/C++ and sandboxing.
 | CISC | Complex Instruction Set Computer — CPU design approach featuring larger, more complex, and variable‑length instructions, often implemented with microcode. | x86/x86‑64 architectures; `REP MOVS`, string ops, rich addressing modes. |
 | CMOS | Complementary Metal‑Oxide‑Semiconductor — low‑power technology used for chips; in PCs, also refers to the small battery‑backed RAM storing firmware settings. | Replace CMOS battery; clear CMOS to reset BIOS/UEFI settings. |
 | CPU | Central Processing Unit — main processor that executes instructions. | x86-64 CPUs with multiple cores/threads and SIMD. |
@@ -526,7 +544,6 @@ section collects concise definitions and quick examples to help you grok the jar
 | HID | Human Interface Device — USB device class for human input/output peripherals using structured HID reports. | USB keyboards, mice, gamepads; HID report descriptors parsed by OS. |
 | IRQ | Interrupt Request — a hardware signal line used by devices to interrupt the CPU for service. | Timer, keyboard, NIC raise IRQs; OS dispatches to ISRs. |
 | ISA | Instruction Set Architecture — contract describing a CPU’s instructions, registers, memory model, and privilege levels; distinct from microarchitecture. | x86‑64, ARMv8‑A; RISC‑V RV64GC with optional extensions. |
-| NMI | Non-Maskable Interrupt — high-priority hardware interrupt that cannot be disabled by normal interrupt masking, used for critical fault or watchdog conditions. | Watchdog parity/ECC errors trigger NMI; OS NMI handler logs/diagnoses hangs.
 | KVM | Keyboard–Video–Mouse switch — hardware device to control multiple computers with a single keyboard, monitor, and mouse. | Toggle between two PCs with a USB/HDMI KVM switch. |
 | LBA | Logical Block Addressing — linear addressing scheme for block devices that replaces legacy CHS (Cylinder/Head/Sector) geometry. | 512‑byte/4K sectors addressed by LBA; used by SATA/SCSI/NVMe.
 | LCD | Liquid Crystal Display — flat‑panel display technology that uses liquid crystals modulated by a backlight to produce images. | IPS/TN/VA LCD panels; requires LED backlight. |
@@ -537,6 +554,7 @@ section collects concise definitions and quick examples to help you grok the jar
 | MMU | Memory Management Unit — hardware for virtual memory and address translation. | x86-64 paging with TLBs. |
 | NCQ | Native Command Queuing — SATA feature allowing a drive to accept and reorder multiple outstanding requests to optimize head movement and throughput. | AHCI/SATA HDDs/SSDs improving random I/O by reordering commands. |
 | NIC | Network Interface Controller — hardware that connects a computer to a network. | Ethernet adapters; 10/25/40/100GbE NICs with offloads. |
+| NMI | Non-Maskable Interrupt — high-priority hardware interrupt that cannot be disabled by normal interrupt masking, used for critical fault or watchdog conditions. | Watchdog parity/ECC errors trigger NMI; OS NMI handler logs/diagnoses hangs.
 | NUMA | Non-Uniform Memory Access — architecture where memory access latency and bandwidth vary depending on whether memory is local to a CPU socket/node or remote. | Pin threads and allocate memory per NUMA node (e.g., `numactl`) to reduce cross-socket traffic. |
 | NVMe | Non-Volatile Memory Express — interface protocol for SSDs over PCIe. | M.2 NVMe SSD with high IOPS/low latency. |
 | NVRAM | Non-Volatile RAM — memory that retains data without power; implemented via flash, EEPROM, or battery‑backed SRAM; often stores firmware variables/settings. | UEFI variables in NVRAM; macOS NVRAM for boot args and device settings. |
@@ -546,8 +564,8 @@ section collects concise definitions and quick examples to help you grok the jar
 | PCI | Peripheral Component Interconnect — hardware bus standard for attaching peripherals. | PCI devices enumerated by bus/device/function. |
 | PCIe | PCI Express — high-speed serial successor to PCI with lanes and links. | x16 GPU slot; NVMe drives over PCIe. |
 | PnP | Plug and Play — automatic device detection, enumeration, and configuration by the OS/firmware, minimizing manual setup and IRQ/DMA conflicts. | ACPI/PCI PnP; USB devices enumerated and drivers auto‑loaded.
-| PPI | Pixels Per Inch — measure of display pixel density; often confused with DPI which is for print. | 326‑PPI phone display; ~220‑PPI “Retina” laptop panels. |
 | PPC | PowerPC — RISC CPU architecture developed by the AIM alliance (Apple–IBM–Motorola), used in desktops historically and widely in embedded/console systems. | PowerPC 32/64‑bit (POWER/PowerPC); GameCube/Wii/PS3; embedded/controllers.
+| PPI | Pixels Per Inch — measure of display pixel density; often confused with DPI which is for print. | 326‑PPI phone display; ~220‑PPI “Retina” laptop panels. |
 | PS/2 | Personal System/2 — legacy Mini‑DIN interface for keyboards and mice on PCs. | PS/2 keyboard/mouse ports on motherboards/KVMs; supports NKRO without USB polling.
 | PSU | Power Supply Unit — converts AC mains to regulated DC rails to power computer components; rated by wattage and efficiency. | ATX PSUs providing +12V/+5V/+3.3V; 80 PLUS efficiency tiers; modular cabling. |
 | RAID | Redundant Array of Independent Disks — combine multiple drives for redundancy and/or performance. | RAID 1 mirroring; RAID 5 parity; RAID 10 stripe+mirror. |
