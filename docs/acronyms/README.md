@@ -18,6 +18,7 @@ about the legacy/historical subsections:
 
 | Acronym | Meaning | Example |
 | --- | --- | --- |
+| C4 | Context–Container–Component–Code — lightweight hierarchical diagramming model for communicating software architecture at multiple levels of abstraction. | Draw a system Context and Container diagram for a web app; break a service into Components; optionally add Code-level diagrams. |
 | CQRS | Command Query Responsibility Segregation — separate writes/reads. | Write model emits events; read model is a projection. |
 | EDA | Event-Driven Architecture — async event-based systems. | Publish domain events to Kafka; services react. |
 | ES | Event Sourcing — persist state changes as an append‑only log of events and rebuild current state by replaying them. | Order aggregate applies `OrderPlaced`/`ItemAdded` events; projections update read models. |
@@ -132,12 +133,17 @@ about the legacy/historical subsections:
 | ADT | Abstract Data Type — specification of behavior independent of implementation. | Stack/queue ADTs with array- or list-based implementations. |
 | ADT | Algebraic Data Type — composite types formed by sums (variants) and products (fields), enabling expressive, type-safe modeling. | Rust enums/Haskell data types; Option/Either in FP. |
 | API | Application Programming Interface — a defined surface for one piece of software to interact with another. | POSIX file APIs, a graphics library API, or an HTTP endpoint. |
+| BFS | Breadth-First Search — graph/tree traversal that visits neighbors level by level using a queue; finds shortest paths in unweighted graphs. | Level-order traversal of a tree; BFS from a source to compute distances/parents. |
+| DAG | Directed Acyclic Graph — directed graph with no cycles; commonly used to model dependencies and enable topological ordering in compilers, build systems, and task scheduling. | Topologically sort to order compilation units; represent dependencies in build graphs or AST passes. |
+| AVL | Adelson-Velsky and Landis tree — self‑balancing binary search tree that maintains height balance via rotations to ensure O(log n) search/insert/delete. | Implement an ordered map/set with AVL rotations (LL/LR/RL/RR). |
 | BSP | Binary Space Partitioning — recursively subdivide space with hyperplanes (planes in 3D, lines in 2D) to organize geometry for visibility, rendering order, and collision queries. | Classic FPS engines (e.g., Quake) use BSP trees for visibility/culling and painter's algorithm ordering. |
+| BST | Binary Search Tree — ordered binary tree supporting average O(log n) search/insert/delete when balanced; worst‑case O(n) if unbalanced. | Implement sets/maps; inorder traversal yields keys in sorted order. |
 | CAS | Compare-And-Swap — atomic operation that updates a memory location only if it still equals an expected value; foundation for lock‑free algorithms. | CAS loop for a lock‑free stack push; beware the ABA problem. |
 | CLI | Command-Line Interface — text-based commands. | `git`, `kubectl`, custom CLIs. |
 | CLR | Common Language Runtime — .NET VM. | Runs C# assemblies. |
 | CRUD | Create, Read, Update, Delete — basic data ops. | REST endpoints map to CRUD on `users`. |
 | CUI | Character User Interface — text/character-based UI typically rendered in terminals with limited graphics; overlaps with TUI. | Installer wizards and ncurses-style menus in a terminal. |
+| DFS | Depth-First Search — graph/tree traversal that explores as far as possible along each branch before backtracking; typically implemented with recursion or an explicit stack. | Topological sort, cycle detection, connected components, subtree times. |
 | DSL | Domain-Specific Language — tailored language. | SQL, Regex, build DSLs. |
 | EOF | End Of File — no more data to read. | Read returns EOF on file end. |
 | FFI | Foreign Function Interface — mechanism to call functions across language/ABI boundaries. | Rust `extern "C"` to call C; Python `ctypes`/`cffi` bindings. |
@@ -158,6 +164,7 @@ about the legacy/historical subsections:
 | JVM | Java Virtual Machine — runs bytecode. | JVM-based languages (Kotlin, Scala). |
 | LRU | Least Recently Used — cache eviction policy that discards the least recently accessed items first. | LRU caches/maps in memory-constrained systems. |
 | LSP | Language Server Protocol — standard JSON-RPC protocol between editors and language servers for code intelligence. | VS Code/Neovim language servers for hover, completion, diagnostics. |
+| MST | Minimum Spanning Tree — subset of edges that connects all vertices in a weighted, undirected graph with minimum total weight and no cycles. | Compute MST with Kruskal (sort edges + DSU) or Prim (priority queue). |
 | NOP | No Operation — instruction or operation that intentionally does nothing; used for timing, alignment, patching, or as a placeholder. | CPU `NOP` instruction; inserting a no‑op in pipelines or bytecode. |
 | ODBC | Open Database Connectivity — cross-platform C API and driver model for accessing relational databases. | Configure DSNs; apps connect via ODBC drivers to SQL Server/MySQL/Postgres. |
 | OLE | Object Linking and Embedding — Microsoft technology (built on COM) for embedding and linking documents/objects between applications. | Embed an Excel sheet in a Word doc; OLE automation for Office apps. |
@@ -207,12 +214,14 @@ about the legacy/historical subsections:
 | DLL | Dynamic-Link Library — shared library format on Windows loaded at runtime into a process address space. | `foo.dll` loaded via LoadLibrary; shared code/plugins. |
 | DYLIB | Dynamic Library — macOS shared library format loaded by the dynamic linker. | `libfoo.dylib` via dyld; `install_name_tool`/rpaths for relocation. |
 | ELF | Executable and Linkable Format — standard binary format for executables, object files, and shared libraries on Unix-like systems. | Linux binaries with sections/segments; inspect with `readelf`/`objdump`. |
+| GNOME | GNU Network Object Model Environment — free, open‑source desktop environment for UNIX-like systems, part of the GNU Project. | Default desktop on many Linux distributions; GNOME Shell with Wayland/X11. |
 | FAT | File Allocation Table — simple filesystem used historically and for removable media; variants FAT12/16/32. | USB stick formatted as FAT32 for broad compatibility; firmware update drives. |
 | FS | File System — on-disk or logical structure and set of rules the OS uses to organize, store, and retrieve files/directories, including metadata and allocation. | ext4, NTFS, APFS, ZFS; mount/unmount volumes; permissions and journaling.
 | FUSE | Filesystem in Userspace — kernel interface to implement filesystems in user space processes. | Mount `sshfs`/`rclone` via FUSE; custom FS without kernel modules. |
 | HAL | Hardware Abstraction Layer — OS layer that hides hardware specifics behind a uniform API so drivers/system code can run across platforms. | Windows HAL; OS kernels providing common driver interfaces across architectures.
 | IPC | Inter-Process Communication — exchange/coordinate between processes. | Pipes, sockets, shared memory, signals. |
 | ISR | Interrupt Service Routine — function invoked by the OS in response to an interrupt to handle the event and acknowledge the controller. | Keyboard ISR on IRQ1 reads scancode; timer ISR updates ticks and EOIs the APIC. |
+| KDE | K Desktop Environment (now the KDE community and Plasma desktop) — free, open‑source desktop environment and software suite for UNIX-like systems. | KDE Plasma on Linux/BSD; highly configurable desktop with KWin and Qt apps. |
 | Mach-O | Mach Object — executable/object file format used by macOS/iOS for binaries and libraries. | Inspect with `otool`/`lldb`; `libfoo.dylib` and `foo.app/Contents/MacOS/foo`. |
 | NTFS | New Technology File System — Windows journaling filesystem with ACLs, alternate data streams, compression, and quotas. | Format a Windows system volume as NTFS; set ACLs with icacls. |
 | OS | Operating System — system software that manages hardware resources and provides common services for programs. | Linux, Windows, macOS; kernel, drivers, processes, filesystems. |
@@ -230,8 +239,10 @@ about the legacy/historical subsections:
 | UNIX | Family of multiuser, multitasking operating systems originating at Bell Labs; basis for POSIX and many modern OSes. | Unix philosophy; shells, processes, files; ancestors to Linux, BSD, macOS. |
 | VFS | Virtual File System — OS abstraction layer that provides a uniform API over different filesystems and devices. | Linux VFS layer exposes common inode/dentry APIs across ext4, XFS, NFS, FUSE. |
 | VM | Virtual Memory — OS abstraction that gives processes isolated address spaces mapped to physical memory via paging/segmentation. | Per‑process address spaces, page tables, demand paging, copy‑on‑write. |
+| X11 | X Window System (Version 11) — network‑transparent windowing system and protocol for bitmap displays on UNIX‑like systems. | Xorg/XWayland on Linux; XQuartz on macOS; `ssh -X` X11 forwarding. |
 | ZFS | Zettabyte File System — advanced filesystem/volume manager with snapshots, checksums, compression, and COW semantics. | Create ZFS datasets/pools; instant snapshots/`zfs send` replication. |
 | **Historical** {colspan=3} |
+| CDE | Common Desktop Environment — classic UNIX desktop environment based on Motif and the X Window System; widely used on commercial UNIX workstations in the 1990s. | HP‑UX, Solaris, AIX shipped CDE as the default desktop; superseded by GNOME/KDE. |
 | CP/M | Control Program for Microcomputers — early microcomputer OS preceding MS‑DOS. | 1970s/80s 8‑bit systems running CP/M. |
 | DOS | Disk Operating System — family of disk‑based OSes. | MS‑DOS, PC‑DOS, DR‑DOS. |
 | MULTICS | Multiplexed Information and Computing Service — influential time‑sharing OS from MIT/GE/Bell Labs that inspired many UNIX concepts. | 1960s/70s mainframes; security and modular design influenced Unix. |
@@ -265,6 +276,7 @@ about the legacy/historical subsections:
 | RLE | Run-Length Encoding — simple lossless compression that replaces runs of repeated symbols with a count and value. | Bitmap/scanline compression (e.g., BMP RLE, fax/CCITT variants); good for large uniform areas.
 | SGML | Standard Generalized Markup Language — meta-language for defining markup languages; foundation for HTML/XML; rarely used directly today. | SGML-based HTML 2.0/3.2 era; modern stacks use XML/HTML5 instead.
 | SVG | Scalable Vector Graphics — XML-based vector image format for resolution-independent graphics. | Inline icons/diagrams in HTML; CSS/SMIL animations. |
+| TAR | Tape ARchive — stream/archive format that bundles multiple files/directories with metadata into a single sequential archive; often compressed (e.g., .tar.gz/.tgz). | Create/extract backups: `tar -czf backup.tgz dir/`; used for packaging and distribution.
 | TOML | Tom's Obvious, Minimal Language — minimal configuration format with clear semantics. | `pyproject.toml`, `Cargo.toml` tool configs. |
 | TSV | Tab-Separated Values — plain text tabular format using tabs as delimiters. | `users.tsv` exports with tab‑delimited fields. |
 | TTF | TrueType Font — outline font format using quadratic Bézier curves; widely supported across operating systems and browsers. | `.ttf` fonts for desktop/web (often inside `.ttc` collections or wrapped as WOFF/WOFF2 for the web).
@@ -297,7 +309,6 @@ about the legacy/historical subsections:
 | CDC | Change Data Capture — stream DB changes. | Debezium publishes events to Kafka. |
 | CRDT | Conflict-free Replicated Data Type — data structures that merge deterministically without coordination for eventual consistency. | LWW-Element-Set, G-Counter; collaborative docs with Automerge/Yjs. |
 | CTE | Common Table Expression — named temporary result set referenced within a statement. | `WITH recent AS (SELECT ...) SELECT * FROM recent WHERE ...`. |
-| DAG | Directed Acyclic Graph — graph with directed edges and no cycles; models dependencies and workflows. | Airflow DAG orchestrating ETL tasks via topological execution order. |
 | DB | Database — organized data managed by a DBMS. | Postgres/MySQL database with tables, indexes, and transactions. |
 | DBMS | Database Management System — software that manages databases, provides storage, query, and transaction processing. | PostgreSQL, MySQL, SQLite, Oracle, SQL Server. |
 | DDL | Data Definition Language — SQL for defining/modifying schema objects. | `CREATE TABLE`, `ALTER TABLE`, `CREATE INDEX`. |
@@ -307,6 +318,8 @@ about the legacy/historical subsections:
 | ELT | Extract, Load, Transform — load raw data then transform in the warehouse. | Modern ELT with dbt/BigQuery. |
 | ETL | Extract, Transform, Load — data integration pipeline. | Batch load to data warehouse. |
 | FK | Foreign Key — constraint that enforces referential integrity by requiring values to exist in a referenced table. | `orders.user_id` references `users.id`; ON DELETE CASCADE. |
+| HLL | HyperLogLog — probabilistic algorithm for cardinality (distinct count) estimation that uses fixed, small memory with tunable relative error via stochastic averaging of leading-zero counts. | Approximate unique users/events with ~1–2% error using kilobytes of memory; streaming distinct counts in analytics pipelines. |
+| LSMT | Log-Structured Merge-Tree — write-optimized indexing/storage structure that buffers writes in memory and flushes them as sorted runs (SSTables) to disk, with background compaction/merging; lowers random writes at the cost of read/space amplification. | Used by LevelDB/RocksDB; LSM-based stores like Cassandra and HBase. |
 | MVCC | Multi-Version Concurrency Control — concurrency control that lets readers and writers proceed by keeping multiple row versions and using snapshot visibility rules. | PostgreSQL snapshot reads; VACUUM removes obsolete versions. |
 | NoSQL | Non-relational DBs: documents, key-values, graphs, wide columns. | MongoDB, Redis, Cassandra. |
 | OLAP | Online Analytical Processing — read-heavy analytics. | BI cubes, columnar stores. |
@@ -331,6 +344,7 @@ about the legacy/historical subsections:
 | MoE | Mixture of Experts — sparse expert routing to scale parameters with near-constant compute. | Router selects top‑k experts per token (Switch-Transformer). |
 | NER | Named Entity Recognition — extract and label entities in text. | Tag PERSON/ORG/LOC from documents. |
 | NLP | Natural Language Processing — techniques for understanding and generating human language. | Text classification, NER, summarization, translation. |
+| OCR | Optical Character Recognition — convert images/scans of text into machine‑encoded text using computer vision and sequence models. | Tesseract or deep‑learning OCR to extract text from documents/receipts. |
 | RAG | Retrieval-Augmented Generation — ground model outputs by retrieving external knowledge at query time. | Retrieve top‑k docs from a vector store and include them in the prompt. |
 | RL | Reinforcement Learning — learning by interaction with an environment via rewards. | Q‑learning, policy gradients; RLHF for model alignment. |
 | RLHF | Reinforcement Learning from Human Feedback — align models using human preference signals via a learned reward model. | Collect preference pairs, train a reward model, then fine‑tune with PPO. |
@@ -386,6 +400,7 @@ about the legacy/historical subsections:
 | CIDR | Classless Inter-Domain Routing — notation for IP prefixes and aggregation. | `10.0.0.0/16` VPC; subnetting `/24`; route summarization. |
 | CNAME | Canonical Name — DNS record that aliases one hostname to another. | `www` CNAME to `example.com`; avoid at zone apex without ALIAS/ANAME. |
 | DHCP | Dynamic Host Configuration Protocol — automatic IP configuration. | DHCP assigns IP/gateway/DNS. |
+| FC | Fibre Channel — high‑speed serial transport for storage networking (SANs) with switched fabrics, typically 8/16/32 Gbit/s, carrying SCSI/FCP. | Connect hosts to SAN arrays over FC via HBAs and switches; zoning and LUN masking.
 | DoH | DNS over HTTPS — perform DNS resolution over HTTPS for privacy/integrity. | `https://dns.google/dns-query` DoH endpoint. |
 | HTTP | Hypertext Transfer Protocol — web application protocol. | `GET /index.html` over TCP. |
 | HTTPS | HTTP over TLS — encrypted HTTP. | Padlock in browsers. |
@@ -477,6 +492,7 @@ about the legacy/historical subsections:
 | DRM | Digital Rights Management — technologies to control access, copying, and usage of digital content via encryption and licensing. | Browser EME with Widevine/PlayReady; app checks license server before playback. |
 | GPG | GNU Privacy Guard — OpenPGP implementation. | `gpg --sign --encrypt file`. |
 | HMAC | Hash-based Message Authentication Code — keyed hash for message integrity and authenticity. | HMAC‑SHA256 for API request signing; JWT HS256. |
+| HSM | Hardware Security Module — tamper‑resistant hardware appliance or cloud service for secure key generation, storage, and cryptographic operations with strong access controls and auditing. | Use an HSM/KMS to generate and store TLS/CA private keys; perform signing inside the module. |
 | HSTS | HTTP Strict Transport Security — force HTTPS for a period. | `Strict-Transport-Security` header. |
 | IAM | Identity and Access Management — users/roles/permissions. | Cloud IAM policies. |
 | JWT | JSON Web Token — compact auth/claims token. | `Authorization: Bearer <jwt>`. |
@@ -548,118 +564,181 @@ about the legacy/historical subsections:
 | VPC | Virtual Private Cloud — isolated virtual network. | Subnets, route tables, SGs. |
 | VPN | Virtual Private Network — secure tunnel. | Site-to-site/client VPN. |
 
-## Hardware
+## Hardware (Architecture)
 
 | Acronym | Meaning | Example |
 | --- | --- | --- |
-| AHCI | Advanced Host Controller Interface — standard programming interface for SATA host controllers enabling features like NCQ, hot-plug, and native command queuing. | OS uses the AHCI driver; set SATA mode to AHCI in firmware for modern OS installs. |
+| AMD64 | 64‑bit x86 architecture introduced by AMD (aka x86‑64, adopted by Intel as Intel 64) extending IA‑32 with 64‑bit registers, more general‑purpose registers, and long mode. | Build for `x86_64`/`amd64`; Linux System V AMD64 ABI; Windows x64 with WOW64 for 32‑bit apps. |
+| ARM64 | 64‑bit ARM architecture (aka AArch64, ARMv8‑A and later) with a new instruction set and execution state distinct from 32‑bit ARM (AArch32). | Build for `arm64`/`aarch64`; Apple Silicon Macs, AWS Graviton/Neoverse servers, Android flagship SoCs. |
+| CHERI | Capability Hardware Enhanced RISC Instructions — architectural extensions that add tagged, unforgeable capabilities to enforce fine‑grained memory safety and compartmentalization. | CHERI‑RISC‑V/MIPS; pointers carry bounds/permissions; safer C/C++ and sandboxing.
+| CISC | Complex Instruction Set Computer — CPU design approach featuring larger, more complex, and variable‑length instructions, often implemented with microcode. | x86/x86‑64 architectures; `REP MOVS`, string ops, rich addressing modes. |
+| CUDA | Compute Unified Device Architecture — NVIDIA's parallel computing platform and programming model for GPUs. | Launch kernels in CUDA C++; PyTorch/TensorFlow GPU ops. |
+| EM64T | Extended Memory 64 Technology — Intel’s original branding for its AMD64‑compatible 64‑bit x86 implementation, now marketed as Intel 64. | Intel Core/Xeon CPUs report Intel 64; target `x86_64` in toolchains. |
+| IA-32 | 32‑bit Intel architecture — the classic 32‑bit x86 ISA (i386 and successors) with protected mode, paging, and SSE-era extensions; predecessor to x86‑64. | Build for `x86`/`i386`/`i686`; 32‑bit OSes/apps, WOW64 on Windows x64, multilib on Linux.
+| ISA | Instruction Set Architecture — contract describing a CPU’s instructions, registers, memory model, and privilege levels; distinct from microarchitecture. | x86‑64, ARMv8‑A; RISC‑V RV64GC with optional extensions. |
+| MIPS | Microprocessor without Interlocked Pipeline Stages — classic RISC architecture used in embedded systems, networking gear, and historically in workstations/servers. | MIPS32/MIPS64 in routers and embedded devices; historical SGI workstations/IRIX. |
+| NUMA | Non-Uniform Memory Access — architecture where memory access latency and bandwidth vary depending on whether memory is local to a CPU socket/node or remote. | Pin threads and allocate memory per NUMA node (e.g., `numactl`) to reduce cross-socket traffic. |
+| PA-RISC | Precision Architecture RISC — Hewlett‑Packard’s RISC architecture used in HP 9000 servers/workstations, largely superseded by Itanium and then x86‑64. | HP‑UX on PA‑RISC systems (e.g., PA‑8700/8900); historical HP 9000 platforms. |
+| POWER | IBM Performance Optimization With Enhanced RISC — IBM’s RISC architecture family used in servers/workstations (POWER4+), distinct but related to the PowerPC lineage. | IBM Power Systems running AIX/IBM i/Linux; POWER9/POWER10 CPUs. |
+| PPC | PowerPC — RISC CPU architecture developed by the AIM alliance (Apple–IBM–Motorola), used in desktops historically and widely in embedded/console systems. | PowerPC 32/64‑bit (POWER/PowerPC); GameCube/Wii/PS3; embedded/controllers.
+| RISC | Reduced Instruction Set Computer — CPU design philosophy emphasizing a small, simple instruction set and efficient pipelines. | ARM and RISC-V architectures. |
+| SMP | Symmetric Multiprocessing — architecture where multiple identical CPUs/cores share the same memory and OS, enabling parallel execution of threads/processes. | Multi-core x86/ARM systems; OS scheduler runs threads across cores with shared memory. |
+| SPARC | Scalable Processor ARChitecture — RISC CPU architecture originally developed by Sun Microsystems, widely used in servers/workstations and embedded systems. | SPARC V8/V9 (32/64‑bit); UltraSPARC/Oracle SPARC running Solaris/illumos. |
+| X86-64 | Generic name for the 64‑bit x86 ISA (defined by AMD as AMD64 and implemented by Intel as Intel 64/EM64T); adds 64‑bit mode and more registers over IA‑32. | Build for `x86_64`; 64‑bit OSes and apps on AMD/Intel processors. |
+| **Historical** {colspan=3} |
+| IA-64 | Intel Itanium architecture — 64‑bit EPIC (Explicitly Parallel Instruction Computing) ISA developed by Intel/HP; distinct from x86/x86‑64 and now discontinued. | Itanium servers/workstations running HP‑UX, OpenVMS, and legacy Windows Server for Itanium‑based systems. |
+| PDP | Programmed Data Processor — DEC minicomputer line before VAX. | PDP‑8, PDP‑11 systems. |
+| VAX | Virtual Address eXtension — DEC 32‑bit minicomputer architecture. | VAX/VMS systems in universities and industry. |
+
+## Hardware (CPU)
+
+| Acronym | Meaning | Example |
+| --- | --- | --- |
 | ALU | Arithmetic Logic Unit — digital circuit in the CPU that performs integer arithmetic and bitwise operations. | Add, subtract, AND/OR/XOR, shifts/rotates executed by the ALU pipelines. |
 | AMX | Advanced Matrix Extensions — x86 instruction set extensions providing tiled matrix operations accelerated in hardware. | Intel AMX for deep‑learning inference/training (tile registers, TMUL). |
 | AP | Application Processor — any non‑bootstrap CPU core in an SMP system that is brought online by the BSP to run the OS scheduler and workloads. | OS sends INIT/SIPI to start APs after BSP init; threads scheduled across APs. |
 | APIC | Advanced Programmable Interrupt Controller — modern local/IO APICs providing scalable interrupt delivery in SMP systems. | LAPIC per core and IOAPIC for external IRQs on x86. |
-| ATX | Advanced Technology eXtended — PC motherboard and power supply form factor standard defining board sizes, mounting, I/O shield, and power connectors. | ATX/mATX/ITX cases; 24‑pin ATX, 8‑pin EPS12V, PCIe 6/8‑pin/12VHPWR.
 | AVX | Advanced Vector Extensions — x86 SIMD instruction set extensions for wide vector operations (256/512-bit in AVX/AVX-512). | AVX2 for integer ops; AVX-512 for HPC workloads. |
 | BSP | Bootstrap Processor — on multi-processor systems (e.g., x86 SMP), the primary CPU core that starts executing firmware/boot code and brings up the OS, which then initializes the remaining cores as Application Processors (APs). | Firmware runs on the BSP first; OS sends INIT/SIPI to start APs. |
-| CHERI | Capability Hardware Enhanced RISC Instructions — architectural extensions that add tagged, unforgeable capabilities to enforce fine‑grained memory safety and compartmentalization. | CHERI‑RISC‑V/MIPS; pointers carry bounds/permissions; safer C/C++ and sandboxing.
-| CISC | Complex Instruction Set Computer — CPU design approach featuring larger, more complex, and variable‑length instructions, often implemented with microcode. | x86/x86‑64 architectures; `REP MOVS`, string ops, rich addressing modes. |
-| CMOS | Complementary Metal‑Oxide‑Semiconductor — low‑power technology used for chips; in PCs, also refers to the small battery‑backed RAM storing firmware settings. | Replace CMOS battery; clear CMOS to reset BIOS/UEFI settings. |
 | CPU | Central Processing Unit — main processor that executes instructions. | x86-64 CPUs with multiple cores/threads and SIMD. |
-| CUDA | Compute Unified Device Architecture — NVIDIA's parallel computing platform and programming model for GPUs. | Launch kernels in CUDA C++; PyTorch/TensorFlow GPU ops. |
-| DDR | Double Data Rate — class of synchronous DRAM that transfers data on both clock edges for higher bandwidth. | DDR4/DDR5 SDRAM in modern systems. |
-| DIMM | Dual Inline Memory Module — standardized memory module form factor for SDRAM. | 288‑pin DDR4/DDR5 DIMMs. |
-| DMA | Direct Memory Access — device-initiated memory transfers without CPU involvement. | NICs use DMA for packet buffers. |
-| DP | DisplayPort — digital display interface with high bandwidth, daisy‑chaining via MST, and adaptive sync support. | DP 1.4/2.0 to high‑refresh monitors; USB‑C DP Alt Mode; MST hub. |
-| DPI | Dots Per Inch — measure of print/display resolution; colloquially used for screens though PPI is more precise. | 300‑DPI print quality; “Retina” displays around ~220 PPI. |
-| DRAM | Dynamic Random Access Memory — volatile memory storing bits in capacitors that require periodic refresh. | Main system memory (SDRAM/DDR). |
 | FPU | Floating Point Unit — hardware for floating-point arithmetic. | IEEE 754 operations, SIMD extensions. |
-| GPIO | General-Purpose Input/Output — configurable digital pins on microcontrollers/SoCs used for reading inputs and driving outputs; often support pull‑ups/downs and interrupts. | Toggle Raspberry Pi GPIO with `libgpiod`; configure pin mode and edge interrupts. |
-| GPT | GUID Partition Table — modern disk partitioning scheme that supports large disks and many partitions, part of the UEFI standard. | Disks initialized with GPT instead of legacy MBR. |
-| GPU | Graphics Processing Unit — highly parallel processor optimized for graphics and compute. | CUDA/OpenCL workloads; 3D rendering. |
-| HBA | Host Bus Adapter — adapter that connects a host system to storage or network devices over a high‑speed bus/fabric (e.g., SAS, Fibre Channel). | FC/SAS HBAs in servers to attach SAN/storage arrays; visible via `lspci`. |
-| HCI | Host Controller Interface — standardized command/event interface between a host stack and a hardware controller (notably in Bluetooth; also USB xHCI). | Capture Bluetooth HCI packets with `btmon`; interact via UART/USB HCI. |
-| HDD | Hard Disk Drive — magnetic storage device with spinning platters and moving heads. | 3.5"/2.5" SATA HDDs for bulk storage; higher latency than SSDs. |
-| HDMI | High-Definition Multimedia Interface — digital audio/video interface for connecting sources to displays. | HDMI 2.0/2.1 to monitors/TVs; HDCP for protected content. |
-| HID | Human Interface Device — USB device class for human input/output peripherals using structured HID reports. | USB keyboards, mice, gamepads; HID report descriptors parsed by OS. |
-| IRQ | Interrupt Request — a hardware signal line used by devices to interrupt the CPU for service. | Timer, keyboard, NIC raise IRQs; OS dispatches to ISRs. |
-| ISA | Instruction Set Architecture — contract describing a CPU’s instructions, registers, memory model, and privilege levels; distinct from microarchitecture. | x86‑64, ARMv8‑A; RISC‑V RV64GC with optional extensions. |
-| KVM | Keyboard–Video–Mouse switch — hardware device to control multiple computers with a single keyboard, monitor, and mouse. | Toggle between two PCs with a USB/HDMI KVM switch. |
-| LBA | Logical Block Addressing — linear addressing scheme for block devices that replaces legacy CHS (Cylinder/Head/Sector) geometry. | 512‑byte/4K sectors addressed by LBA; used by SATA/SCSI/NVMe.
-| LCD | Liquid Crystal Display — flat‑panel display technology that uses liquid crystals modulated by a backlight to produce images. | IPS/TN/VA LCD panels; requires LED backlight. |
-| LED | Light‑Emitting Diode — semiconductor light source; in monitors/TVs, often shorthand for LED‑backlit LCDs (not emissive per‑pixel). | Status indicator LEDs; LED‑backlit LCD monitors/TVs. |
-| LUN | Logical Unit Number — identifier addressing a logical unit (virtual disk) within a SCSI/iSCSI/Fibre Channel target, used for mapping storage to hosts. | Present LUNs from a SAN array to servers; host multipath to the same LUN.
-| MIDI | Musical Instrument Digital Interface — standard protocol/interface for transmitting musical performance data between instruments, controllers, and computers. | 5‑pin DIN or USB‑MIDI; Note On/Off, Control Change; DAW controlling a synth. |
-| MMIO | Memory-Mapped I/O — device registers mapped into the CPU address space for control/status. | Writing to MMIO addresses to control PCIe device registers. |
 | MMU | Memory Management Unit — hardware for virtual memory and address translation. | x86-64 paging with TLBs. |
-| NCQ | Native Command Queuing — SATA feature allowing a drive to accept and reorder multiple outstanding requests to optimize head movement and throughput. | AHCI/SATA HDDs/SSDs improving random I/O by reordering commands. |
-| NIC | Network Interface Controller — hardware that connects a computer to a network. | Ethernet adapters; 10/25/40/100GbE NICs with offloads. |
 | NMI | Non-Maskable Interrupt — high-priority hardware interrupt that cannot be disabled by normal interrupt masking, used for critical fault or watchdog conditions. | Watchdog parity/ECC errors trigger NMI; OS NMI handler logs/diagnoses hangs.
-| NUMA | Non-Uniform Memory Access — architecture where memory access latency and bandwidth vary depending on whether memory is local to a CPU socket/node or remote. | Pin threads and allocate memory per NUMA node (e.g., `numactl`) to reduce cross-socket traffic. |
-| NVMe | Non-Volatile Memory Express — interface protocol for SSDs over PCIe. | M.2 NVMe SSD with high IOPS/low latency. |
-| NVRAM | Non-Volatile RAM — memory that retains data without power; implemented via flash, EEPROM, or battery‑backed SRAM; often stores firmware variables/settings. | UEFI variables in NVRAM; macOS NVRAM for boot args and device settings. |
-| OEM | Original Equipment Manufacturer — company that produces components or products that are marketed by another company; also denotes vendor‑specific builds/licenses. | OEM Windows licenses preinstalled on PCs; OEM parts used by system integrators.
-| OLED | Organic Light‑Emitting Diode — emissive display technology where each pixel emits light for high contrast and true blacks. | AMOLED smartphone screens; per‑pixel dimming on TVs/phones. |
-| PC | Personal Computer — general-purpose computer intended for individual use; commonly refers to IBM‑PC compatible systems running Windows/Linux. | Desktop/tower PC with x86‑64 CPU and discrete GPU.
-| PCI | Peripheral Component Interconnect — hardware bus standard for attaching peripherals. | PCI devices enumerated by bus/device/function. |
-| PCIe | PCI Express — high-speed serial successor to PCI with lanes and links. | x16 GPU slot; NVMe drives over PCIe. |
-| PnP | Plug and Play — automatic device detection, enumeration, and configuration by the OS/firmware, minimizing manual setup and IRQ/DMA conflicts. | ACPI/PCI PnP; USB devices enumerated and drivers auto‑loaded.
-| PPC | PowerPC — RISC CPU architecture developed by the AIM alliance (Apple–IBM–Motorola), used in desktops historically and widely in embedded/console systems. | PowerPC 32/64‑bit (POWER/PowerPC); GameCube/Wii/PS3; embedded/controllers.
-| PPI | Pixels Per Inch — measure of display pixel density; often confused with DPI which is for print. | 326‑PPI phone display; ~220‑PPI “Retina” laptop panels. |
-| PS/2 | Personal System/2 — legacy Mini‑DIN interface for keyboards and mice on PCs. | PS/2 keyboard/mouse ports on motherboards/KVMs; supports NKRO without USB polling.
-| PSU | Power Supply Unit — converts AC mains to regulated DC rails to power computer components; rated by wattage and efficiency. | ATX PSUs providing +12V/+5V/+3.3V; 80 PLUS efficiency tiers; modular cabling. |
-| RAID | Redundant Array of Independent Disks — combine multiple drives for redundancy and/or performance. | RAID 1 mirroring; RAID 5 parity; RAID 10 stripe+mirror. |
-| RAM | Random Access Memory — volatile memory used for working data and code. | DDR4/DDR5 DIMMs. |
-| RGB | Red, Green, Blue — additive color model used in displays and imaging. | sRGB color space; RGB LED subpixels in LCD/OLED panels. |
-| RGBA | Red, Green, Blue, Alpha — RGB color with an additional alpha (opacity) channel for transparency. | CSS `rgba(255, 0, 0, 0.5)`; PNG images with alpha channel.
-| RISC | Reduced Instruction Set Computer — CPU design philosophy emphasizing a small, simple instruction set and efficient pipelines. | ARM and RISC-V architectures. |
-| ROM | Read-Only Memory — non-volatile memory storing firmware or static data. | Boot ROM, option ROMs. |
-| RTC | Real-Time Clock — hardware clock that keeps time across reboots/power cycles, often backed by a battery. | System reads RTC (CMOS/ACPI) at boot to set the OS clock. |
-| SAS | Serial Attached SCSI — point‑to‑point serial interface for enterprise storage. | 12Gb/s SAS HDDs/SSDs; SAS expanders/backplanes. |
-| SATA | Serial ATA — interface for connecting storage devices. | 2.5" SATA SSDs and HDDs. |
-| SBC | Single-Board Computer — complete computer on a single circuit board integrating CPU, memory, storage, and I/O. | Raspberry Pi, BeagleBone; runs Linux for embedded/edge. |
-| SDRAM | Synchronous Dynamic Random Access Memory — DRAM synchronized with the system clock, enabling pipelined access and higher throughput versus asynchronous DRAM. | PC100/PC133 SDRAM; basis for modern DDR (DDR/DDR2/3/4/5). |
 | SIMD | Single Instruction, Multiple Data — vector parallelism executing the same instruction across multiple data lanes. | SSE/AVX on x86, NEON on ARM. |
-| SIMT | Single Instruction, Multiple Threads — GPU execution model where groups of threads execute the same instruction on different data. | NVIDIA warp execution; branch divergence reduces efficiency. |
-| SMBIOS | System Management BIOS — firmware tables that describe hardware to the OS. | DMI/SMBIOS tables expose model, memory, and slots. |
-| SMP | Symmetric Multiprocessing — architecture where multiple identical CPUs/cores share the same memory and OS, enabling parallel execution of threads/processes. | Multi-core x86/ARM systems; OS scheduler runs threads across cores with shared memory. |
-| SoC | System on Chip — integrated circuit that consolidates CPU cores, GPU, memory controllers, and I/O peripherals on a single die/package. | Smartphone/tablet SoCs (Apple M‑series, Qualcomm Snapdragon); embedded ARM SoCs. |
-| SPARC | Scalable Processor ARChitecture — RISC CPU architecture originally developed by Sun Microsystems, widely used in servers/workstations and embedded systems. | SPARC V8/V9 (32/64‑bit); UltraSPARC/Oracle SPARC running Solaris/illumos. |
-| SPI | Serial Peripheral Interface — synchronous serial bus with master/slave (controller/peripheral) and separate data lines for full-duplex transfers. | Connect sensors/flash to microcontrollers (MOSI/MISO/SCLK/CS); higher speed than I²C.
-| SRAM | Static Random Access Memory — volatile memory using flip-flops; fast and does not need refresh. | CPU caches (L1/L2/L3) implemented with SRAM. |
-| SSD | Solid-State Drive — storage device using flash memory (no moving parts), offering low latency and high throughput. | NVMe SSDs for fast boot and build times. |
 | SSE | Streaming SIMD Extensions — x86 SIMD instruction set extensions for parallel vector operations. | SSE2/SSE4 intrinsics; compiler autovectorization for math/graphics. |
 | TLB | Translation Lookaside Buffer — small cache of virtual→physical address translations used by the MMU. | TLB hits speed up paging; TLB flush on context switch. |
-| TPM | Trusted Platform Module — hardware-based security chip for keys and attestation. | TPM 2.0 used by Secure Boot and disk encryption. |
+| **Historical** {colspan=3} |
+| MMX | MultiMedia eXtensions — early x86 SIMD instruction set for integer vector operations. | Legacy MMX ops predating SSE on Pentium-era CPUs. |
+
+## Hardware (Memory)
+
+| Acronym | Meaning | Example |
+| --- | --- | --- |
+| DDR | Double Data Rate — class of synchronous DRAM that transfers data on both clock edges for higher bandwidth. | DDR4/DDR5 SDRAM in modern systems. |
+| DIMM | Dual Inline Memory Module — standardized memory module form factor for SDRAM. | 288‑pin DDR4/DDR5 DIMMs. |
+| DRAM | Dynamic Random Access Memory — volatile memory storing bits in capacitors that require periodic refresh. | Main system memory (SDRAM/DDR). |
+| ECC | Error-Correcting Code memory — memory modules/chipsets that detect and correct single‑bit errors (and detect some multi‑bit errors) to improve reliability. | ECC UDIMMs/RDIMMs in servers/workstations; machine check logs corrected errors. |
+| GDDR | Graphics Double Data Rate — high‑bandwidth memory variants optimized for GPUs and graphics workloads. | GDDR6/GDDR6X on modern GPUs; wide buses and high data rates. |
+| HBM | High Bandwidth Memory — stacked memory connected via wide interfaces on‑package for very high bandwidth and energy efficiency. | HBM2/HBM3 on AI/ML accelerators and high‑end GPUs. |
+| LPDDR | Low-Power DDR — mobile/embedded DRAM optimized for low power with deep power states and wide IO at low voltage. | LPDDR4/4X/5/5X in smartphones, tablets, ultrabooks, and SoCs. |
+| NVRAM | Non-Volatile RAM — memory that retains data without power; implemented via flash, EEPROM, or battery‑backed SRAM; often stores firmware variables/settings. | UEFI variables in NVRAM; macOS NVRAM for boot args and device settings. |
+| RAM | Random Access Memory — volatile memory used for working data and code. | DDR4/DDR5 DIMMs. |
+| ROM | Read-Only Memory — non-volatile memory storing firmware or static data. | Boot ROM, option ROMs. |
+| SDRAM | Synchronous Dynamic Random Access Memory — DRAM synchronized with the system clock, enabling pipelined access and higher throughput versus asynchronous DRAM. | PC100/PC133 SDRAM; basis for modern DDR (DDR/DDR2/3/4/5). |
+| SO-DIMM | Small Outline Dual Inline Memory Module — compact memory module form factor used in laptops and small form-factor systems; electrically similar to DIMMs but physically smaller and not interchangeable. | DDR4/DDR5 SO‑DIMMs in laptops/NUCs; shorter modules with different keying. |
+| SRAM | Static Random Access Memory — volatile memory using flip-flops; fast and does not need refresh. | CPU caches (L1/L2/L3) implemented with SRAM. |
+| **Historical** {colspan=3} |
+| EDO | Extended Data Out DRAM — improved asynchronous DRAM that allows the data output to remain valid longer, enabling slightly higher performance than FPM before SDRAM became mainstream. | Mid‑1990s 486/Pentium systems with EDO SIMMs; replaced by SDRAM. |
+| FPM | Fast Page Mode DRAM — asynchronous DRAM access mode that speeds up accesses within the same row/page compared to plain DRAM; predecessor to EDO and SDRAM. | Early 1990s SIMM modules using FPM; superseded by EDO/SDRAM. |
+| RDRAM | Rambus DRAM — high‑bandwidth DRAM technology from Rambus used with RIMM modules and a packetized, narrow bus; briefly mainstream on Pentium 4 before being displaced by DDR SDRAM. | RIMM modules in Intel i850/i850E chipsets; now obsolete in favor of DDR/DDR2+. |
+| RIMM | Rambus Inline Memory Module — module form factor for RDRAM with continuity requirements (CRIMMs in empty slots) and heat spreaders; used briefly in early‑2000s PCs/servers. | Populate paired RIMMs on i850 boards; install CRIMMs in unused slots; now obsolete.
+| SIMM | Single Inline Memory Module — older memory module form factor with a single set of contacts; used with FPM/EDO/early SDRAM. | 30‑pin/72‑pin SIMMs on 386/486/Pentium-era systems. |
+
+## Hardware (Buses & Interfaces)
+
+| Acronym | Meaning | Example |
+| --- | --- | --- |
+| GPIO | General-Purpose Input/Output — configurable digital pins on microcontrollers/SoCs used for reading inputs and driving outputs; often support pull‑ups/downs and interrupts. | Toggle Raspberry Pi GPIO with `libgpiod`; configure pin mode and edge interrupts. |
+| HBA | Host Bus Adapter — adapter that connects a host system to storage or network devices over a high‑speed bus/fabric (e.g., SAS, Fibre Channel). | FC/SAS HBAs in servers to attach SAN/storage arrays; visible via `lspci`. |
+| HCI | Host Controller Interface — standardized command/event interface between a host stack and a hardware controller (notably in Bluetooth; also USB xHCI). | Capture Bluetooth HCI packets with `btmon`; interact via UART/USB HCI. |
+| MIDI | Musical Instrument Digital Interface — standard protocol/interface for transmitting musical performance data between instruments, controllers, and computers. | 5‑pin DIN or USB‑MIDI; Note On/Off, Control Change; DAW controlling a synth. |
+| PCI | Peripheral Component Interconnect — hardware bus standard for attaching peripherals. | PCI devices enumerated by bus/device/function. |
+| PCIe | PCI Express — high-speed serial successor to PCI with lanes and links. | x16 GPU slot; NVMe drives over PCIe. |
+| PS/2 | Personal System/2 — legacy Mini‑DIN interface for keyboards and mice on PCs. | PS/2 keyboard/mouse ports on motherboards/KVMs; supports NKRO without USB polling.
+| SPI | Serial Peripheral Interface — synchronous serial bus with master/slave (controller/peripheral) and separate data lines for full-duplex transfers. | Connect sensors/flash to microcontrollers (MOSI/MISO/SCLK/CS); higher speed than I²C.
 | UART | Universal Asynchronous Receiver-Transmitter — hardware for serial communication using asynchronous framing (start/stop bits) over TTL/RS-232 levels. | Debug console on microcontrollers; `/dev/ttyS*`/`/dev/ttyUSB*`; 115200 8N1. |
 | USB | Universal Serial Bus — standard for cables and connectors between computers and peripherals. | USB 3.x devices; HID, storage, and serial classes. |
-| VESA | Video Electronics Standards Association — industry group that defines and maintains display and related interface standards. | DisplayHDR, DP standards, EDID/DMT timing standards. |
-| VRAM | Video RAM — memory used by GPUs/display controllers to store framebuffers, textures, and render targets; historically specialized types (e.g., SGRAM, GDDR). | Dedicated GDDR6 on discrete GPUs; shared system memory on iGPUs.
+| **Historical** {colspan=3} |
+| EISA | Extended Industry Standard Architecture — 32‑bit ISA-compatible bus developed by a consortium as an open alternative to MCA; supported bus mastering and IRQ sharing. | Server‑class 486 systems with EISA expansion cards; later replaced by PCI. |
+| ISA | Industry Standard Architecture — legacy 8/16‑bit PC expansion bus. | Sound/IO cards on 286/386 era PCs. |
+| MCA | Micro Channel Architecture — IBM's proprietary 32‑bit bus introduced with PS/2 systems as a successor to ISA; offered bus mastering and improved throughput but lacked industry adoption. | IBM PS/2 expansion cards; supplanted by EISA/PCI. |
+| Q-BUS | DEC Q‑bus — asynchronous multiplexed address/data bus used in later PDP‑11 and early MicroVAX systems; lower-cost successor to Unibus with fewer signals. | Q‑bus backplanes/peripherals in PDP‑11/23 and MicroVAX; legacy DEC minicomputers. |
+| Unibus | DEC Unibus — early synchronous shared backplane bus interconnecting CPU, memory, and peripherals in PDP‑11 systems; predecessor to Q‑bus. | PDP‑11 Unibus backplanes/peripherals; historical DEC minicomputers. |
+| VLB | VESA Local Bus — high‑speed local bus before PCI. | 486 motherboards with VLB video/IO cards. |
+| VME | VMEbus (Versa Module Europa) — parallel backplane bus standard (IEEE 1014) widely used in embedded/industrial systems with Eurocard form factors (3U/6U) and modular CPU/I/O cards. | VME chassis in telecom, industrial control, and defense; CPU cards and I/O modules on a shared backplane. |
+
+## Hardware (Storage)
+
+| Acronym | Meaning | Example |
+| --- | --- | --- |
+| AHCI | Advanced Host Controller Interface — standard programming interface for SATA host controllers enabling features like NCQ, hot-plug, and native command queuing. | OS uses the AHCI driver; set SATA mode to AHCI in firmware for modern OS installs. |
+| GPT | GUID Partition Table — modern disk partitioning scheme that supports large disks and many partitions, part of the UEFI standard. | Disks initialized with GPT instead of legacy MBR. |
+| HDD | Hard Disk Drive — magnetic storage device with spinning platters and moving heads. | 3.5"/2.5" SATA HDDs for bulk storage; higher latency than SSDs. |
+| LBA | Logical Block Addressing — linear addressing scheme for block devices that replaces legacy CHS (Cylinder/Head/Sector) geometry. | 512‑byte/4K sectors addressed by LBA; used by SATA/SCSI/NVMe.
+| LTO | Linear Tape-Open — open tape storage format for data backup/archive with generational roadmap (LTO‑1..LTO‑9), high capacity, and LTFS support. | LTO‑8/LTO‑9 tape drives/libraries in enterprise backups; use LTFS for file‑like access. |
+| LUN | Logical Unit Number — identifier addressing a logical unit (virtual disk) within a SCSI/iSCSI/Fibre Channel target, used for mapping storage to hosts. | Present LUNs from a SAN array to servers; host multipath to the same LUN.
+| NCQ | Native Command Queuing — SATA feature allowing a drive to accept and reorder multiple outstanding requests to optimize head movement and throughput. | AHCI/SATA HDDs/SSDs improving random I/O by reordering commands. |
+| NVMe | Non-Volatile Memory Express — interface protocol for SSDs over PCIe. | M.2 NVMe SSD with high IOPS/low latency. |
+| RAID | Redundant Array of Independent Disks — combine multiple drives for redundancy and/or performance. | RAID 1 mirroring; RAID 5 parity; RAID 10 stripe+mirror. |
+| SAS | Serial Attached SCSI — point‑to‑point serial interface for enterprise storage. | 12Gb/s SAS HDDs/SSDs; SAS expanders/backplanes. |
+| SATA | Serial ATA — interface for connecting storage devices. | 2.5" SATA SSDs and HDDs. |
+| SSD | Solid-State Drive — storage device using flash memory (no moving parts), offering low latency and high throughput. | NVMe SSDs for fast boot and build times. |
 | **Legacy** {colspan=3} |
 | EIDE | Enhanced IDE — extensions to IDE/PATA. | Support for larger drives and ATAPI. |
 | IDE/PATA | Integrated Drive Electronics / Parallel ATA — legacy parallel disk interface. | 40/80‑wire ribbon cables for HDD/optical drives. |
 | MBR | Master Boot Record — legacy partitioning scheme and first 512 bytes of a disk containing boot code and a partition table. | BIOS boots from MBR; up to 4 primary partitions or extended/logical. |
 | UDMA | Ultra Direct Memory Access — ATA/IDE DMA transfer modes providing higher throughput and lower CPU usage than PIO; modes UDMA/33/66/100/133 (higher modes require 80‑wire cables). | PATA drive negotiates UDMA/5 (ATA/100); Linux dmesg shows UDMA/133. |
-| VGA | Video Graphics Array — de facto PC graphics standard. | 640×480 16‑color; mode 13h 320×200×256. |
 | WORM | Write Once, Read Many — non‑rewritable archival storage media. | Optical WORM jukeboxes for compliance archives. |
+| **Historical** {colspan=3} |
+| CHS | Cylinder/Head/Sector — legacy disk geometry addressing scheme used by BIOS/MBR era systems; limited capacity and translation quirks. | 1024‑cylinder limit; CHS/LBA translation in BIOS; superseded by LBA.
+| DDS | Digital Data Storage — magnetic tape data storage format derived from DAT (Digital Audio Tape), widely used for backups in the 1990s–2000s (DDS‑1..4, DDS‑DC, DAT72). | DAT/DDS tape drives and media for server/workstation backups; largely obsolete today. |
+| DLT | Digital Linear Tape — half‑inch magnetic tape storage format popular in the 1990s–2000s for enterprise backups; superseded by LTO. | DLT/SDLT drives and media in tape libraries; largely obsolete now. |
+| FDD | Floppy Disk Drive — magnetic removable storage. | 5.25" and 3.5" floppies. |
+| MFM | Modified Frequency Modulation — legacy disk encoding scheme. | Early HDDs and floppies using MFM/RLL. |
+| QIC | Quarter-Inch Cartridge — magnetic tape data storage format using 1/4" tape in cartridges; common for backups on PCs/workstations in the 1980s–1990s (e.g., QIC-80/150, Travan). | Tape backup drives and cartridges; largely obsolete today.
+| RLL | Run Length Limited — denser successor to MFM for magnetic storage. | RLL controllers for higher HDD capacity. |
+| SCSI | Small Computer System Interface — parallel peripheral bus widely used pre‑SATA/USB. | External SCSI disks and scanners on workstations. |
+
+## Hardware (Video & Displays)
+
+| Acronym | Meaning | Example |
+| --- | --- | --- |
+| DP | DisplayPort — digital display interface with high bandwidth, daisy‑chaining via MST, and adaptive sync support. | DP 1.4/2.0 to high‑refresh monitors; USB‑C DP Alt Mode; MST hub. |
+| DPI | Dots Per Inch — measure of print/display resolution; colloquially used for screens though PPI is more precise. | 300‑DPI print quality; “Retina” displays around ~220 PPI. |
+| GPU | Graphics Processing Unit — highly parallel processor optimized for graphics and compute. | CUDA/OpenCL workloads; 3D rendering. |
+| HDMI | High-Definition Multimedia Interface — digital audio/video interface for connecting sources to displays. | HDMI 2.0/2.1 to monitors/TVs; HDCP for protected content. |
+| LCD | Liquid Crystal Display — flat‑panel display technology that uses liquid crystals modulated by a backlight to produce images. | IPS/TN/VA LCD panels; requires LED backlight. |
+| LED | Light‑Emitting Diode — semiconductor light source; in monitors/TVs, often shorthand for LED‑backlit LCDs (not emissive per‑pixel). | Status indicator LEDs; LED‑backlit LCD monitors/TVs. |
+| OLED | Organic Light‑Emitting Diode — emissive display technology where each pixel emits light for high contrast and true blacks. | AMOLED smartphone screens; per‑pixel dimming on TVs/phones. |
+| PPI | Pixels Per Inch — measure of display pixel density; often confused with DPI which is for print. | 326‑PPI phone display; ~220‑PPI “Retina” laptop panels. |
+| RGB | Red, Green, Blue — additive color model used in displays and imaging. | sRGB color space; RGB LED subpixels in LCD/OLED panels. |
+| RGBA | Red, Green, Blue, Alpha — RGB color with an additional alpha (opacity) channel for transparency. | CSS `rgba(255, 0, 0, 0.5)`; PNG images with alpha channel.
+| VESA | Video Electronics Standards Association — industry group that defines and maintains display and related interface standards. | DisplayHDR, DP standards, EDID/DMT timing standards. |
+| VMX | Virtual Machine Extensions — Intel x86 virtualization extensions (VT‑x) that add CPU modes/instructions (VMX root/non‑root, VMXON/VMXOFF, VMLAUNCH/VMRESUME) and a VMCS for hardware‑assisted virtualization. | Enable VT‑x in firmware; KVM/Hyper‑V/VMware use VMX to run guests with hardware assist. |
+| VRAM | Video RAM — memory used by GPUs/display controllers to store framebuffers, textures, and render targets; historically specialized types (e.g., SGRAM, GDDR). | Dedicated GDDR6 on discrete GPUs; shared system memory on iGPUs.
+| **Legacy** {colspan=3} |
+| VGA | Video Graphics Array — de facto PC graphics standard. | 640×480 16‑color; mode 13h 320×200×256. |
+| SVGA | Super VGA — VESA extensions beyond VGA. | 800×600 and higher resolutions. |
 | **Historical** {colspan=3} |
 | AGP | Accelerated Graphics Port — dedicated graphics slot pre‑PCIe. | AGP 4×/8× graphics cards. |
 | CGA | Color Graphics Adapter — IBM PC color graphics standard. | 320×200 4‑color modes on early PCs. |
-| CHS | Cylinder/Head/Sector — legacy disk geometry addressing scheme used by BIOS/MBR era systems; limited capacity and translation quirks. | 1024‑cylinder limit; CHS/LBA translation in BIOS; superseded by LBA.
 | CRT | Cathode Ray Tube — vacuum tube display technology that steers electron beams across a phosphor‑coated screen to form images. | Legacy CRT monitors/TVs; scanlines, phosphor persistence, high refresh at lower resolutions. |
 | EGA | Enhanced Graphics Adapter — improved IBM graphics adapter. | 640×350 16‑color graphics. |
-| EISA | Extended Industry Standard Architecture — 32‑bit ISA-compatible bus developed by a consortium as an open alternative to MCA; supported bus mastering and IRQ sharing. | Server‑class 486 systems with EISA expansion cards; later replaced by PCI. |
-| FDD | Floppy Disk Drive — magnetic removable storage. | 5.25" and 3.5" floppies. |
-| ISA | Industry Standard Architecture — legacy 8/16‑bit PC expansion bus. | Sound/IO cards on 286/386 era PCs. |
-| MCA | Micro Channel Architecture — IBM's proprietary 32‑bit bus introduced with PS/2 systems as a successor to ISA; offered bus mastering and improved throughput but lacked industry adoption. | IBM PS/2 expansion cards; supplanted by EISA/PCI. |
-| MFM | Modified Frequency Modulation — legacy disk encoding scheme. | Early HDDs and floppies using MFM/RLL. |
-| MMX | MultiMedia eXtensions — early x86 SIMD instruction set for integer vector operations. | Legacy MMX ops predating SSE on Pentium-era CPUs. |
-| PDP | Programmed Data Processor — DEC minicomputer line before VAX. | PDP‑8, PDP‑11 systems. |
+
+## Hardware (General)
+
+| Acronym | Meaning | Example |
+| --- | --- | --- |
+| ATX | Advanced Technology eXtended — PC motherboard and power supply form factor standard defining board sizes, mounting, I/O shield, and power connectors. | ATX/mATX/ITX cases; 24‑pin ATX, 8‑pin EPS12V, PCIe 6/8‑pin/12VHPWR.
+| CMOS | Complementary Metal‑Oxide‑Semiconductor — low‑power technology used for chips; in PCs, also refers to the small battery‑backed RAM storing firmware settings. | Replace CMOS battery; clear CMOS to reset BIOS/UEFI settings. |
+| DMA | Direct Memory Access — device-initiated memory transfers without CPU involvement. | NICs use DMA for packet buffers. |
+| HID | Human Interface Device — USB device class for human input/output peripherals using structured HID reports. | USB keyboards, mice, gamepads; HID report descriptors parsed by OS. |
+| IRQ | Interrupt Request — a hardware signal line used by devices to interrupt the CPU for service. | Timer, keyboard, NIC raise IRQs; OS dispatches to ISRs. |
+| KVM | Keyboard–Video–Mouse switch — hardware device to control multiple computers with a single keyboard, monitor, and mouse. | Toggle between two PCs with a USB/HDMI KVM switch. |
+| MMIO | Memory-Mapped I/O — device registers mapped into the CPU address space for control/status. | Writing to MMIO addresses to control PCIe device registers. |
+| NIC | Network Interface Controller — hardware that connects a computer to a network. | Ethernet adapters; 10/25/40/100GbE NICs with offloads. |
+| OEM | Original Equipment Manufacturer — company that produces components or products that are marketed by another company; also denotes vendor‑specific builds/licenses. | OEM Windows licenses preinstalled on PCs; OEM parts used by system integrators.
+| PC | Personal Computer — general-purpose computer intended for individual use; commonly refers to IBM‑PC compatible systems running Windows/Linux. | Desktop/tower PC with x86‑64 CPU and discrete GPU.
+| PnP | Plug and Play — automatic device detection, enumeration, and configuration by the OS/firmware, minimizing manual setup and IRQ/DMA conflicts. | ACPI/PCI PnP; USB devices enumerated and drivers auto‑loaded.
+| PSU | Power Supply Unit — converts AC mains to regulated DC rails to power computer components; rated by wattage and efficiency. | ATX PSUs providing +12V/+5V/+3.3V; 80 PLUS efficiency tiers; modular cabling. |
+| RTC | Real-Time Clock — hardware clock that keeps time across reboots/power cycles, often backed by a battery. | System reads RTC (CMOS/ACPI) at boot to set the OS clock. |
+| SBC | Single-Board Computer — complete computer on a single circuit board integrating CPU, memory, storage, and I/O. | Raspberry Pi, BeagleBone; runs Linux for embedded/edge. |
+| SIMT | Single Instruction, Multiple Threads — GPU execution model where groups of threads execute the same instruction on different data. | NVIDIA warp execution; branch divergence reduces efficiency. |
+| SMBIOS | System Management BIOS — firmware tables that describe hardware to the OS. | DMI/SMBIOS tables expose model, memory, and slots. |
+| SoC | System on Chip — integrated circuit that consolidates CPU cores, GPU, memory controllers, and I/O peripherals on a single die/package. | Smartphone/tablet SoCs (Apple M‑series, Qualcomm Snapdragon); embedded ARM SoCs. |
+| TPM | Trusted Platform Module — hardware-based security chip for keys and attestation. | TPM 2.0 used by Secure Boot and disk encryption. |
+| **Historical** {colspan=3} |
 | PIC | Programmable Interrupt Controller — legacy interrupt controller (e.g., Intel 8259A) that routes hardware IRQs to the CPU. | Classic x86 uses dual 8259 PICs remapped during OS init. |
-| RLL | Run Length Limited — denser successor to MFM for magnetic storage. | RLL controllers for higher HDD capacity. |
-| SCSI | Small Computer System Interface — parallel peripheral bus widely used pre‑SATA/USB. | External SCSI disks and scanners on workstations. |
-| SIMM | Single Inline Memory Module — older memory module form factor with a single set of contacts; used with FPM/EDO/early SDRAM. | 30‑pin/72‑pin SIMMs on 386/486/Pentium-era systems. |
-| SVGA | Super VGA — VESA extensions beyond VGA. | 800×600 and higher resolutions. |
-| VAX | Virtual Address eXtension — DEC 32‑bit minicomputer architecture. | VAX/VMS systems in universities and industry. |
-| VLB | VESA Local Bus — high‑speed local bus before PCI. | 486 motherboards with VLB video/IO cards. |
 
 ## Firmware
 
