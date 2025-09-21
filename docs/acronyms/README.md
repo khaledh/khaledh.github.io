@@ -173,6 +173,7 @@ about the legacy/historical subsections:
 | OLE | Object Linking and Embedding — Microsoft technology (built on COM) for embedding and linking documents/objects between applications. | Embed an Excel sheet in a Word doc; OLE automation for Office apps. |
 | OOM | Out Of Memory — condition where available memory is exhausted and allocations fail. | Linux OOM killer terminates processes; runtime throws OOM error. |
 | OOP | Object-Oriented Programming — encapsulation/inheritance/polymorphism. | Classes, interfaces, virtual methods. |
+| ORM | Object-Relational Mapping — map objects to relational tables. | ORM entities and repositories. |
 | PCRE | Perl Compatible Regular Expressions — regex libraries and syntax compatible with Perl's regex engine (PCRE/PCRE2). | `grep -P`, nginx, PHP use PCRE/PCRE2 for advanced regex features.
 | RAII | Resource Acquisition Is Initialization — lifetime control. | C++ locks released at scope end. |
 | REPL | Read–Eval–Print Loop — interactive shell. | Python/Node REPL. |
@@ -266,6 +267,20 @@ about the legacy/historical subsections:
 | TSR | Terminate and Stay Resident — DOS resident utility/program. | Keyboard macros/clock TSRs in MS‑DOS. |
 | VMS | Virtual Memory System — DEC's operating system for VAX (later Alpha/Itanium as OpenVMS), featuring robust clustering and security. | VAX/VMS in enterprises; OpenVMS clusters with RMS/DCL.
 
+## Document Markup
+
+| Acronym | Meaning | Example |
+| --- | --- | --- |
+| LaTeX | Document preparation system built on TeX that provides high‑level markup for typesetting complex documents (sections, figures, bibliographies) with excellent math support. | Write papers/books with LaTeX classes/packages; `pdflatex`/`xelatex` build pipelines.
+| MD | Markdown — lightweight plain‑text markup language for formatting documents with simple syntax for headings, lists, emphasis, links, and code. | `README.md`, GitHub Flavored Markdown; code fences ``` ``` and tables in docs/blogs.
+| RST | reStructuredText — plaintext markup language used in the Python ecosystem and Sphinx documentation generator; emphasizes readable source and structured directives. | Sphinx `.rst` docs with directives/roles; PyPI/ReadTheDocs project documentation. |
+| TeX | Low‑level typesetting system designed by Donald Knuth providing precise control over layout and mathematics; foundation for LaTeX and many formats. | Typeset math-heavy documents; `plain TeX` macros; outputs DVI/PDF via engines like pdfTeX/XeTeX/LuaTeX. |
+| XML | Extensible Markup Language — verbose structured data. | XML configs, SOAP payloads. |
+| **Legacy** {colspan=3} |
+| DTD | Document Type Definition — schema language defining the legal structure/elements/attributes of SGML/XML documents. | Validate XML with a DTD; `<!DOCTYPE ...>` declarations; legacy vs XML Schema/Relax NG. |
+| **Historical** {colspan=3} |
+| SGML | Standard Generalized Markup Language — meta-language for defining markup languages; foundation for HTML/XML; rarely used directly today. | SGML-based HTML 2.0/3.2 era; modern stacks use XML/HTML5 instead.
+
 ## File Formats
 
 | Acronym | Meaning | Example |
@@ -281,18 +296,6 @@ about the legacy/historical subsections:
 | **Legacy** {colspan=3} |
 | BMP | Bitmap Image File — raster image format (Device‑Independent Bitmap) storing pixel data with optional RLE compression. | `.bmp` screenshots/icons; large files compared to PNG/JPEG. |
 | RTF | Rich Text Format — plain-text document format with markup (control words and groups) for character/paragraph styling; widely supported across editors. | Save/export `.rtf` from word processors to interchange formatted text. |
-
-## Data Formats
-
-| Acronym | Meaning | Example |
-| --- | --- | --- |
-| CSV | Comma-Separated Values — plain text tabular format. | `users.csv` exports/imports. |
-| JSON | JavaScript Object Notation — data format. | `{ "id": 1 }` payloads. |
-| RDF | Resource Description Framework — W3C model for describing and linking data using triples (subject–predicate–object), often serialized as Turtle/RDF/XML/JSON‑LD. | Knowledge graphs, linked data; schema.org markup via JSON‑LD.
-| TAR | Tape ARchive — stream/archive format that bundles multiple files/directories with metadata into a single sequential archive; often compressed (e.g., .tar.gz/.tgz). | Create/extract backups: `tar -czf backup.tgz dir/`; used for packaging and distribution.
-| TSV | Tab-Separated Values — plain text tabular format using tabs as delimiters. | `users.tsv` exports with tab‑delimited fields. |
-| **Legacy** {colspan=3} |
-| RSS | Really Simple Syndication — XML-based web feed format for publishing updates. | Blog feed at `/feed.xml`; subscribe in a feed reader. |
 
 ## Data Encodings
 
@@ -318,31 +321,47 @@ about the legacy/historical subsections:
 | **Historical** {colspan=3} |
 | CR | Carriage Return — control character (0x0D) historically used to move the print head to column 0; used by classic Mac OS as line terminator. | `\r` in classic Mac text files; pairs with LF in CRLF on Windows. |
 
-## Data Compression
+## Data Formats (Interchange)
 
 | Acronym | Meaning | Example |
 | --- | --- | --- |
+| BSON | Binary JSON — binary serialization format with typed fields and efficient encoding designed for fast traversal and in-place updates. | MongoDB wire/storage format; supports types like ObjectId, Date, binary; drivers encode/decode BSON.
+| CBOR | Concise Binary Object Representation — compact, schema-optional binary data format designed for small code and message size (RFC 8949). | IoT/API payloads with maps/arrays; COSE for CBOR Object Signing and Encryption; diagnostic notation for debugging. |
+| CSV | Comma-Separated Values — plain text tabular format. | `users.csv` exports/imports. |
+| HDF5 | Hierarchical Data Format version 5 — portable file format and library for storing large, complex, heterogeneous scientific data with groups/datasets and rich metadata. | Store arrays/tables/images with chunking/compression; used in scientific computing and ML datasets. |
+| JSON | JavaScript Object Notation — data format. | `{ "id": 1 }` payloads. |
+| JSON-LD | JSON for Linking Data — JSON‑based serialization for Linked Data/RDF that uses `@context` to map terms to IRIs and add semantics to JSON documents. | Embed schema.org with `<script type="application/ld+json">` on web pages; exchange RDF graphs in JSON for knowledge graphs/APIs. |
+| JSONL | JSON Lines — newline‑delimited JSON records for streaming/append‑friendly logs and datasets (aka NDJSON). | One JSON object per line; easy to process with line‑oriented tools. |
+| RDF | Resource Description Framework — W3C model for describing and linking data using triples (subject–predicate–object), often serialized as Turtle/RDF/XML/JSON‑LD. | Knowledge graphs, linked data; schema.org markup via JSON‑LD.
+| ORC | Optimized Row Columnar — columnar storage format optimized for analytics with predicate pushdown, compression, and statistics. | Store big data tables in ORC on Hadoop/Spark; efficient scans and compression.
+| netCDF | Network Common Data Form — self‑describing, portable data formats and libraries for array‑oriented scientific data; supports classic (CDF), 64‑bit offset, and netCDF‑4/HDF5. | Earth science datasets (grids/time series); interoperable with many scientific tools.
+| TSV | Tab-Separated Values — plain text tabular format using tabs as delimiters. | `users.tsv` exports with tab‑delimited fields. |
+| **Legacy** {colspan=3} |
+| JSONP | JSON with Padding — legacy technique to circumvent same‑origin policy by wrapping JSON in a callback for script tags. | `callback({ ... })` responses consumed via `<script>`; replaced by CORS. |
+| RSS | Really Simple Syndication — XML-based web feed format for publishing updates. | Blog feed at `/feed.xml`; subscribe in a feed reader. |
+
+## Data Formats (Compression & Archival)
+
+| Acronym | Meaning | Example |
+| --- | --- | --- |
+| 7z | 7‑Zip archive format — open archive container supporting solid compression, advanced filters, and high ratios via LZMA/LZMA2 and others. | Create/extract with `7z a archive.7z files/` and `7z x`; widely used for high‑ratio packaging.
+| BZIP2 | Burrows–Wheeler block-sorting compressor — high compression ratio with moderate CPU cost; slower than gzip, faster than xz in many cases. | Compress archives/logs: `bzip2 file`, `tar -cjf archive.tar.bz2 dir/`; `.bz2` packages. |
+| DEFLATE | Lossless compression format combining LZ77 sliding‑window dictionary with Huffman coding; ubiquitous in ZIP, gzip, and PNG. | Compress HTTP responses (`Content‑Encoding: gzip/deflate`), ZIP entries, and PNG image data.
+| GZIP | GNU Zip — widely used lossless compression format using DEFLATE (LZ77+Huffman); good balance of speed and ratio. | Compress streams/files: `gzip file`, `tar -czf archive.tar.gz dir/`; HTTP `Content-Encoding: gzip`. |
+| JAR | Java ARchive — ZIP‑based archive format for packaging Java classes/resources and metadata (`META-INF/MANIFEST.MF`); supports signing and class‑path entries. | Build/run `.jar` apps (`jar cfm app.jar MANIFEST.MF -C out/ .`); libraries on the classpath; fat/uber JARs bundle deps.
 | LZ4 | Extremely fast lossless compression algorithm optimized for speed with modest compression ratios. | Compress logs/IPC payloads with LZ4 for low latency; `.lz4` frames. |
+| LZ77 | Lempel–Ziv 1977 — dictionary-based lossless compression using a sliding window and back‑references (length, distance) to past data. | Foundation for DEFLATE (gzip/ZIP) and many formats; emits literals and copy tokens.
+| LZMA | Lempel–Ziv–Markov chain Algorithm — high‑ratio lossless compression with larger memory use and slower speeds than DEFLATE; foundation for 7z and XZ (LZMA2). | Create 7z archives with LZMA/LZMA2; `xz` uses LZMA2 for `.xz`/`.tar.xz`.
+| RAR | Roshal Archive — proprietary archive format supporting solid compression, recovery records, and strong encryption; widely used but not fully open. | Create/extract with WinRAR/`rar`/`unrar`; `.rar` multi‑part volumes; consider 7z/zip for openness.
 | RLE | Run-Length Encoding — simple lossless compression that replaces runs of repeated symbols with a count and value. | Bitmap/scanline compression (e.g., BMP RLE, fax/CCITT variants); good for large uniform areas.
+| TAR | Tape ARchive — stream/archive format that bundles multiple files/directories with metadata into a single sequential archive; often compressed (e.g., .tar.gz/.tgz). | Create/extract backups: `tar -czf backup.tgz dir/`; used for packaging and distribution.
+| XZ | XZ Utils format — high‑ratio lossless compression using LZMA2 with solid archives and strong compression at the cost of CPU/time. | Compress release artifacts/logs: `tar -cJf`, `xz -T0 file`; `.tar.xz` packages in Linux distros.
+| ZIP | ZIP archive format — ubiquitous container supporting per‑file compression (typically DEFLATE), random access, and metadata; widely supported on all platforms. | `.zip` files; `zip`/`unzip`; JAR/APK/Office Open XML use ZIP containers. |
 | ZSTD | Zstandard — modern fast lossless compression algorithm offering high ratios with very high decompression speed; supports dictionaries. | Compress artifacts/logs with zstd; `.zst` files; use dictionaries for small data.
 | **Legacy** {colspan=3} |
 | LZW | Lempel–Ziv–Welch — dictionary-based lossless compression algorithm historically used in GIF and some TIFF variants; now patent-free. | Classic GIF image compression; replace with PNG for lossless images.
 
-## Document Markup
-
-| Acronym | Meaning | Example |
-| --- | --- | --- |
-| LaTeX | Document preparation system built on TeX that provides high‑level markup for typesetting complex documents (sections, figures, bibliographies) with excellent math support. | Write papers/books with LaTeX classes/packages; `pdflatex`/`xelatex` build pipelines.
-| MD | Markdown — lightweight plain‑text markup language for formatting documents with simple syntax for headings, lists, emphasis, links, and code. | `README.md`, GitHub Flavored Markdown; code fences ``` ``` and tables in docs/blogs.
-| RST | reStructuredText — plaintext markup language used in the Python ecosystem and Sphinx documentation generator; emphasizes readable source and structured directives. | Sphinx `.rst` docs with directives/roles; PyPI/ReadTheDocs project documentation. |
-| TeX | Low‑level typesetting system designed by Donald Knuth providing precise control over layout and mathematics; foundation for LaTeX and many formats. | Typeset math-heavy documents; `plain TeX` macros; outputs DVI/PDF via engines like pdfTeX/XeTeX/LuaTeX. |
-| XML | Extensible Markup Language — verbose structured data. | XML configs, SOAP payloads. |
-| **Legacy** {colspan=3} |
-| DTD | Document Type Definition — schema language defining the legal structure/elements/attributes of SGML/XML documents. | Validate XML with a DTD; `<!DOCTYPE ...>` declarations; legacy vs XML Schema/Relax NG. |
-| **Historical** {colspan=3} |
-| SGML | Standard Generalized Markup Language — meta-language for defining markup languages; foundation for HTML/XML; rarely used directly today. | SGML-based HTML 2.0/3.2 era; modern stacks use XML/HTML5 instead.
-
-## Data & Consistency
+## Data Processing
 
 | Acronym | Meaning | Example |
 | --- | --- | --- |
@@ -370,7 +389,6 @@ about the legacy/historical subsections:
 | NoSQL | Non-relational DBs: documents, key-values, graphs, wide columns. | MongoDB, Redis, Cassandra. |
 | OLAP | Online Analytical Processing — read-heavy analytics. | BI cubes, columnar stores. |
 | OLTP | Online Transaction Processing — write-heavy transactions. | Order processing systems. |
-| ORM | Object-Relational Mapping — map objects to relational tables. | ORM entities and repositories. |
 | PK | Primary Key — unique, non-null identifier for a table row. | `users(id UUID PRIMARY KEY)`; composite keys across columns. |
 | RDBMS | Relational Database Management System — DBMS based on the relational model using tables, rows, and SQL with constraints and ACID transactions. | PostgreSQL, MySQL, SQL Server, Oracle; normalized schemas and joins. |
 | SQL | Structured Query Language — query/manage relational DBs. | `SELECT * FROM users`. |
