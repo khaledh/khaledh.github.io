@@ -119,7 +119,6 @@ about the legacy/historical subsections:
 | URI | Uniform Resource Identifier — generic identifier for names/addresses of resources; includes URLs (locators) and URNs (names). | `mailto:hello@example.com`, `urn:isbn:9780143127796`, `https://example.com/`. |
 | URL | Uniform Resource Locator — reference (address) to resources on a network using a scheme, host, and path. | `https://example.com/docs/index.html`. |
 | URN | Uniform Resource Name — a URI that names a resource without specifying its location; persistent, location‑independent identifiers. | `urn:isbn:9780143127796`, `urn:uuid:123e4567-e89b-12d3-a456-426614174000`. |
-| W3C | World Wide Web Consortium — standards body that develops web specifications. | Publishes HTML/CSS/DOM recommendations; WGs and specs at w3.org. |
 | WASM | WebAssembly — portable fast binary format. | Run Rust/C++ in the browser. |
 | WWW | World Wide Web — system of interlinked hypertext documents and resources accessed via the internet using HTTP(S) and URLs. | Browse websites over HTTPS with a web browser. |
 | **Legacy** {colspan=3} |
@@ -130,6 +129,7 @@ about the legacy/historical subsections:
 
 | Acronym | Meaning | Example |
 | --- | --- | --- |
+| AAA | Arrange–Act–Assert — unit testing pattern that structures tests into setup (arrange inputs/fixtures), execution (act), and verification (assert expected outcomes). | Arrange a service and mocks; Act by calling the method; Assert on result and interactions. |
 | ADT | Abstract Data Type — specification of behavior independent of implementation. | Stack/queue ADTs with array- or list-based implementations. |
 | ADT | Algebraic Data Type — composite types formed by sums (variants) and products (fields), enabling expressive, type-safe modeling. | Rust enums/Haskell data types; Option/Either in FP. |
 | API | Application Programming Interface — a defined surface for one piece of software to interact with another. | POSIX file APIs, a graphics library API, or an HTTP endpoint. |
@@ -162,10 +162,13 @@ about the legacy/historical subsections:
 | JDK | Java Development Kit — Java dev tools. | `javac`, `jar`. |
 | JRE | Java Runtime Environment — run Java apps. | `java -jar app.jar`. |
 | JVM | Java Virtual Machine — runs bytecode. | JVM-based languages (Kotlin, Scala). |
+| RPN | Reverse Polish Notation — postfix notation for arithmetic expressions that eliminates parentheses and associates operators with operands directly; naturally evaluated with a stack. | Evaluate `3 4 + 2 *` with a stack; HP calculators and some compilers/VMs use RPN internally. |
 | LRU | Least Recently Used — cache eviction policy that discards the least recently accessed items first. | LRU caches/maps in memory-constrained systems. |
 | LSP | Language Server Protocol — standard JSON-RPC protocol between editors and language servers for code intelligence. | VS Code/Neovim language servers for hover, completion, diagnostics. |
 | MST | Minimum Spanning Tree — subset of edges that connects all vertices in a weighted, undirected graph with minimum total weight and no cycles. | Compute MST with Kruskal (sort edges + DSU) or Prim (priority queue). |
+| NaN | Not a Number — IEEE 754 floating‑point special value representing undefined/invalid results; propagates through computations and is unordered (not equal to any value, including itself). | `0.0/0.0` or `sqrt(-1.0)` produce NaN; `NaN != NaN` is true; use `isnan()` to test. |
 | NOP | No Operation — instruction or operation that intentionally does nothing; used for timing, alignment, patching, or as a placeholder. | CPU `NOP` instruction; inserting a no‑op in pipelines or bytecode. |
+| NPE | Null Pointer Exception — runtime error arising from dereferencing a null reference/pointer in languages with nullable references. | Java `NullPointerException`, C# `NullReferenceException`; avoid with null checks, Option/Optional, or null‑safety features. |
 | ODBC | Open Database Connectivity — cross-platform C API and driver model for accessing relational databases. | Configure DSNs; apps connect via ODBC drivers to SQL Server/MySQL/Postgres. |
 | OLE | Object Linking and Embedding — Microsoft technology (built on COM) for embedding and linking documents/objects between applications. | Embed an Excel sheet in a Word doc; OLE automation for Office apps. |
 | OOM | Out Of Memory — condition where available memory is exhausted and allocations fail. | Linux OOM killer terminates processes; runtime throws OOM error. |
@@ -177,6 +180,7 @@ about the legacy/historical subsections:
 | SDK | Software Development Kit — tools/libs for a platform. | AWS SDK for programmatic access. |
 | TLS | Thread-Local Storage — per-thread storage for data that gives each thread its own instance of a variable. | C/C++ `thread_local`/`__thread`, POSIX `pthread_key_create`; Rust `thread_local!`.
 | TUI | Text-based User Interface — terminal UI. | `htop`, `ncurses` apps. |
+| UB | Undefined Behaviour — program operations for which the language standard imposes no requirements, allowing compilers to assume they never happen and enabling aggressive optimizations. | C/C++ out‑of‑bounds access, use‑after‑free, signed overflow; can lead to unpredictable results; use sanitizers to detect.
 | UTC | Coordinated Universal Time — global time standard. | Timestamps/logs in UTC. |
 | WYSIWYG | What You See Is What You Get — direct-manipulation editor. | Rich text editors. |
 | **Legacy** {colspan=3} |
@@ -189,10 +193,15 @@ about the legacy/historical subsections:
 | --- | --- | --- |
 | AOT | Ahead-Of-Time compilation — compile before runtime. | Angular AOT compiles templates during build. |
 | AST | Abstract Syntax Tree — structured tree representation of parsed source code used by compilers and tooling. | AST nodes for statements/expressions in parsers/linters. |
+| BNF | Backus–Naur Form — notation for expressing context‑free grammars used to define programming language syntax. | Language specs define grammar productions in BNF or EBNF. |
 | CFG | Control Flow Graph — directed graph of basic blocks and edges representing possible control transfers within a function/program; foundation for data‑flow analysis and many optimizations. | Build CFG to compute dominators/loops; enable DCE, SSA construction, and liveness. |
+| CFG | Context‑Free Grammar — formal grammar class used to define programming language syntax; typically expressed in BNF/EBNF and parsed by LL/LR/GLR/PEG parsers. | Write grammar productions; generate parsers with yacc/bison/ANTLR.
 | CSE | Common Subexpression Elimination — remove repeated identical expressions by computing once and reusing the value within a region. | Within a block, compute `x+y` once and reuse; global variants extend across blocks. |
 | DCE | Dead Code Elimination — remove code shown by analysis to have no effect on program outputs/side effects, improving size and performance. | Eliminate unused assignments/branches after liveness/constant propagation; `-O2` passes in LLVM/GCC. |
 | DFA | Deterministic Finite Automaton — finite-state machine with exactly one transition per symbol for each state; used in lexers/pattern matching. | Tokenizer state machine generated from regular languages. |
+| DFA | Data Flow Analysis — family of static analyses that compute facts about program variables/paths over a control flow graph using lattice/transfer functions (e.g., reaching definitions, liveness, constant propagation). | Run forward/backward analyses on a CFG; feed results to optimizations like DCE, CSE, and register allocation. |
+| EBNF | Extended Backus–Naur Form — BNF with additional operators (repetition, optional, grouping) for more concise grammar specifications. | `{ }` repetition, `[ ]` optional; used in many language grammars and docs. |
+| FAM | Flexible Array Member — language/ABI feature where a struct’s last field is a size‑unspecified array used to tail‑allocate variable‑length data; not counted in `sizeof` and requires custom allocation/copy logic. | In C (C99+): `struct S{size_t n; int a[];};` allocate with `malloc(sizeof(struct S)+n*sizeof(int))`; `a` occupies trailing storage. |
 | GCC | GNU Compiler Collection — suite of compilers for C/C++/Fortran and more. | `gcc`/`g++` toolchains for building software. |
 | GVN | Global Value Numbering — discover semantically equivalent computations (beyond syntactic equality) to eliminate redundancies across the dominator tree. | Treat `t=x; z=t+y` as `x+y`; coalesce values through copies/φ nodes in SSA. |
 | IR | Intermediate Representation — compiler/transformation-friendly program form between source and machine code. | LLVM IR, SSA-based IRs used for optimization. |
@@ -200,9 +209,15 @@ about the legacy/historical subsections:
 | LICM | Loop-Invariant Code Motion — hoist computations whose operands don’t change within a loop to preheaders, and sink post‑loop where safe. | Move `len(arr)`/`c*2` out of the loop body to reduce work. |
 | LLVM | Low Level Virtual Machine — modular compiler toolchain and IR used by many languages. | Clang/LLVM backends, `llc`, `opt`, and LLVM IR. |
 | LTO | Link Time Optimization — whole‑program optimization performed at link time across translation units, typically by linking IR/bitcode and running interprocedural passes. | `-flto` in Clang/GCC; enables cross‑TU inlining, DCE, devirtualization, ICF/WPO.
+| NFA | Nondeterministic Finite Automaton — automaton model for regular languages allowing ε‑transitions and multiple possible next states; typically converted to an equivalent DFA for efficient matching. | Build NFA from regex via Thompson's construction; convert to DFA by subset construction for lexers.
+| NRVO | Named Return Value Optimization — compiler optimization that elides copies/moves by constructing a named local return object directly in the caller’s storage. | `T f(){ T x; return x; }` constructs `x` in the caller (C++); differs from RVO on unnamed temporaries.
+| PEG | Parsing Expression Grammar — recognition‑based grammar formalism with ordered (prioritized) choice and unlimited lookahead; often parsed via packrat parsing with memoization for linear time. | Define a PEG for a language and parse with PEG.js/pest/PEGTL; use ordered choice instead of ambiguous CFGs. |
 | PRE | Partial Redundancy Elimination — inserts computations to make partially redundant expressions fully redundant, then removes duplicates (often via Lazy Code Motion/SSA-PRE). | If `a+b` happens on some paths and later unconditionally, place it optimally so all uses share one computed value. |
+| RTTI | Run-Time Type Information — runtime facility to query an object's dynamic type and perform safe downcasts/instance checks in languages with polymorphism. | In C++, use `dynamic_cast<Base*>` and `typeid`; in Java/C#, use `instanceof`/`is` and reflection APIs.
+| RVO | Return Value Optimization — compiler optimization that elides copies/moves by constructing a returned temporary directly in the caller’s storage. | `T f(){ return T(); }` constructs the `T` in the caller; guaranteed in C++17 (copy elision rules).
 | SSA | Static Single Assignment — IR form where each variable is assigned exactly once, using φ (phi) functions at merge points; simplifies data‑flow analysis and optimization. | Convert to SSA to enable efficient DCE, copy propagation, and value numbering; SSA in LLVM IR. |
 | TCO | Tail Call Optimization — reuse the current stack frame for a tail call to avoid stack growth and enable efficient tail recursion. | Compilers transform tail-recursive functions into loops; mandated in some languages (Scheme), optional in others. |
+| UFCS | Uniform Function Call Syntax — language feature that allows calling free/extension functions with method-call syntax by implicitly passing the receiver as the first argument. | D/Scala/Rust desugar `x.f(y)` to `f(x, y)`; extension methods in C#/Kotlin/Swift. |
 
 ## Operating Systems
 
@@ -210,6 +225,7 @@ about the legacy/historical subsections:
 | --- | --- | --- |
 | ABI | Application Binary Interface — low-level contract governing calling conventions, data layout, and linkage between compiled code and the OS/runtime. | x86‑64 System V ABI, Windows x64 ABI; stable FFI boundaries. |
 | ASLR | Address Space Layout Randomization — security technique that randomizes process address spaces (stack/heap/ASLR-enabled libs) to make memory corruption exploits less reliable. | `cat /proc/sys/kernel/randomize_va_space`; Windows system-wide ASLR. |
+| BSS | Block Started by Symbol — segment for zero‑initialized or uninitialized static/global data that occupies memory at load/runtime but takes no space in the object file beyond metadata (size). | C `static int buf[4096];` goes to `.bss`; reduces binary size versus storing zeros. |
 | COW | Copy-On-Write — share pages or objects until a write occurs, then copy to preserve isolation; reduces memory/IO and enables efficient forks/snapshots. | `fork()` shares pages COW; VM snapshots; filesystem COW in ZFS/Btrfs. |
 | DLL | Dynamic-Link Library — shared library format on Windows loaded at runtime into a process address space. | `foo.dll` loaded via LoadLibrary; shared code/plugins. |
 | DYLIB | Dynamic Library — macOS shared library format loaded by the dynamic linker. | `libfoo.dylib` via dyld; `install_name_tool`/rpaths for relocation. |
@@ -250,51 +266,81 @@ about the legacy/historical subsections:
 | TSR | Terminate and Stay Resident — DOS resident utility/program. | Keyboard macros/clock TSRs in MS‑DOS. |
 | VMS | Virtual Memory System — DEC's operating system for VAX (later Alpha/Itanium as OpenVMS), featuring robust clustering and security. | VAX/VMS in enterprises; OpenVMS clusters with RMS/DCL.
 
-## Data Formats & Encodings
+## File Formats
+
+| Acronym | Meaning | Example |
+| --- | --- | --- |
+| DVI | Device Independent file format — TeX's output format describing pages and typeset content in a device‑agnostic way, later converted to PostScript/PDF or displayed via drivers. | Generate `.dvi` from TeX; view/convert with `dvips`, `dvipdfmx`, or viewers like xdvi. |
+| PDF | Portable Document Format — fixed‑layout document format combining text, vector graphics, and images. | Generate reports/invoices; fillable forms; print‑ready docs. |
+| PNG | Portable Network Graphics — lossless raster image format with DEFLATE compression, alpha transparency, and gamma/metadata support. | `.png` UI assets/screenshots; better compression than BMP; supports transparency.
+| PS | PostScript — page description language and programming language used primarily in desktop publishing and printing workflows. | Generate vector/print-ready `.ps` files; printers interpret PostScript directly; PDF evolved from it.
+| SVG | Scalable Vector Graphics — XML-based vector image format for resolution-independent graphics. | Inline icons/diagrams in HTML; CSS/SMIL animations. |
+| TOML | Tom's Obvious, Minimal Language — minimal configuration format with clear semantics. | `pyproject.toml`, `Cargo.toml` tool configs. |
+| TTF | TrueType Font — outline font format using quadratic Bézier curves; widely supported across operating systems and browsers. | `.ttf` fonts for desktop/web (often inside `.ttc` collections or wrapped as WOFF/WOFF2 for the web).
+| YAML | Human-friendly serialization format. | `docker-compose.yml` files. |
+| **Legacy** {colspan=3} |
+| BMP | Bitmap Image File — raster image format (Device‑Independent Bitmap) storing pixel data with optional RLE compression. | `.bmp` screenshots/icons; large files compared to PNG/JPEG. |
+| RTF | Rich Text Format — plain-text document format with markup (control words and groups) for character/paragraph styling; widely supported across editors. | Save/export `.rtf` from word processors to interchange formatted text. |
+
+## Data Formats
+
+| Acronym | Meaning | Example |
+| --- | --- | --- |
+| CSV | Comma-Separated Values — plain text tabular format. | `users.csv` exports/imports. |
+| JSON | JavaScript Object Notation — data format. | `{ "id": 1 }` payloads. |
+| RDF | Resource Description Framework — W3C model for describing and linking data using triples (subject–predicate–object), often serialized as Turtle/RDF/XML/JSON‑LD. | Knowledge graphs, linked data; schema.org markup via JSON‑LD.
+| TAR | Tape ARchive — stream/archive format that bundles multiple files/directories with metadata into a single sequential archive; often compressed (e.g., .tar.gz/.tgz). | Create/extract backups: `tar -czf backup.tgz dir/`; used for packaging and distribution.
+| TSV | Tab-Separated Values — plain text tabular format using tabs as delimiters. | `users.tsv` exports with tab‑delimited fields. |
+| **Legacy** {colspan=3} |
+| RSS | Really Simple Syndication — XML-based web feed format for publishing updates. | Blog feed at `/feed.xml`; subscribe in a feed reader. |
+
+## Data Encodings
 
 | Acronym | Meaning | Example |
 | --- | --- | --- |
 | ASCII | American Standard Code for Information Interchange — 7‑bit character encoding defining codes 0–127; subset of UTF‑8. | Plain ASCII text files; printable characters and control codes. |
 | BOM | Byte Order Mark — optional Unicode signature at the start of a text stream indicating endianness/encoding (UTF‑8/UTF‑16/UTF‑32). | Avoid UTF‑8 BOM in Unix scripts; UTF‑16 LE files start with FE FF. |
 | CRLF | Carriage Return + Line Feed — sequence `\r\n` used by Windows and many network protocols as a line terminator. | HTTP headers and CSV on Windows use CRLF line endings. |
-| CSV | Comma-Separated Values — plain text tabular format. | `users.csv` exports/imports. |
 | DER | Distinguished Encoding Rules — binary ASN.1 encoding used for certificates/keys. | `.cer/.der` X.509 certs; binary form of ASN.1 structures. |
-| DTD | Document Type Definition — schema language defining the legal structure/elements/attributes of SGML/XML documents. | Validate XML with a DTD; `<!DOCTYPE ...>` declarations; legacy vs XML Schema/Relax NG. |
 | EBCDIC | Extended Binary Coded Decimal Interchange Code — 8‑bit character encoding used primarily on IBM mainframes; incompatible with ASCII. | Converting EBCDIC files to ASCII/UTF‑8 when integrating with mainframe systems. |
 | GUID | Globally Unique Identifier — Microsoft’s term for UUID. | `{3F25...C3301}` COM-style format. |
-| JSON | JavaScript Object Notation — data format. | `{ "id": 1 }` payloads. |
 | LF | Line Feed — newline control character (0x0A) used by Unix/Linux/macOS to terminate lines. | `\n` in text files; contrast with CR (0x0D) and CRLF (`\r\n`). |
 | LSB | Least Significant Bit — the bit with the lowest positional value in a binary number (2^0); determines odd/even and is affected first by increment. | In 0b1011, the LSB is 1; little‑endian stores LSB byte first. |
-| LZ4 | Extremely fast lossless compression algorithm optimized for speed with modest compression ratios. | Compress logs/IPC payloads with LZ4 for low latency; `.lz4` frames. |
 | MIME | Multipurpose Internet Mail Extensions — standardized media types and encoding for content on the internet. | `Content-Type: application/json`; `multipart/form-data` with boundaries. |
 | MSB | Most Significant Bit — the bit with the highest positional value; often used as the sign bit in signed integers. | In 0b1011, the MSB is 1; big‑endian stores MSB byte first. |
-| PDF | Portable Document Format — fixed‑layout document format combining text, vector graphics, and images. | Generate reports/invoices; fillable forms; print‑ready docs. |
 | PEM | Privacy-Enhanced Mail — Base64 (PEM) encoding with header/footer lines for certs/keys. | `-----BEGIN CERTIFICATE-----` blocks; `.pem/.crt/.key` files. |
-| PNG | Portable Network Graphics — lossless raster image format with DEFLATE compression, alpha transparency, and gamma/metadata support. | `.png` UI assets/screenshots; better compression than BMP; supports transparency.
-| PS | PostScript — page description language and programming language used primarily in desktop publishing and printing workflows. | Generate vector/print-ready `.ps` files; printers interpret PostScript directly; PDF evolved from it.
-| RDF | Resource Description Framework — W3C model for describing and linking data using triples (subject–predicate–object), often serialized as Turtle/RDF/XML/JSON‑LD. | Knowledge graphs, linked data; schema.org markup via JSON‑LD.
-| RLE | Run-Length Encoding — simple lossless compression that replaces runs of repeated symbols with a count and value. | Bitmap/scanline compression (e.g., BMP RLE, fax/CCITT variants); good for large uniform areas.
-| SGML | Standard Generalized Markup Language — meta-language for defining markup languages; foundation for HTML/XML; rarely used directly today. | SGML-based HTML 2.0/3.2 era; modern stacks use XML/HTML5 instead.
-| SVG | Scalable Vector Graphics — XML-based vector image format for resolution-independent graphics. | Inline icons/diagrams in HTML; CSS/SMIL animations. |
-| TAR | Tape ARchive — stream/archive format that bundles multiple files/directories with metadata into a single sequential archive; often compressed (e.g., .tar.gz/.tgz). | Create/extract backups: `tar -czf backup.tgz dir/`; used for packaging and distribution.
-| TOML | Tom's Obvious, Minimal Language — minimal configuration format with clear semantics. | `pyproject.toml`, `Cargo.toml` tool configs. |
-| TSV | Tab-Separated Values — plain text tabular format using tabs as delimiters. | `users.tsv` exports with tab‑delimited fields. |
-| TTF | TrueType Font — outline font format using quadratic Bézier curves; widely supported across operating systems and browsers. | `.ttf` fonts for desktop/web (often inside `.ttc` collections or wrapped as WOFF/WOFF2 for the web).
 | UCS | Universal Character Set — ISO/IEC 10646 standard defining the full repertoire of Unicode code points; Unicode is kept synchronized with UCS. | UCS-2/UCS-4 historical encodings map to UTF‑16/UTF‑32; code points vs encodings distinction.
 | UTF | Unicode Transformation Format — encodings of Unicode code points (e.g., UTF‑8/UTF‑16/UTF‑32). | UTF‑8 is the dominant encoding on the web and in APIs. |
 | UUID | Universally Unique Identifier — 128-bit unique ID. | UUID v4 random, v5 namespace. |
-| XML | Extensible Markup Language — verbose structured data. | XML configs, SOAP payloads. |
-| YAML | Human-friendly serialization format. | `docker-compose.yml` files. |
-| ZSTD | Zstandard — modern fast lossless compression algorithm offering high ratios with very high decompression speed; supports dictionaries. | Compress artifacts/logs with zstd; `.zst` files; use dictionaries for small data.
 | **Legacy** {colspan=3} |
 | BCD | Binary-Coded Decimal — encoding that represents each decimal digit with its own binary nibble (4 bits), enabling precise decimal arithmetic. | Packed BCD in financial systems; CPU decimal adjust instructions (DAA/DAS). |
-| BMP | Bitmap Image File — raster image format (Device‑Independent Bitmap) storing pixel data with optional RLE compression. | `.bmp` screenshots/icons; large files compared to PNG/JPEG. |
-| LZW | Lempel–Ziv–Welch — dictionary-based lossless compression algorithm historically used in GIF and some TIFF variants; now patent-free. | Classic GIF image compression; replace with PNG for lossless images.
 | MBCS | Multi-Byte Character Set — legacy variable-length encodings that use one or more bytes per character (often DBCS for CJK) prior to widespread Unicode adoption. | Windows "ANSI" code pages (Shift_JIS, EUC‑JP); prefer UTF‑8 today.
-| RSS | Really Simple Syndication — XML-based web feed format for publishing updates. | Blog feed at `/feed.xml`; subscribe in a feed reader. |
-| RTF | Rich Text Format — plain-text document format with markup (control words and groups) for character/paragraph styling; widely supported across editors. | Save/export `.rtf` from word processors to interchange formatted text. |
 | **Historical** {colspan=3} |
 | CR | Carriage Return — control character (0x0D) historically used to move the print head to column 0; used by classic Mac OS as line terminator. | `\r` in classic Mac text files; pairs with LF in CRLF on Windows. |
+
+## Data Compression
+
+| Acronym | Meaning | Example |
+| --- | --- | --- |
+| LZ4 | Extremely fast lossless compression algorithm optimized for speed with modest compression ratios. | Compress logs/IPC payloads with LZ4 for low latency; `.lz4` frames. |
+| RLE | Run-Length Encoding — simple lossless compression that replaces runs of repeated symbols with a count and value. | Bitmap/scanline compression (e.g., BMP RLE, fax/CCITT variants); good for large uniform areas.
+| ZSTD | Zstandard — modern fast lossless compression algorithm offering high ratios with very high decompression speed; supports dictionaries. | Compress artifacts/logs with zstd; `.zst` files; use dictionaries for small data.
+| **Legacy** {colspan=3} |
+| LZW | Lempel–Ziv–Welch — dictionary-based lossless compression algorithm historically used in GIF and some TIFF variants; now patent-free. | Classic GIF image compression; replace with PNG for lossless images.
+
+## Document Markup
+
+| Acronym | Meaning | Example |
+| --- | --- | --- |
+| LaTeX | Document preparation system built on TeX that provides high‑level markup for typesetting complex documents (sections, figures, bibliographies) with excellent math support. | Write papers/books with LaTeX classes/packages; `pdflatex`/`xelatex` build pipelines.
+| MD | Markdown — lightweight plain‑text markup language for formatting documents with simple syntax for headings, lists, emphasis, links, and code. | `README.md`, GitHub Flavored Markdown; code fences ``` ``` and tables in docs/blogs.
+| RST | reStructuredText — plaintext markup language used in the Python ecosystem and Sphinx documentation generator; emphasizes readable source and structured directives. | Sphinx `.rst` docs with directives/roles; PyPI/ReadTheDocs project documentation. |
+| TeX | Low‑level typesetting system designed by Donald Knuth providing precise control over layout and mathematics; foundation for LaTeX and many formats. | Typeset math-heavy documents; `plain TeX` macros; outputs DVI/PDF via engines like pdfTeX/XeTeX/LuaTeX. |
+| XML | Extensible Markup Language — verbose structured data. | XML configs, SOAP payloads. |
+| **Legacy** {colspan=3} |
+| DTD | Document Type Definition — schema language defining the legal structure/elements/attributes of SGML/XML documents. | Validate XML with a DTD; `<!DOCTYPE ...>` declarations; legacy vs XML Schema/Relax NG. |
+| **Historical** {colspan=3} |
+| SGML | Standard Generalized Markup Language — meta-language for defining markup languages; foundation for HTML/XML; rarely used directly today. | SGML-based HTML 2.0/3.2 era; modern stacks use XML/HTML5 instead.
 
 ## Data & Consistency
 
@@ -407,16 +453,19 @@ about the legacy/historical subsections:
 | ICMP | Internet Control Message Protocol — diagnostics/control. | `ping` uses Echo Request/Reply. |
 | IMAP | Internet Message Access Protocol — email retrieval/sync. | Mail clients syncing mailboxes. |
 | IP | Internet Protocol — addressing/routing (IPv4/IPv6). | Packet delivery across networks. |
+| IPsec | Internet Protocol Security — suite of protocols for authenticating and encrypting IP packets at the network layer (AH/ESP) with key exchange via IKE. | Site-to-site or remote-access VPNs using IKEv2 with ESP in tunnel mode; transport mode for host-to-host.
 | iSCSI | Internet Small Computer Systems Interface — block storage protocol that encapsulates SCSI commands over TCP/IP. | Connect initiators to targets on port 3260; boot from SAN; map LUNs over the network. |
 | ISP | Internet Service Provider — company that provides internet connectivity and related services. | Residential broadband, business fiber links, and transit. |
 | LAN | Local Area Network — network covering a limited geographic area such as a home, office, or campus. | Ethernet/Wi‑Fi LAN with switches and access points. |
 | LDAP | Lightweight Directory Access Protocol — protocol for accessing and managing directory services. | Authenticate/lookup users and groups in an LDAP directory. |
 | MAC | Media Access Control — data-link sublayer that governs medium access, framing, and addressing on LANs. | Ethernet MAC handles frame delimiting, MAC addressing, and channel access. |
 | MTU | Maximum Transmission Unit — largest payload size (in bytes) that can be sent in a single layer‑2 frame without fragmentation. | Ethernet MTU 1500; jumbo frames MTU 9000; Path MTU Discovery avoids fragmentation. |
+| MX | Mail Exchanger — DNS record that specifies the mail servers responsible for accepting email for a domain, with preferences for priority/failover. | `example.com. MX 10 mail1.example.com.` and `MX 20 mail2.example.com.` as backup. |
 | NAT | Network Address Translation — remap private to public addresses. | Home routers performing PAT. |
 | NFS | Network File System — distributed file system protocol for sharing files over a network. | Mount remote directories via NFSv3/NFSv4. |
 | NS | Name Server — DNS server authoritative for a zone; also the DNS record type that delegates to authoritative servers. | `NS` records pointing to `ns1.example.com` for a domain. |
 | NTP | Network Time Protocol — synchronize clocks over networks using a hierarchy of time sources. | `chrony`/`ntpd` syncing to NTP servers (stratum levels). |
+| OSI | Open Systems Interconnection — conceptual seven‑layer networking reference model for describing protocols and interoperability (Layers 1–7: Physical→Application). | Map protocols to layers (e.g., Ethernet=L2, IP=L3, TCP=L4, HTTP=L7); teaching/troubleshooting taxonomy. |
 | OSPF | Open Shortest Path First — interior gateway routing protocol. | Multi-area OSPF in enterprises. |
 | P2P | Peer-to-Peer — decentralized communication model where nodes act as both clients and servers without a central coordinator. | BitTorrent swarms; WebRTC data channels; DHT-based peer discovery. |
 | QUIC | Quick UDP Internet Connections — encrypted, multiplexed transport over UDP. | HTTP/3 runs over QUIC. |
@@ -435,6 +484,7 @@ about the legacy/historical subsections:
 | WAN | Wide Area Network — network spanning large geographic areas interconnecting LANs over provider links or the public internet. | MPLS links, SD‑WAN, site‑to‑site VPN between offices. |
 | WS | WebSocket — full-duplex over single TCP connection. | `ws://example.com/socket`. |
 | WSS | WebSocket Secure — WebSocket over TLS. | `wss://example.com/socket`. |
+| WHOIS | WHOIS protocol — query/response protocol for retrieving registration information about internet resources such as domain names and IP address allocations. | `whois example.com` to get registrar/registrant data; RDAP is the modern HTTP-based successor.
 | **Legacy** {colspan=3} |
 | FTP | File Transfer Protocol — legacy, unencrypted by default. | `ftp` client for file transfers. |
 | FTPS | FTP over TLS — encrypted FTP. | Implicit/explicit FTPS modes. |
@@ -443,6 +493,7 @@ about the legacy/historical subsections:
 | NNTP | Network News Transfer Protocol — application protocol for distributing, querying, and posting Usenet articles over TCP. | Connect to Usenet servers on 119 (or 563 for NNTPS) to read/post news.
 | POP3 | Post Office Protocol v3 — simple email retrieval. | Fetch-and-delete mailbox flow. |
 | PPP | Point-to-Point Protocol — data link layer protocol for encapsulating network traffic over serial links; supports authentication, compression, and multilink. | Dial-up links; PPPoE for broadband; CHAP/PAP authentication. |
+| PPTP | Point-to-Point Tunneling Protocol — legacy VPN tunneling protocol that encapsulates PPP over GRE with MPPE encryption; considered insecure and deprecated. | Historical Windows VPNs using PPTP; replace with IPsec/OpenVPN/WireGuard/L2TP over IPsec. |
 | PXE | Preboot Execution Environment — standard for network booting clients using DHCP/BOOTP to obtain boot info and TFTP/HTTP to fetch boot loaders/images. | PXE boot a workstation from a provisioning server into an installer.
 | RIP | Routing Information Protocol — distance-vector interior gateway protocol using hop count as its metric with periodic full-table updates. | RIP v2 on small LANs; max 15 hops; split horizon/poison reverse to mitigate loops. |
 | RLOGIN | Remote Login — BSD plaintext remote login protocol; superseded by SSH. | `rlogin host` for interactive sessions on legacy UNIX systems. |
@@ -495,6 +546,7 @@ about the legacy/historical subsections:
 | HSM | Hardware Security Module — tamper‑resistant hardware appliance or cloud service for secure key generation, storage, and cryptographic operations with strong access controls and auditing. | Use an HSM/KMS to generate and store TLS/CA private keys; perform signing inside the module. |
 | HSTS | HTTP Strict Transport Security — force HTTPS for a period. | `Strict-Transport-Security` header. |
 | IAM | Identity and Access Management — users/roles/permissions. | Cloud IAM policies. |
+| IDS | Intrusion Detection System — monitors networks/hosts for malicious activity or policy violations, generating alerts for investigation. | Network IDS like Zeek/Snort; host IDS like OSSEC/Wazuh; alert to SIEM.
 | JWT | JSON Web Token — compact auth/claims token. | `Authorization: Bearer <jwt>`. |
 | MDM | Mobile Device Management — administer and secure mobile/end-user devices via policies, enrollment, and remote actions. | Enforce passcodes, disk encryption, app whitelists; remote wipe on loss. |
 | MFA | Multi-Factor Authentication — 2+ factors. | Password + hardware key. |
@@ -512,6 +564,7 @@ about the legacy/historical subsections:
 | SAST | Static App Security Testing — analyze code/binaries. | SAST pipeline checks. |
 | SBOM | Software Bill of Materials — inventory of components, dependencies, and versions in software artifacts for transparency and vulnerability management. | Generate CycloneDX/SPDX SBOMs in CI; scan against CVEs. |
 | SHA | Secure Hash Algorithm — family of cryptographic hash functions (SHA‑2/256/512; SHA‑3/Keccak). | TLS cert signatures, file integrity checks; Git moving from SHA‑1 to SHA‑256. |
+| IPS | Intrusion Prevention System — inline security control that inspects traffic/events and can automatically block or remediate detected threats. | IPS mode in next‑gen firewalls; Snort/Suricata inline dropping malicious packets.
 | SPF | Sender Policy Framework — DNS-based mechanism to authorize mail servers for a domain. | `v=spf1 ip4:203.0.113.0/24 -all` record. |
 | SQLi | SQL Injection — inject SQL via input. | Parameterized queries prevent it. |
 | SSH | Secure Shell — encrypted remote login/exec. | `ssh user@host`. |
@@ -542,6 +595,7 @@ about the legacy/historical subsections:
 | AD | Active Directory — Microsoft identity directory service. | Centralized auth/authorization. |
 | CDN | Content Delivery Network — globally distributed cache. | Faster static asset delivery. |
 | DNS | Domain Name System — resolve names to IPs. | `A`, `AAAA`, `CNAME` records. |
+| DNSSEC | Domain Name System Security Extensions — adds origin authentication and data integrity to DNS using digital signatures (RRSIG) validated via a chain of trust from signed zones and DS records. | Sign zones with ZSK/KSK; validators check RRSIGs and DS chain from the root; prevents cache poisoning/spoofing. |
 | FaaS | Function as a Service — serverless functions. | AWS Lambda handlers. |
 | FQDN | Fully Qualified Domain Name — complete, absolute domain name that specifies all labels up to the root. | `host1.db.eu-west.example.com.` (trailing dot optional in practice). |
 | HPC | High-Performance Computing — parallel, large-scale compute using clusters/supercomputers for scientific/engineering workloads. | Run MPI/Slurm jobs on a GPU/CPU cluster with InfiniBand. |
@@ -582,6 +636,7 @@ about the legacy/historical subsections:
 | POWER | IBM Performance Optimization With Enhanced RISC — IBM’s RISC architecture family used in servers/workstations (POWER4+), distinct but related to the PowerPC lineage. | IBM Power Systems running AIX/IBM i/Linux; POWER9/POWER10 CPUs. |
 | PPC | PowerPC — RISC CPU architecture developed by the AIM alliance (Apple–IBM–Motorola), used in desktops historically and widely in embedded/console systems. | PowerPC 32/64‑bit (POWER/PowerPC); GameCube/Wii/PS3; embedded/controllers.
 | RISC | Reduced Instruction Set Computer — CPU design philosophy emphasizing a small, simple instruction set and efficient pipelines. | ARM and RISC-V architectures. |
+| RISC-V | Open standard RISC instruction set architecture with modular extensions (e.g., I/M/A/F/D/V) and 32/64/128‑bit variants (RV32/64/128); free to implement without licensing. | Microcontrollers to servers; Linux on RV64GC; chips from SiFive, Andes; SBCs and accelerators.
 | SMP | Symmetric Multiprocessing — architecture where multiple identical CPUs/cores share the same memory and OS, enabling parallel execution of threads/processes. | Multi-core x86/ARM systems; OS scheduler runs threads across cores with shared memory. |
 | SPARC | Scalable Processor ARChitecture — RISC CPU architecture originally developed by Sun Microsystems, widely used in servers/workstations and embedded systems. | SPARC V8/V9 (32/64‑bit); UltraSPARC/Oracle SPARC running Solaris/illumos. |
 | X86-64 | Generic name for the 64‑bit x86 ISA (defined by AMD as AMD64 and implemented by Intel as Intel 64/EM64T); adds 64‑bit mode and more registers over IA‑32. | Build for `x86_64`; 64‑bit OSes and apps on AMD/Intel processors. |
@@ -812,6 +867,33 @@ about the legacy/historical subsections:
 | YMMV | Your Mileage May Vary — results differ. | Different env outcomes. |
 | YOLO | You Only Live Once — humorously justifies taking a risk; use with care. | "YOLO deploy" on Friday — probably don't. |
 
+## Organizations
+
+| Acronym | Meaning | Example |
+| --- | --- | --- |
+| ACM | Association for Computing Machinery — international learned society for computing, publishing journals, conferences, curricula, and best practices. | ACM SIGs (SIGGRAPH, SIGPLAN), ACM Digital Library, Turing Award. |
+| ANSI | American National Standards Institute — U.S. standards organization that oversees and coordinates standards development and accredits standards bodies. | ANSI C (C89/C90) standardization; coordinates U.S. positions in ISO/IEC JTC 1. |
+| ASF | Apache Software Foundation — non‑profit that supports Apache open source projects and communities. | Apache HTTP Server, Hadoop, Kafka, Spark under the ASF.
+| CNCF | Cloud Native Computing Foundation — part of the Linux Foundation hosting cloud‑native projects and standards. | Kubernetes, Prometheus, Envoy; CNCF landscape and graduation levels.
+| ECMA | Ecma International — industry association for information and communication systems standards. | ECMAScript (JavaScript), C# (ECMA-334), CLI (ECMA-335). |
+| FSF | Free Software Foundation — GNU/GPL steward. | Publishes GPL family. |
+| GNU | GNU’s Not Unix — FSF project and philosophy. | GNU toolchain/userland. |
+| IANA | Internet Assigned Numbers Authority — coordinates global IP addressing, DNS root zone management (with ICANN), and protocol parameter registries (ports, DHCP options, etc.). | Port numbers and protocol parameters registries; root zone management with ICANN.
+| ICANN | Internet Corporation for Assigned Names and Numbers — oversees the global DNS root, IP address allocation policy coordination, and domain name registries/registrars. | gTLD/ccTLD policies; WHOIS/RDAP; root zone stewardship.
+| IEEE | Institute of Electrical and Electronics Engineers — professional association and standards body producing technical standards. | IEEE 802 (Ethernet/Wi‑Fi), IEEE 754 floating‑point. |
+| IETF | Internet Engineering Task Force — open standards body that develops and publishes internet standards as RFCs. | HTTP/1.1 (RFC 723x), TLS (RFC 8446), QUIC (RFC 9000); working groups and I-Ds.
+| ISO | International Organization for Standardization — independent, non‑governmental international standards body. | ISO 8601 dates/times; ISO/IEC 9899 (C), ISO/IEC 14882 (C++). |
+| ITU‑T | International Telecommunication Union — Telecommunication Standardization Sector; develops telecom standards (Recommendations) for networks, media, and services. | ITU‑T H.264/H.265 (with ISO/IEC), G.711/G.722 codecs; numbering, signaling, and transport Recs. |
+| OASIS | OASIS Open — consortium that develops open standards for security, identity, content, and more. | SAML, STIX/TAXII, KMIP; technical committees and OASIS specifications.
+| NIST | National Institute of Standards and Technology — U.S. federal agency that develops standards, guidelines, and measurements to improve technology, cybersecurity, and commerce. | NIST SP 800‑53/63/171 security guidelines; NIST hash/SHA competition; time services. |
+| OMG | Object Management Group — consortium that develops technology standards, notably modeling/specification standards. | UML, CORBA, BPMN standards; working groups and specifications. |
+| OSI | Open Source Initiative — OSI-approved licenses. | Open Source Definition stewardship. |
+| PCI-SIG | Peripheral Component Interconnect Special Interest Group — consortium that develops and maintains PCI and PCI Express specifications and compliance programs. | PCIe 5.0/6.0 specs, CEM/ECNs; compliance workshops and device interoperability testing.
+| SPEC | Standard Performance Evaluation Corporation — develops industry‑standard benchmarks for computing performance and energy. | SPEC CPU, SPECjbb, SPECpower; widely cited performance metrics. |
+| TPC | Transaction Processing Performance Council — benchmarks for database and transaction processing systems. | TPC‑C (OLTP), TPC‑H/TPC‑DS (analytics), audited results and full disclosure reports.
+| W3C | World Wide Web Consortium — standards body that develops web specifications and recommendations. | HTML/CSS/DOM specs; Working Groups and drafts at w3.org. |
+| WHATWG | Web Hypertext Application Technology Working Group — community maintaining living standards for HTML, DOM, and related web platform technologies. | HTML Living Standard; DOM and URL standards co‑developed with browsers.
+
 ## Licensing & Open Source
 
 | Acronym | Meaning | Example |
@@ -821,13 +903,9 @@ about the legacy/historical subsections:
 | EULA | End-User License Agreement — contract between software provider and end user defining usage rights/restrictions; common for proprietary software. | Accept EULA during installation; governs redistribution and usage. |
 | FLOSS | Free/Libre and Open Source Software — umbrella term. | General discussions of FLOSS. |
 | FOSS | Free and Open Source Software — umbrella term. | FOSS projects and communities. |
-| FSF | Free Software Foundation — GNU/GPL steward. | Publishes GPL family. |
-| GNU | GNU’s Not Unix — FSF project and philosophy. | GNU toolchain/userland. |
-| GNU/Linux | Linux kernel + GNU userland label. | Common distro description. |
 | GPL | GNU General Public License — strong copyleft. | Derivatives must remain open. |
 | LGPL | GNU Lesser GPL — weak copyleft for linking. | Use in libraries linkable from proprietary apps. |
 | MIT | MIT License — simple permissive license. | Many JS libs under MIT. |
-| OSI | Open Source Initiative — OSI-approved licenses. | Open Source Definition stewardship. |
 | OSS | Open Source Software — software under OSI licenses. | OSS adoption. |
 
 </div>
