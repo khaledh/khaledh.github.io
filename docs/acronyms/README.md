@@ -132,6 +132,7 @@ about the legacy/historical subsections:
 | ADT | Abstract Data Type — specification of behavior independent of implementation. | Stack/queue ADTs with array- or list-based implementations. |
 | ADT | Algebraic Data Type — composite types formed by sums (variants) and products (fields), enabling expressive, type-safe modeling. | Rust enums/Haskell data types; Option/Either in FP. |
 | API | Application Programming Interface — a defined surface for one piece of software to interact with another. | POSIX file APIs, a graphics library API, or an HTTP endpoint. |
+| BSP | Binary Space Partitioning — recursively subdivide space with hyperplanes (planes in 3D, lines in 2D) to organize geometry for visibility, rendering order, and collision queries. | Classic FPS engines (e.g., Quake) use BSP trees for visibility/culling and painter's algorithm ordering. |
 | CAS | Compare-And-Swap — atomic operation that updates a memory location only if it still equals an expected value; foundation for lock‑free algorithms. | CAS loop for a lock‑free stack push; beware the ABA problem. |
 | CLI | Command-Line Interface — text-based commands. | `git`, `kubectl`, custom CLIs. |
 | CLR | Common Language Runtime — .NET VM. | Runs C# assemblies. |
@@ -143,6 +144,7 @@ about the legacy/historical subsections:
 | FIFO | First In, First Out — queue discipline. | Message queues processing order. |
 | FP | Functional Programming — pure functions/immutability. | Map/filter/reduce pipelines. |
 | FSM | Finite State Machine — computational model with a finite number of states and transitions driven by inputs/events. | UI workflows, protocol handlers, and parsers modeled as FSMs. |
+| GADT | Generalized Algebraic Data Type — ADT whose constructors can refine the result type, enabling more precise typing and safer pattern matches. | Haskell/OCaml GADTs for typed ASTs; matching narrows types. |
 | GC | Garbage Collection — automatic memory management. | JVM/CLR collectors free unused objects. |
 | gRPC | High-performance RPC over HTTP/2 with Protobuf. | Define `.proto`; generate client/server stubs. |
 | GUI | Graphical User Interface — visual interaction. | Desktop app windows, buttons. |
@@ -200,24 +202,35 @@ about the legacy/historical subsections:
 | Acronym | Meaning | Example |
 | --- | --- | --- |
 | ABI | Application Binary Interface — low-level contract governing calling conventions, data layout, and linkage between compiled code and the OS/runtime. | x86‑64 System V ABI, Windows x64 ABI; stable FFI boundaries. |
+| ASLR | Address Space Layout Randomization — security technique that randomizes process address spaces (stack/heap/ASLR-enabled libs) to make memory corruption exploits less reliable. | `cat /proc/sys/kernel/randomize_va_space`; Windows system-wide ASLR. |
+| COW | Copy-On-Write — share pages or objects until a write occurs, then copy to preserve isolation; reduces memory/IO and enables efficient forks/snapshots. | `fork()` shares pages COW; VM snapshots; filesystem COW in ZFS/Btrfs. |
 | DLL | Dynamic-Link Library — shared library format on Windows loaded at runtime into a process address space. | `foo.dll` loaded via LoadLibrary; shared code/plugins. |
 | DYLIB | Dynamic Library — macOS shared library format loaded by the dynamic linker. | `libfoo.dylib` via dyld; `install_name_tool`/rpaths for relocation. |
 | ELF | Executable and Linkable Format — standard binary format for executables, object files, and shared libraries on Unix-like systems. | Linux binaries with sections/segments; inspect with `readelf`/`objdump`. |
+| FAT | File Allocation Table — simple filesystem used historically and for removable media; variants FAT12/16/32. | USB stick formatted as FAT32 for broad compatibility; firmware update drives. |
+| FS | File System — on-disk or logical structure and set of rules the OS uses to organize, store, and retrieve files/directories, including metadata and allocation. | ext4, NTFS, APFS, ZFS; mount/unmount volumes; permissions and journaling.
+| FUSE | Filesystem in Userspace — kernel interface to implement filesystems in user space processes. | Mount `sshfs`/`rclone` via FUSE; custom FS without kernel modules. |
 | HAL | Hardware Abstraction Layer — OS layer that hides hardware specifics behind a uniform API so drivers/system code can run across platforms. | Windows HAL; OS kernels providing common driver interfaces across architectures.
 | IPC | Inter-Process Communication — exchange/coordinate between processes. | Pipes, sockets, shared memory, signals. |
 | ISR | Interrupt Service Routine — function invoked by the OS in response to an interrupt to handle the event and acknowledge the controller. | Keyboard ISR on IRQ1 reads scancode; timer ISR updates ticks and EOIs the APIC. |
 | Mach-O | Mach Object — executable/object file format used by macOS/iOS for binaries and libraries. | Inspect with `otool`/`lldb`; `libfoo.dylib` and `foo.app/Contents/MacOS/foo`. |
+| NTFS | New Technology File System — Windows journaling filesystem with ACLs, alternate data streams, compression, and quotas. | Format a Windows system volume as NTFS; set ACLs with icacls. |
 | OS | Operating System — system software that manages hardware resources and provides common services for programs. | Linux, Windows, macOS; kernel, drivers, processes, filesystems. |
 | PE | Portable Executable — Windows binary format for executables, DLLs, and object files. | Inspect with `dumpbin`/`objdump`; sections, import/export tables. |
+| PID | Process Identifier — numeric ID assigned by the kernel to a process. | `pid=1` init/systemd; `ps -o pid,comm`. |
 | POSIX | Portable OS Interface — Unix-like standard APIs. | `fork`, `exec`, `pthread` APIs. |
 | PTY | Pseudo Terminal — virtual terminal pair (master/slave) used by terminal emulators and remote sessions to emulate a real TTY. | `/dev/pts/*`, `ssh -t`, `forkpty`, `tmux`.
 | RTOS | Real-Time Operating System — OS designed for deterministic response and bounded latency, with priority-based scheduling and real-time primitives. | FreeRTOS, Zephyr, VxWorks on microcontrollers/embedded systems; hard vs soft real-time. |
 | SO | Shared Object — Unix/Linux shared library format loaded by the dynamic linker. | `libfoo.so` via ld.so/`dlopen`; sonames and rpaths. |
 | SUS | Single UNIX Specification — standard defining UNIX interfaces and behavior maintained by The Open Group, ensuring POSIX compliance and application portability. | SUS/POSIX APIs (`unistd.h`, signals, threads); conformant systems like AIX, HP‑UX, macOS. |
+| TID | Thread Identifier — numeric ID for a thread (often equals PID for single-threaded processes; Linux has per-thread TIDs). | `gettid()` on Linux; `pthread_self()` maps to a TID. |
 | TTY | Teletype/Terminal — character device for text I/O; terminal sessions. | `/dev/tty`, PTY in shells. |
+| UAC | User Account Control — Windows elevation and consent mechanism to limit silent privilege escalation. | Admin tasks prompt for consent; split‑token admin accounts. |
+| UDS | Unix Domain Socket — IPC mechanism using socket endpoints on the local host with filesystem pathnames or abstract namespace. | `/var/run/docker.sock`; faster than TCP on localhost. |
 | UNIX | Family of multiuser, multitasking operating systems originating at Bell Labs; basis for POSIX and many modern OSes. | Unix philosophy; shells, processes, files; ancestors to Linux, BSD, macOS. |
 | VFS | Virtual File System — OS abstraction layer that provides a uniform API over different filesystems and devices. | Linux VFS layer exposes common inode/dentry APIs across ext4, XFS, NFS, FUSE. |
 | VM | Virtual Memory — OS abstraction that gives processes isolated address spaces mapped to physical memory via paging/segmentation. | Per‑process address spaces, page tables, demand paging, copy‑on‑write. |
+| ZFS | Zettabyte File System — advanced filesystem/volume manager with snapshots, checksums, compression, and COW semantics. | Create ZFS datasets/pools; instant snapshots/`zfs send` replication. |
 | **Historical** {colspan=3} |
 | CP/M | Control Program for Microcomputers — early microcomputer OS preceding MS‑DOS. | 1970s/80s 8‑bit systems running CP/M. |
 | DOS | Disk Operating System — family of disk‑based OSes. | MS‑DOS, PC‑DOS, DR‑DOS. |
@@ -289,6 +302,7 @@ about the legacy/historical subsections:
 | DBMS | Database Management System — software that manages databases, provides storage, query, and transaction processing. | PostgreSQL, MySQL, SQLite, Oracle, SQL Server. |
 | DDL | Data Definition Language — SQL for defining/modifying schema objects. | `CREATE TABLE`, `ALTER TABLE`, `CREATE INDEX`. |
 | DML | Data Manipulation Language — SQL for querying and changing data. | `SELECT`, `INSERT`, `UPDATE`, `DELETE`. |
+| DLQ | Dead Letter Queue — holding queue/topic for messages/events that could not be processed or delivered after retries, isolating poison messages for inspection and remediation. | SQS redrive policy sends failed messages to a DLQ; Kafka error/"-dlq" topic. |
 | DW | Data Warehouse — centralized, integrated repository optimized for analytics. | Snowflake/BigQuery/Redshift with star/snowflake schemas. |
 | ELT | Extract, Load, Transform — load raw data then transform in the warehouse. | Modern ELT with dbt/BigQuery. |
 | ETL | Extract, Transform, Load — data integration pipeline. | Batch load to data warehouse. |
@@ -450,7 +464,6 @@ about the legacy/historical subsections:
 | BYOD | Bring Your Own Device — policy allowing use of personal devices for work, requiring security controls and management. | Enforce MDM, device compliance, and conditional access for email/apps. |
 | BYOK | Bring Your Own Key — customer-managed encryption keys used with a cloud provider’s services instead of provider‑managed keys. | Store CMKs in KMS/HSM; configure services to use them; rotate regularly. |
 | CA | Certificate Authority — issues digital certificates (X.509). | Let's Encrypt TLS certs. |
-| CCPA | California Consumer Privacy Act — US privacy law granting rights to access, delete, and opt out of sale of personal data. | Add Do Not Sell link; handle access/deletion requests. |
 | CFI | Control-Flow Integrity — restricts indirect branches/returns to valid targets to thwart code‑reuse attacks (ROP/JOP). | LLVM/Clang CFI, Intel CET/IBT, ARM Pointer Authentication (PAC) harden control flow. |
 | CORS | Cross-Origin Resource Sharing — control cross-site requests. | Allow specific origins/headers. |
 | CSP | Content Security Policy — control resource loading; mitigate XSS. | `default-src 'self'`. |
@@ -462,7 +475,6 @@ about the legacy/historical subsections:
 | DMARC | Domain-based Message Authentication, Reporting, and Conformance — email authentication policy leveraging SPF and DKIM with alignment and reporting. | Publish `v=DMARC1; p=quarantine; rua=mailto:dmarc@example.com`. |
 | DoS | Denial of Service — make a service unavailable. | Single-source flood. |
 | DRM | Digital Rights Management — technologies to control access, copying, and usage of digital content via encryption and licensing. | Browser EME with Widevine/PlayReady; app checks license server before playback. |
-| GDPR | General Data Protection Regulation — EU law governing personal data protection, rights, and obligations. | Lawful basis, DPO, DPIA; data subject rights (access/erasure/portability). |
 | GPG | GNU Privacy Guard — OpenPGP implementation. | `gpg --sign --encrypt file`. |
 | HMAC | Hash-based Message Authentication Code — keyed hash for message integrity and authenticity. | HMAC‑SHA256 for API request signing; JWT HS256. |
 | HSTS | HTTP Strict Transport Security — force HTTPS for a period. | `Strict-Transport-Security` header. |
@@ -476,7 +488,6 @@ about the legacy/historical subsections:
 | OIDC | OpenID Connect — identity layer over OAuth 2.0. | ID token for login. |
 | OTP | One-Time Password — short‑lived code used for authentication; delivered or generated per login. | App‑generated TOTP/HOTP codes; avoid SMS OTP when possible. |
 | PGP | Pretty Good Privacy — encryption/signing format. | Email encryption/signing. |
-| PII | Personally Identifiable Information — data that can identify an individual; subject to privacy laws and safeguards. | Names, emails, SSNs; apply minimization, masking, and access controls. |
 | PKCS | Public-Key Cryptography Standards — RSA-led standards defining formats and algorithms used in public-key crypto. | PKCS #1 (RSA), #7/CMS (cryptographic messages), #8 (private keys), #12 (PFX/P12), #5 (PBES), #10 (CSR). |
 | PKI | Public Key Infrastructure — system of CAs, certs, keys, and policies. | Issue and validate X.509 certs. |
 | RBAC | Role-Based Access Control — role-granted permissions. | Admin/Editor/Viewer roles. |
@@ -496,6 +507,17 @@ about the legacy/historical subsections:
 | XSS | Cross-Site Scripting — script injection into pages. | Output encoding, CSP. |
 | **Historical** {colspan=3} |
 | SSL | Secure Sockets Layer — legacy to TLS. | Deprecated; use TLS. |
+
+## Privacy
+
+| Acronym | Meaning | Example |
+| --- | --- | --- |
+| CCPA | California Consumer Privacy Act — US privacy law granting rights to access, delete, and opt out of sale of personal data. | Add Do Not Sell link; handle access/deletion requests. |
+| CPRA | California Privacy Rights Act — amends/expands CCPA with new rights (correction), sensitive data category, and the CPPA regulator. | Honor opt-out for sharing; handle sensitive PI with limits. |
+| DSAR | Data Subject Access Request — request by an individual to access, correct, delete, or obtain a copy of their personal data. | Process access/erasure/portability requests within statutory timelines. |
+| GDPR | General Data Protection Regulation — EU law governing personal data protection, rights, and obligations. | Lawful basis, DPO, DPIA; data subject rights (access/erasure/portability). |
+| HIPAA | Health Insurance Portability and Accountability Act — US law setting privacy/security standards for protected health information (PHI). | Covered entities sign BAAs; apply the HIPAA Privacy/Security Rules. |
+| PII | Personally Identifiable Information — data that can identify an individual; subject to privacy laws and safeguards. | Names, emails, SSNs; apply minimization, masking, and access controls. |
 
 ## Infrastructure
 
@@ -533,9 +555,11 @@ about the legacy/historical subsections:
 | AHCI | Advanced Host Controller Interface — standard programming interface for SATA host controllers enabling features like NCQ, hot-plug, and native command queuing. | OS uses the AHCI driver; set SATA mode to AHCI in firmware for modern OS installs. |
 | ALU | Arithmetic Logic Unit — digital circuit in the CPU that performs integer arithmetic and bitwise operations. | Add, subtract, AND/OR/XOR, shifts/rotates executed by the ALU pipelines. |
 | AMX | Advanced Matrix Extensions — x86 instruction set extensions providing tiled matrix operations accelerated in hardware. | Intel AMX for deep‑learning inference/training (tile registers, TMUL). |
+| AP | Application Processor — any non‑bootstrap CPU core in an SMP system that is brought online by the BSP to run the OS scheduler and workloads. | OS sends INIT/SIPI to start APs after BSP init; threads scheduled across APs. |
 | APIC | Advanced Programmable Interrupt Controller — modern local/IO APICs providing scalable interrupt delivery in SMP systems. | LAPIC per core and IOAPIC for external IRQs on x86. |
 | ATX | Advanced Technology eXtended — PC motherboard and power supply form factor standard defining board sizes, mounting, I/O shield, and power connectors. | ATX/mATX/ITX cases; 24‑pin ATX, 8‑pin EPS12V, PCIe 6/8‑pin/12VHPWR.
 | AVX | Advanced Vector Extensions — x86 SIMD instruction set extensions for wide vector operations (256/512-bit in AVX/AVX-512). | AVX2 for integer ops; AVX-512 for HPC workloads. |
+| BSP | Bootstrap Processor — on multi-processor systems (e.g., x86 SMP), the primary CPU core that starts executing firmware/boot code and brings up the OS, which then initializes the remaining cores as Application Processors (APs). | Firmware runs on the BSP first; OS sends INIT/SIPI to start APs. |
 | CHERI | Capability Hardware Enhanced RISC Instructions — architectural extensions that add tagged, unforgeable capabilities to enforce fine‑grained memory safety and compartmentalization. | CHERI‑RISC‑V/MIPS; pointers carry bounds/permissions; safer C/C++ and sandboxing.
 | CISC | Complex Instruction Set Computer — CPU design approach featuring larger, more complex, and variable‑length instructions, often implemented with microcode. | x86/x86‑64 architectures; `REP MOVS`, string ops, rich addressing modes. |
 | CMOS | Complementary Metal‑Oxide‑Semiconductor — low‑power technology used for chips; in PCs, also refers to the small battery‑backed RAM storing firmware settings. | Replace CMOS battery; clear CMOS to reset BIOS/UEFI settings. |
@@ -607,8 +631,13 @@ about the legacy/historical subsections:
 | TPM | Trusted Platform Module — hardware-based security chip for keys and attestation. | TPM 2.0 used by Secure Boot and disk encryption. |
 | UART | Universal Asynchronous Receiver-Transmitter — hardware for serial communication using asynchronous framing (start/stop bits) over TTL/RS-232 levels. | Debug console on microcontrollers; `/dev/ttyS*`/`/dev/ttyUSB*`; 115200 8N1. |
 | USB | Universal Serial Bus — standard for cables and connectors between computers and peripherals. | USB 3.x devices; HID, storage, and serial classes. |
+| VESA | Video Electronics Standards Association — industry group that defines and maintains display and related interface standards. | DisplayHDR, DP standards, EDID/DMT timing standards. |
 | VRAM | Video RAM — memory used by GPUs/display controllers to store framebuffers, textures, and render targets; historically specialized types (e.g., SGRAM, GDDR). | Dedicated GDDR6 on discrete GPUs; shared system memory on iGPUs.
 | **Legacy** {colspan=3} |
+| EIDE | Enhanced IDE — extensions to IDE/PATA. | Support for larger drives and ATAPI. |
+| IDE/PATA | Integrated Drive Electronics / Parallel ATA — legacy parallel disk interface. | 40/80‑wire ribbon cables for HDD/optical drives. |
+| MBR | Master Boot Record — legacy partitioning scheme and first 512 bytes of a disk containing boot code and a partition table. | BIOS boots from MBR; up to 4 primary partitions or extended/logical. |
+| UDMA | Ultra Direct Memory Access — ATA/IDE DMA transfer modes providing higher throughput and lower CPU usage than PIO; modes UDMA/33/66/100/133 (higher modes require 80‑wire cables). | PATA drive negotiates UDMA/5 (ATA/100); Linux dmesg shows UDMA/133. |
 | VGA | Video Graphics Array — de facto PC graphics standard. | 640×480 16‑color; mode 13h 320×200×256. |
 | WORM | Write Once, Read Many — non‑rewritable archival storage media. | Optical WORM jukeboxes for compliance archives. |
 | **Historical** {colspan=3} |
@@ -617,12 +646,9 @@ about the legacy/historical subsections:
 | CHS | Cylinder/Head/Sector — legacy disk geometry addressing scheme used by BIOS/MBR era systems; limited capacity and translation quirks. | 1024‑cylinder limit; CHS/LBA translation in BIOS; superseded by LBA.
 | CRT | Cathode Ray Tube — vacuum tube display technology that steers electron beams across a phosphor‑coated screen to form images. | Legacy CRT monitors/TVs; scanlines, phosphor persistence, high refresh at lower resolutions. |
 | EGA | Enhanced Graphics Adapter — improved IBM graphics adapter. | 640×350 16‑color graphics. |
-| EIDE | Enhanced IDE — extensions to IDE/PATA. | Support for larger drives and ATAPI. |
 | EISA | Extended Industry Standard Architecture — 32‑bit ISA-compatible bus developed by a consortium as an open alternative to MCA; supported bus mastering and IRQ sharing. | Server‑class 486 systems with EISA expansion cards; later replaced by PCI. |
 | FDD | Floppy Disk Drive — magnetic removable storage. | 5.25" and 3.5" floppies. |
-| IDE/PATA | Integrated Drive Electronics / Parallel ATA — legacy parallel disk interface. | 40/80‑wire ribbon cables for HDD/optical drives. |
 | ISA | Industry Standard Architecture — legacy 8/16‑bit PC expansion bus. | Sound/IO cards on 286/386 era PCs. |
-| MBR | Master Boot Record — legacy partitioning scheme and first 512 bytes of a disk containing boot code and a partition table. | BIOS boots from MBR; up to 4 primary partitions or extended/logical. |
 | MCA | Micro Channel Architecture — IBM's proprietary 32‑bit bus introduced with PS/2 systems as a successor to ISA; offered bus mastering and improved throughput but lacked industry adoption. | IBM PS/2 expansion cards; supplanted by EISA/PCI. |
 | MFM | Modified Frequency Modulation — legacy disk encoding scheme. | Early HDDs and floppies using MFM/RLL. |
 | MMX | MultiMedia eXtensions — early x86 SIMD instruction set for integer vector operations. | Legacy MMX ops predating SSE on Pentium-era CPUs. |
@@ -633,7 +659,6 @@ about the legacy/historical subsections:
 | SIMM | Single Inline Memory Module — older memory module form factor with a single set of contacts; used with FPM/EDO/early SDRAM. | 30‑pin/72‑pin SIMMs on 386/486/Pentium-era systems. |
 | SVGA | Super VGA — VESA extensions beyond VGA. | 800×600 and higher resolutions. |
 | VAX | Virtual Address eXtension — DEC 32‑bit minicomputer architecture. | VAX/VMS systems in universities and industry. |
-| VESA | Video Electronics Standards Association — defined display standards. | VESA BIOS Extensions (VBE), VESA Local Bus (VLB). |
 | VLB | VESA Local Bus — high‑speed local bus before PCI. | 486 motherboards with VLB video/IO cards. |
 
 ## Firmware
