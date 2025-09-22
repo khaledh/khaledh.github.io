@@ -202,6 +202,7 @@ about the legacy/historical subsections:
 | DCE | Dead Code Elimination — remove code shown by analysis to have no effect on program outputs/side effects, improving size and performance. | Eliminate unused assignments/branches after liveness/constant propagation; `-O2` passes in LLVM/GCC. |
 | DFA | Data Flow Analysis — family of static analyses that compute facts about program variables/paths over a control flow graph using lattice/transfer functions (e.g., reaching definitions, liveness, constant propagation). | Run forward/backward analyses on a CFG; feed results to optimizations like DCE, CSE, and register allocation. |
 | DFA | Deterministic Finite Automaton — finite-state machine with exactly one transition per symbol for each state; used in lexers/pattern matching. | Tokenizer state machine generated from regular languages. |
+| DWARF | Debug With Arbitrary Record Format — standardized debugging information format for compiled programs (types, symbols, line tables, call frames) used across platforms. | GCC/Clang emit DWARF in ELF/Mach-O; inspect with `readelf --debug-dump` or `llvm-dwarfdump`; GDB/LLDB consume DWARF. |
 | EBNF | Extended Backus–Naur Form — BNF with additional operators (repetition, optional, grouping) for more concise grammar specifications. | `{ }` repetition, `[ ]` optional; used in many language grammars and docs. |
 | FAM | Flexible Array Member — language/ABI feature where a struct’s last field is a size‑unspecified array used to tail‑allocate variable‑length data; not counted in `sizeof` and requires custom allocation/copy logic. | In C (C99+): `struct S{size_t n; int a[];};` allocate with `malloc(sizeof(struct S)+n*sizeof(int))`; `a` occupies trailing storage. |
 | GCC | GNU Compiler Collection — suite of compilers for C/C++/Fortran and more. | `gcc`/`g++` toolchains for building software. |
@@ -228,6 +229,7 @@ about the legacy/historical subsections:
 | ABI | Application Binary Interface — low-level contract governing calling conventions, data layout, and linkage between compiled code and the OS/runtime. | x86‑64 System V ABI, Windows x64 ABI; stable FFI boundaries. |
 | ASLR | Address Space Layout Randomization — security technique that randomizes process address spaces (stack/heap/ASLR-enabled libs) to make memory corruption exploits less reliable. | `cat /proc/sys/kernel/randomize_va_space`; Windows system-wide ASLR. |
 | BSS | Block Started by Symbol — segment for zero‑initialized or uninitialized static/global data that occupies memory at load/runtime but takes no space in the object file beyond metadata (size). | C `static int buf[4096];` goes to `.bss`; reduces binary size versus storing zeros. |
+| CMD | Windows Command Prompt — command-line interpreter (`cmd.exe`) for Windows providing batch scripting (.bat/.cmd) and built-in shell commands. | Run `cmd.exe`; use `dir`, `copy`, `set` and `%PATH%`; legacy scripts for automation. |
 | COW | Copy-On-Write — share pages or objects until a write occurs, then copy to preserve isolation; reduces memory/IO and enables efficient forks/snapshots. | `fork()` shares pages COW; VM snapshots; filesystem COW in ZFS/Btrfs. |
 | DLL | Dynamic-Link Library — shared library format on Windows loaded at runtime into a process address space. | `foo.dll` loaded via LoadLibrary; shared code/plugins. |
 | DYLIB | Dynamic Library — macOS shared library format loaded by the dynamic linker. | `libfoo.dylib` via dyld; `install_name_tool`/rpaths for relocation. |
@@ -259,10 +261,19 @@ about the legacy/historical subsections:
 | VM | Virtual Memory — OS abstraction that gives processes isolated address spaces mapped to physical memory via paging/segmentation. | Per‑process address spaces, page tables, demand paging, copy‑on‑write. |
 | X11 | X Window System (Version 11) — network‑transparent windowing system and protocol for bitmap displays on UNIX‑like systems. | Xorg/XWayland on Linux; XQuartz on macOS; `ssh -X` X11 forwarding. |
 | ZFS | Zettabyte File System — advanced filesystem/volume manager with snapshots, checksums, compression, and COW semantics. | Create ZFS datasets/pools; instant snapshots/`zfs send` replication. |
+| z/OS | IBM's mainframe operating system for IBM Z, successor to OS/390 and MVS; provides JES2/3, RACF security, JCL batch, and UNIX System Services (POSIX environment). | Enterprise workloads on IBM Z mainframes; partitioned datasets, CICS/IMS, and USS shells. |
+| **Legacy** {colspan=3} |
+| AIX | IBM's UNIX (Advanced Interactive eXecutive) for POWER systems, featuring LPARs, SMIT, JFS2, and enterprise tooling. | IBM Power Systems running AIX on POWER9/POWER10; manage with SMIT/VIOS. |
+| HP-UX | Hewlett-Packard's UNIX for PA‑RISC and Itanium systems with LVM/VxFS and enterprise features. | HP Integrity servers running HP‑UX; SAM/SMH administration; Serviceguard clusters. |
+| MCP | Master Control Program — Unisys mainframe OS in the Burroughs large‑systems line, featuring a stack machine architecture and strong language support; still in use but niche. | Unisys ClearPath MCP systems (Burroughs B5000 lineage) running enterprise workloads. |
+| NT | New Technology — Microsoft’s NT family/architecture underlying Windows NT and its successors (2000/XP/Vista/7/8/10/11), featuring a hybrid kernel, HAL, NTFS, and Win32/NT native subsystems. | Windows NT lineage; `ver` shows NT versioning; services/session model and security based on NT architecture. |
 | **Historical** {colspan=3} |
 | CDE | Common Desktop Environment — classic UNIX desktop environment based on Motif and the X Window System; widely used on commercial UNIX workstations in the 1990s. | HP‑UX, Solaris, AIX shipped CDE as the default desktop; superseded by GNOME/KDE. |
 | CP/M | Control Program for Microcomputers — early microcomputer OS preceding MS‑DOS. | 1970s/80s 8‑bit systems running CP/M. |
+| CTSS | Compatible Time-Sharing System — pioneering time-sharing OS developed at MIT for the IBM 7090/7094; introduced concepts like password logins and interactive command shells; precursor to Multics. | MIT Project MAC on IBM 7094; early 1960s interactive computing. |
+| DG/UX | Data General's UNIX for AViiON servers/workstations; SVR4-based, multi-processor support; discontinued. | DG AViiON systems running DG/UX; enterprise UNIX of the 1990s. |
 | DOS | Disk Operating System — family of disk‑based OSes. | MS‑DOS, PC‑DOS, DR‑DOS. |
+| IRIX | SGI's UNIX for MIPS workstations/servers; renowned for graphics and the original home of XFS; discontinued. | SGI Octane/Onyx systems running IRIX; MIPSpro toolchain; legacy SGI graphics stacks. |
 | MULTICS | Multiplexed Information and Computing Service — influential time‑sharing OS from MIT/GE/Bell Labs that inspired many UNIX concepts. | 1960s/70s mainframes; security and modular design influenced Unix. |
 | OS/2 | IBM/Microsoft then IBM OS succeeding DOS. | OS/2 Warp on 1990s PCs. |
 | TSR | Terminate and Stay Resident — DOS resident utility/program. | Keyboard macros/clock TSRs in MS‑DOS. |
@@ -277,6 +288,7 @@ about the legacy/historical subsections:
 | RST | reStructuredText — plaintext markup language used in the Python ecosystem and Sphinx documentation generator; emphasizes readable source and structured directives. | Sphinx `.rst` docs with directives/roles; PyPI/ReadTheDocs project documentation. |
 | TeX | Low‑level typesetting system designed by Donald Knuth providing precise control over layout and mathematics; foundation for LaTeX and many formats. | Typeset math-heavy documents; `plain TeX` macros; outputs DVI/PDF via engines like pdfTeX/XeTeX/LuaTeX. |
 | XML | Extensible Markup Language — verbose structured data. | XML configs, SOAP payloads. |
+| XSLT | Extensible Stylesheet Language Transformations — declarative language for transforming XML documents using template rules, XPath selection, and functions. | Transform DocBook/XML to HTML/PDF with Saxon/Xalan; XSLT 1.0/2.0/3.0. |
 | **Legacy** {colspan=3} |
 | DTD | Document Type Definition — schema language defining the legal structure/elements/attributes of SGML/XML documents. | Validate XML with a DTD; `<!DOCTYPE ...>` declarations; legacy vs XML Schema/Relax NG. |
 | **Historical** {colspan=3} |
@@ -286,7 +298,9 @@ about the legacy/historical subsections:
 
 | Acronym | Meaning | Example |
 | --- | --- | --- |
+| BAT | Batch file — Windows Command Prompt script file executed by `cmd.exe`; commonly `.bat` or `.cmd`. | Automation scripts using built-ins like `echo`, `set`, `if`, `for`. |
 | DVI | Device Independent file format — TeX's output format describing pages and typeset content in a device‑agnostic way, later converted to PostScript/PDF or displayed via drivers. | Generate `.dvi` from TeX; view/convert with `dvips`, `dvipdfmx`, or viewers like xdvi. |
+| EXE | Executable file — Windows program file using the Portable Executable (PE) format for executables and DLLs. | Launch `.exe` apps; inspect PE headers with `dumpbin`/`objdump`. |
 | PDF | Portable Document Format — fixed‑layout document format combining text, vector graphics, and images. | Generate reports/invoices; fillable forms; print‑ready docs. |
 | PNG | Portable Network Graphics — lossless raster image format with DEFLATE compression, alpha transparency, and gamma/metadata support. | `.png` UI assets/screenshots; better compression than BMP; supports transparency.
 | PS | PostScript — page description language and programming language used primarily in desktop publishing and printing workflows. | Generate vector/print-ready `.ps` files; printers interpret PostScript directly; PDF evolved from it.
@@ -296,6 +310,7 @@ about the legacy/historical subsections:
 | YAML | Human-friendly serialization format. | `docker-compose.yml` files. |
 | **Legacy** {colspan=3} |
 | BMP | Bitmap Image File — raster image format (Device‑Independent Bitmap) storing pixel data with optional RLE compression. | `.bmp` screenshots/icons; large files compared to PNG/JPEG. |
+| COM | DOS executable — simple flat binary loaded at offset 0x100 with ~64KB segment limit and no header. | Classic `.COM` utilities/programs on MS‑DOS/PC‑DOS; tiny loaders/stubs. |
 | RTF | Rich Text Format — plain-text document format with markup (control words and groups) for character/paragraph styling; widely supported across editors. | Save/export `.rtf` from word processors to interchange formatted text. |
 
 ## Data Encodings
@@ -488,6 +503,7 @@ about the legacy/historical subsections:
 | QUIC | Quick UDP Internet Connections — encrypted, multiplexed transport over UDP. | HTTP/3 runs over QUIC. |
 | SFTP | SSH File Transfer Protocol — file transfer over SSH. | `sftp user@host` uploads/downloads. |
 | SMB | Server Message Block — network file/printer sharing protocol used mainly by Windows; modern versions (SMBv2/v3) support signing/encryption. | Mount `\\server\share`; Samba on Unix; avoid SMBv1 due to security issues. |
+| SNMP | Simple Network Management Protocol — protocol for monitoring and managing networked devices via a hierarchical MIB of OIDs, supporting polling and asynchronous traps/informs. | Poll interfaces/CPU via GET/GETNEXT/GETBULK; receive traps; v1/v2c (community) and v3 (auth/privacy). |
 | SMTP | Simple Mail Transfer Protocol — send email. | MTA relaying messages. |
 | SSE | Server-Sent Events — HTTP-based server→client stream. | `EventSource('/events')`. |
 | TCP | Transmission Control Protocol — reliable byte stream. | HTTP, TLS use TCP. |
@@ -679,6 +695,7 @@ about the legacy/historical subsections:
 | SIMD | Single Instruction, Multiple Data — vector parallelism executing the same instruction across multiple data lanes. | SSE/AVX on x86, NEON on ARM. |
 | SSE | Streaming SIMD Extensions — x86 SIMD instruction set extensions for parallel vector operations. | SSE2/SSE4 intrinsics; compiler autovectorization for math/graphics. |
 | TLB | Translation Lookaside Buffer — small cache of virtual→physical address translations used by the MMU. | TLB hits speed up paging; TLB flush on context switch. |
+| VMX | Virtual Machine Extensions — Intel x86 virtualization extensions (VT‑x) that add CPU modes/instructions (VMX root/non‑root, VMXON/VMXOFF, VMLAUNCH/VMRESUME) and a VMCS for hardware‑assisted virtualization. | Enable VT‑x in firmware; KVM/Hyper‑V/VMware use VMX to run guests with hardware assist. |
 | **Historical** {colspan=3} |
 | MMX | MultiMedia eXtensions — early x86 SIMD instruction set for integer vector operations. | Legacy MMX ops predating SSE on Pentium-era CPUs. |
 
@@ -690,6 +707,7 @@ about the legacy/historical subsections:
 | DIMM | Dual Inline Memory Module — standardized memory module form factor for SDRAM. | 288‑pin DDR4/DDR5 DIMMs. |
 | DRAM | Dynamic Random Access Memory — volatile memory storing bits in capacitors that require periodic refresh. | Main system memory (SDRAM/DDR). |
 | ECC | Error-Correcting Code memory — memory modules/chipsets that detect and correct single‑bit errors (and detect some multi‑bit errors) to improve reliability. | ECC UDIMMs/RDIMMs in servers/workstations; machine check logs corrected errors. |
+| EEPROM | Electrically Erasable Programmable Read-Only Memory — non-volatile memory that can be electrically erased and reprogrammed at the byte/page level; used for small configuration storage and microcontroller data. | I²C/SPI EEPROMs (24xx/25xx series); MCU calibration data; distinct from flash (block erase). |
 | GDDR | Graphics Double Data Rate — high‑bandwidth memory variants optimized for GPUs and graphics workloads. | GDDR6/GDDR6X on modern GPUs; wide buses and high data rates. |
 | HBM | High Bandwidth Memory — stacked memory connected via wide interfaces on‑package for very high bandwidth and energy efficiency. | HBM2/HBM3 on AI/ML accelerators and high‑end GPUs. |
 | LPDDR | Low-Power DDR — mobile/embedded DRAM optimized for low power with deep power states and wide IO at low voltage. | LPDDR4/4X/5/5X in smartphones, tablets, ultrabooks, and SoCs. |
@@ -700,8 +718,10 @@ about the legacy/historical subsections:
 | SO-DIMM | Small Outline Dual Inline Memory Module — compact memory module form factor used in laptops and small form-factor systems; electrically similar to DIMMs but physically smaller and not interchangeable. | DDR4/DDR5 SO‑DIMMs in laptops/NUCs; shorter modules with different keying. |
 | SRAM | Static Random Access Memory — volatile memory using flip-flops; fast and does not need refresh. | CPU caches (L1/L2/L3) implemented with SRAM. |
 | **Historical** {colspan=3} |
+| EPROM | Erasable Programmable Read-Only Memory — UV-erasable ROM chips with a quartz window; erased under UV light and reprogrammed with a programmer. | 27xx-series EPROMs in retro computers/arcade boards; UV eraser tools. |
 | EDO | Extended Data Out DRAM — improved asynchronous DRAM that allows the data output to remain valid longer, enabling slightly higher performance than FPM before SDRAM became mainstream. | Mid‑1990s 486/Pentium systems with EDO SIMMs; replaced by SDRAM. |
 | FPM | Fast Page Mode DRAM — asynchronous DRAM access mode that speeds up accesses within the same row/page compared to plain DRAM; predecessor to EDO and SDRAM. | Early 1990s SIMM modules using FPM; superseded by EDO/SDRAM. |
+| PROM | Programmable Read-Only Memory — one-time programmable ROM that can be programmed once after manufacturing and cannot be erased. | 82S/27S series PROMs used for microcode/firmware; fuse/antifuse technologies. |
 | RDRAM | Rambus DRAM — high‑bandwidth DRAM technology from Rambus used with RIMM modules and a packetized, narrow bus; briefly mainstream on Pentium 4 before being displaced by DDR SDRAM. | RIMM modules in Intel i850/i850E chipsets; now obsolete in favor of DDR/DDR2+. |
 | RIMM | Rambus Inline Memory Module — module form factor for RDRAM with continuity requirements (CRIMMs in empty slots) and heat spreaders; used briefly in early‑2000s PCs/servers. | Populate paired RIMMs on i850 boards; install CRIMMs in unused slots; now obsolete.
 | SIMM | Single Inline Memory Module — older memory module form factor with a single set of contacts; used with FPM/EDO/early SDRAM. | 30‑pin/72‑pin SIMMs on 386/486/Pentium-era systems. |
@@ -720,9 +740,12 @@ about the legacy/historical subsections:
 | SPI | Serial Peripheral Interface — synchronous serial bus with master/slave (controller/peripheral) and separate data lines for full-duplex transfers. | Connect sensors/flash to microcontrollers (MOSI/MISO/SCLK/CS); higher speed than I²C.
 | UART | Universal Asynchronous Receiver-Transmitter — hardware for serial communication using asynchronous framing (start/stop bits) over TTL/RS-232 levels. | Debug console on microcontrollers; `/dev/ttyS*`/`/dev/ttyUSB*`; 115200 8N1. |
 | USB | Universal Serial Bus — standard for cables and connectors between computers and peripherals. | USB 3.x devices; HID, storage, and serial classes. |
+| **Legacy** {colspan=3} |
+| COM | Serial COM port — PC designation for RS‑232 serial interfaces (COM1/COM2/...), typically provided by 16550‑class UARTs on DB‑9 connectors. | Connect via null‑modem/USB‑serial; Windows `COM3:`; Linux `/dev/ttyS0` serial consoles. |
 | **Historical** {colspan=3} |
 | EISA | Extended Industry Standard Architecture — 32‑bit ISA-compatible bus developed by a consortium as an open alternative to MCA; supported bus mastering and IRQ sharing. | Server‑class 486 systems with EISA expansion cards; later replaced by PCI. |
 | ISA | Industry Standard Architecture — legacy 8/16‑bit PC expansion bus. | Sound/IO cards on 286/386 era PCs. |
+| LPT | Line Printer port — PC parallel printer interface (Centronics/IEEE 1284), addressed as LPT1/LPT2; largely obsolete. | Parallel printers and hardware dongles; DB‑25 connectors; IEEE 1284 SPP/EPP/ECP modes. |
 | MCA | Micro Channel Architecture — IBM's proprietary 32‑bit bus introduced with PS/2 systems as a successor to ISA; offered bus mastering and improved throughput but lacked industry adoption. | IBM PS/2 expansion cards; supplanted by EISA/PCI. |
 | Q-BUS | DEC Q‑bus — asynchronous multiplexed address/data bus used in later PDP‑11 and early MicroVAX systems; lower-cost successor to Unibus with fewer signals. | Q‑bus backplanes/peripherals in PDP‑11/23 and MicroVAX; legacy DEC minicomputers. |
 | Unibus | DEC Unibus — early synchronous shared backplane bus interconnecting CPU, memory, and peripherals in PDP‑11 systems; predecessor to Q‑bus. | PDP‑11 Unibus backplanes/peripherals; historical DEC minicomputers. |
@@ -744,6 +767,7 @@ about the legacy/historical subsections:
 | RAID | Redundant Array of Independent Disks — combine multiple drives for redundancy and/or performance. | RAID 1 mirroring; RAID 5 parity; RAID 10 stripe+mirror. |
 | SAS | Serial Attached SCSI — point‑to‑point serial interface for enterprise storage. | 12Gb/s SAS HDDs/SSDs; SAS expanders/backplanes. |
 | SATA | Serial ATA — interface for connecting storage devices. | 2.5" SATA SSDs and HDDs. |
+| SD | Secure Digital — flash memory card format with variants (SD/SDHC/SDXC) commonly used in portable devices; typically formatted with FAT32 or exFAT. | Cameras, handheld consoles, and phones; microSD cards with adapters. |
 | SSD | Solid-State Drive — storage device using flash memory (no moving parts), offering low latency and high throughput. | NVMe SSDs for fast boot and build times. |
 | **Legacy** {colspan=3} |
 | EIDE | Enhanced IDE — extensions to IDE/PATA. | Support for larger drives and ATAPI. |
@@ -771,16 +795,19 @@ about the legacy/historical subsections:
 | HDMI | High-Definition Multimedia Interface — digital audio/video interface for connecting sources to displays. | HDMI 2.0/2.1 to monitors/TVs; HDCP for protected content. |
 | LCD | Liquid Crystal Display — flat‑panel display technology that uses liquid crystals modulated by a backlight to produce images. | IPS/TN/VA LCD panels; requires LED backlight. |
 | LED | Light‑Emitting Diode — semiconductor light source; in monitors/TVs, often shorthand for LED‑backlit LCDs (not emissive per‑pixel). | Status indicator LEDs; LED‑backlit LCD monitors/TVs. |
+| HD | High Definition — 720p (1280×720) and 1080i/p (1920×1080) resolution classes. | 1080p monitor; HD streaming. |
 | OLED | Organic Light‑Emitting Diode — emissive display technology where each pixel emits light for high contrast and true blacks. | AMOLED smartphone screens; per‑pixel dimming on TVs/phones. |
 | PPI | Pixels Per Inch — measure of display pixel density; often confused with DPI which is for print. | 326‑PPI phone display; ~220‑PPI “Retina” laptop panels. |
+| QHD | Quad High Definition — 2560×1440 (1440p) resolution at 16:9; roughly 4× 720p and about half the pixels of 4K UHD. | 27" 1440p monitors; competitive gaming displays. |
 | RGB | Red, Green, Blue — additive color model used in displays and imaging. | sRGB color space; RGB LED subpixels in LCD/OLED panels. |
 | RGBA | Red, Green, Blue, Alpha — RGB color with an additional alpha (opacity) channel for transparency. | CSS `rgba(255, 0, 0, 0.5)`; PNG images with alpha channel.
+| UHD | Ultra High Definition — 4K UHD (3840×2160) consumer resolution class; sometimes extends to 8K (7680×4320). | 4K 2160p TV/monitor; UHD streaming. |
 | VESA | Video Electronics Standards Association — industry group that defines and maintains display and related interface standards. | DisplayHDR, DP standards, EDID/DMT timing standards. |
-| VMX | Virtual Machine Extensions — Intel x86 virtualization extensions (VT‑x) that add CPU modes/instructions (VMX root/non‑root, VMXON/VMXOFF, VMLAUNCH/VMRESUME) and a VMCS for hardware‑assisted virtualization. | Enable VT‑x in firmware; KVM/Hyper‑V/VMware use VMX to run guests with hardware assist. |
 | VRAM | Video RAM — memory used by GPUs/display controllers to store framebuffers, textures, and render targets; historically specialized types (e.g., SGRAM, GDDR). | Dedicated GDDR6 on discrete GPUs; shared system memory on iGPUs.
 | **Legacy** {colspan=3} |
-| VGA | Video Graphics Array — de facto PC graphics standard. | 640×480 16‑color; mode 13h 320×200×256. |
+| SD | Standard Definition — legacy video resolution class around 480i/480p (NTSC) or 576i/576p (PAL), typically 4:3 aspect. | DVD 480p; SDTV broadcast. |
 | SVGA | Super VGA — VESA extensions beyond VGA. | 800×600 and higher resolutions. |
+| VGA | Video Graphics Array — de facto PC graphics standard. | 640×480 16‑color; mode 13h 320×200×256. |
 | **Historical** {colspan=3} |
 | AGP | Accelerated Graphics Port — dedicated graphics slot pre‑PCIe. | AGP 4×/8× graphics cards. |
 | CGA | Color Graphics Adapter — IBM PC color graphics standard. | 320×200 4‑color modes on early PCs. |
@@ -794,6 +821,7 @@ about the legacy/historical subsections:
 | ATX | Advanced Technology eXtended — PC motherboard and power supply form factor standard defining board sizes, mounting, I/O shield, and power connectors. | ATX/mATX/ITX cases; 24‑pin ATX, 8‑pin EPS12V, PCIe 6/8‑pin/12VHPWR.
 | CMOS | Complementary Metal‑Oxide‑Semiconductor — low‑power technology used for chips; in PCs, also refers to the small battery‑backed RAM storing firmware settings. | Replace CMOS battery; clear CMOS to reset BIOS/UEFI settings. |
 | DMA | Direct Memory Access — device-initiated memory transfers without CPU involvement. | NICs use DMA for packet buffers. |
+| FPGA | Field-Programmable Gate Array — reconfigurable semiconductor device consisting of programmable logic blocks and interconnects configured by a bitstream to implement custom digital circuits. | Prototype/accelerate designs; soft CPUs and hardware offload over PCIe; tools like Vivado/Quartus using HDL/RTL. |
 | HID | Human Interface Device — USB device class for human input/output peripherals using structured HID reports. | USB keyboards, mice, gamepads; HID report descriptors parsed by OS. |
 | IRQ | Interrupt Request — a hardware signal line used by devices to interrupt the CPU for service. | Timer, keyboard, NIC raise IRQs; OS dispatches to ISRs. |
 | KVM | Keyboard–Video–Mouse switch — hardware device to control multiple computers with a single keyboard, monitor, and mouse. | Toggle between two PCs with a USB/HDMI KVM switch. |
@@ -817,7 +845,10 @@ about the legacy/historical subsections:
 | Acronym | Meaning | Example |
 | --- | --- | --- |
 | ACPI | Advanced Configuration and Power Interface — standard for power management and device configuration via tables provided by firmware. | ACPI tables (DSDT/SSDT) describe devices and power states to the OS. |
+| SBI | Supervisor Binary Interface — standard interface between a RISC‑V supervisor OS and machine‑mode firmware providing services (timers, IPIs, power, console) via SBI calls; commonly implemented by OpenSBI. | Boot flow: ROM/FSBL → OpenSBI (SBI firmware) → U‑Boot/Linux; OS issues `ecall` to SBI for privileged services. |
 | UEFI | Unified Extensible Firmware Interface — modern firmware replacing legacy BIOS with a flexible boot and runtime services model. | UEFI boot managers, GPT disks, Secure Boot. |
+| **Legacy** {colspan=3} |
+| CSM | Compatibility Support Module — UEFI component that provides legacy BIOS services to boot non‑UEFI OSes and option ROMs; phased out on modern systems. | Enable CSM to boot legacy MBR media or old GPUs with legacy option ROMs. |
 | **Historical** {colspan=3} |
 | BIOS | Basic Input/Output System — legacy PC firmware that initializes hardware and boots the OS. | PC firmware POST and boot sequence on legacy/CSM systems. |
 
@@ -841,7 +872,10 @@ about the legacy/historical subsections:
 | EOY | End Of Year — end of the calendar or fiscal year; deadline shorthand. | “Let's target EOY for GA after extended beta.” |
 | ETA | Estimated Time of Arrival — expected completion/arrival time. | “ETA for fix is 3pm.” |
 | FFS | For F***'s Sake — expression of frustration or exasperation; avoid in formal communication. | “FFS, the build broke again.” |
+| FOMO | Fear Of Missing Out — anxiety about missing experiences or opportunities others are having. | “Skip the release party? FOMO is real.” |
+| FTW | For The Win — enthusiastic endorsement or celebration of something that worked well. | “Feature flags FTW — painless rollback.” |
 | FUD | Fear, Uncertainty, Doubt — disinformation tactic. | Competitor FUD. |
+| FWIW | For What It's Worth — modest preface to share input without asserting authority. | “FWIW, retry with exponential backoff.” |
 | FYI | For Your Information — share info without requiring action. | “FYI: maintenance window Sunday 2am.” |
 | GTK | Good To Know — acknowledges helpful info. | “Rate limit resets hourly — GTK.” |
 | HN | Hacker News — tech news and discussion site run by Y Combinator. | Post a launch on news.ycombinator.com; join the discussion. |
@@ -854,9 +888,11 @@ about the legacy/historical subsections:
 | IMO | In My Opinion — opinion preface; a slightly less self-deprecating variant of IMHO. | “IMO, we should ship feature‑flagged.” |
 | IRL | In Real Life — referring to the physical/offline world as opposed to online/virtual contexts. | “Let's meet IRL next week.” |
 | LGTM | Looks Good To Me — code review approval. | “LGTM, ship it.” |
+| LMGTFY | Let Me Google That For You — snarky suggestion to search the web first; use sparingly as it can come across as dismissive. | “LMGTFY: how to clear npm cache.” |
 | LMK | Let Me Know — request a follow-up. | “LMK if the deploy finishes.” |
 | MOTD | Message Of The Day — login banner/notice. | `/etc/motd` on login. |
 | NIH | Not Invented Here — bias to build your own instead of using existing solutions. | Replacing a mature library with custom code. |
+| NBD | No Big Deal — indicates something is minor or not worth worrying about. | “Missed the standup — NBD.” |
 | NP | No Problem — acknowledgment that a request is fine or a task is acceptable. | “NP, I can take this.” |
 | NSFW | Not Safe For Work — content that may be inappropriate for professional settings. | “NSFW: explicit language/images; open privately.” |
 | OOO | Out Of Office — unavailable for work/response. | “OOO until Monday.” |
@@ -869,7 +905,9 @@ about the legacy/historical subsections:
 | QQ | Quick Question — brief, low‑effort question or nudge for a short answer. | “QQ: is staging using the new DB URL?” |
 | RTFM | Read The F***ing Manual — read docs first. | `git rebase --help`. |
 | SME | Subject-Matter Expert — domain expert. | Security SME review. |
+| SMH | Shaking My Head — expresses disappointment or disbelief. | “Prod creds in a script? SMH.” |
 | SO | Stack Overflow — popular Q&A site for programming and software development. | Link to an accepted SO answer for a solution/workaround. |
+| TANSTAAFL | There Ain't No Such Thing As A Free Lunch — highlights that every choice has trade‑offs or hidden costs; nothing is truly free. | “TANSTAAFL: caching speeds reads but adds complexity/invalidation.” |
 | TBA | To Be Announced — details later. | Rollout date TBA. |
 | TBD | To Be Determined — not finalized. | Owner TBD after planning. |
 | TBH | To Be Honest — candid preface. | “TBH, refactor first.” |
@@ -878,6 +916,7 @@ about the legacy/historical subsections:
 | TIL | Today I Learned — sharing a new fact or insight just learned. | “TIL `git worktree` simplifies multi-branch checkouts.” |
 | TL;DR | Too Long; Didn't Read — summary. | TL;DR: Use approach B. |
 | TLA | Three-Letter Acronym — meta-acronym. | “Another TLA.” |
+| TTYL | Talk To You Later — casual sign-off indicating you’ll continue the conversation later. | “Gotta run — TTYL.” |
 | WCGW | What Could Go Wrong — tongue-in-cheek before risk. | “Deploy Friday, WCGW?” |
 | WFH | Work From Home — remote from home. | “WFH today.” |
 | WTF | What The F*** — expression of surprise, confusion, or frustration; avoid in formal communication. | “WTF happened to the build pipeline?” |
