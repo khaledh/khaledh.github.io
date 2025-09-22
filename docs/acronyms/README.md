@@ -21,6 +21,7 @@ about the legacy/historical subsections:
 | C4 | Context–Container–Component–Code — lightweight hierarchical diagramming model for communicating software architecture at multiple levels of abstraction. | Draw a system Context and Container diagram for a web app; break a service into Components; optionally add Code-level diagrams. |
 | CQRS | Command Query Responsibility Segregation — separate writes/reads. | Write model emits events; read model is a projection. |
 | EDA | Event-Driven Architecture — async event-based systems. | Publish domain events to Kafka; services react. |
+| ECS | Entity Component System — decompose game and simulation logic into data-only components processed by systems operating on matching entities. | Game engine with `Position`/`Velocity` components updated by a `PhysicsSystem`; rendering system consumes `Mesh` components. |
 | ES | Event Sourcing — persist state changes as an append‑only log of events and rebuild current state by replaying them. | Order aggregate applies `OrderPlaced`/`ItemAdded` events; projections update read models. |
 | SOA | Service-Oriented Architecture — collaborating services. | Decompose monolith into services. |
 | **Legacy** {colspan=3} |
@@ -35,6 +36,7 @@ about the legacy/historical subsections:
 
 | Acronym | Meaning | Example |
 | --- | --- | --- |
+| AoS | Array of Structs — contiguous collection where each element stores all fields, offering good spatial locality for per-entity operations. | `struct Particle { float x, y, z; } particles[N];` iterate once to update position/velocity. |
 | CPS | Continuation-Passing Style — express control flow by passing an explicit continuation function instead of returning normally. | `f(x, k)` calls `k(result)`; enables tail calls, trampolines, async composition. |
 | CSP | Communicating Sequential Processes — formal concurrency model where independent processes interact solely via message‑passing over channels (no shared memory). | Go channels/`select` and occam are CSP‑inspired; model systems as processes and rendezvous on channels. |
 | DDD | Domain-Driven Design — model around the domain. | Ubiquitous language in code and docs. |
@@ -49,6 +51,7 @@ about the legacy/historical subsections:
 | MVC | Model–View–Controller — separate data, presentation, and control flow. | Controllers orchestrate; Views render; Models hold domain data. |
 | MVVM | Model–View–ViewModel — bind UI to a ViewModel that exposes state/actions. | Two-way binding in front-end frameworks. |
 | OCP | Open/Closed Principle — open for extension, closed for modification. | Add a new strategy class instead of editing a switch. |
+| SoA | Struct of Arrays — layout that keeps each field in its own contiguous array to enable SIMD/vectorization and cache-friendly columnar processing. | Separate `x[N]`, `y[N]`, `z[N]` arrays for particles to update components with wide vector loads. |
 | SoC | Separation of Concerns — isolate responsibilities into distinct modules. | Keep validation, business logic, and persistence in separate layers. |
 | SOLID | Five OO design principles: SRP, OCP, LSP, ISP, DIP. | Extract interfaces and inject dependencies via constructors. |
 | SRP | Single Responsibility Principle — one reason to change. | Split parsing and rendering into separate classes. |
@@ -66,6 +69,7 @@ about the legacy/historical subsections:
 | CI | Continuous Integration — frequently merge to main with automated tests. | Every PR runs unit and integration tests in CI. |
 | CI/CD | Combined practice of Continuous Integration and Delivery/Deployment. | Build, test, artifact, deploy stages in one pipeline. |
 | DX | Developer Experience — overall quality of tools, workflows, and docs that make developers productive and happy. | One‑command setup, fast feedback loops, clear errors, great CLIs. |
+| DSC | Desired State Configuration — declarative configuration management approach that defines the target state and lets tooling converge systems to it continually. | PowerShell DSC or Azure Automanage enforces web server configs by applying declarative manifests and reporting drift. |
 | E2E | End-to-End — tests or flows that cover the full user journey across systems and components. | Cypress/Playwright tests from UI through API to DB.
 | EOL | End Of Life — product/version no longer supported with fixes or updates; plan upgrades before EOL to remain secure and compliant. | Ubuntu 20.04 reaches EOL → migrate to 22.04 LTS.
 | GA | General Availability — broad production release status following beta/RC; officially supported. | Mark v1.0 as GA and enable default rollout.
@@ -75,6 +79,7 @@ about the legacy/historical subsections:
 | L10N | Localization — adapt an internationalized product for a locale. | Translate resources; RTL layout; localized units/images. |
 | LTS | Long-Term Support — release line maintained with security/critical fixes for an extended period. | Choose Node.js LTS for production; receive patches without feature churn. |
 | MVP | Minimum Viable Product — smallest thing to deliver value/learning. | Ship a CLI prototype before a full GUI. |
+| MQ | Merge Queue — automation that sequences merges and runs required checks on up-to-date commits so main stays green. | GitHub/GitLab merge queue rebases the next PR onto main, runs CI, and auto-merges when green. |
 | OKR | Objectives and Key Results — align goals and track outcomes. | Company-level objectives with measurable KRs. |
 | PoC | Proof of Concept — quick prototype to validate feasibility. | Spike code to test a new database driver. |
 | PR | Pull Request — propose code change for review/merge. | Open a PR for CI checks and team review. |
@@ -107,6 +112,7 @@ about the legacy/historical subsections:
 | HTML | HyperText Markup Language — web markup. | `<div>`, `<a>`, `<section>` structure pages. |
 | JS | JavaScript — language of the web. | Frontend apps, Node.js scripts. |
 | LTR | Left-To-Right — text direction where writing proceeds from left to right; default for Latin scripts. | HTML `dir="ltr"`; ensure proper bidi handling with Unicode markers where needed. |
+| NPM | Node Package Manager — default package manager and registry client for Node.js, distributing JavaScript packages and managing project dependencies/scripts. | `npm install react` adds dependencies; `package.json` defines scripts run via `npm run build`. |
 | OpenAPI | Standard to describe HTTP APIs (Swagger). | Generate clients from `openapi.yaml`. |
 | PWA | Progressive Web App — offline/installable web app. | Add service worker and manifest. |
 | REST | Representational State Transfer — resource APIs. | `GET /posts/42` returns a Post. |
@@ -181,6 +187,7 @@ about the legacy/historical subsections:
 | RPC | Remote Procedure Call — call functions on a service. | gRPC `CreateUser` method. |
 | RPN | Reverse Polish Notation — postfix notation for arithmetic expressions that eliminates parentheses and associates operators with operands directly; naturally evaluated with a stack. | Evaluate `3 4 + 2 *` with a stack; HP calculators and some compilers/VMs use RPN internally. |
 | SDK | Software Development Kit — tools/libs for a platform. | AWS SDK for programmatic access. |
+| SUT | System Under Test — the specific component or boundary being exercised by a test, often isolated from collaborators via test doubles. | Unit test drives the SUT (a service class) while stubbing its repository and asserting outputs/interactions. |
 | TLS | Thread-Local Storage — per-thread storage for data that gives each thread its own instance of a variable. | C/C++ `thread_local`/`__thread`, POSIX `pthread_key_create`; Rust `thread_local!`.
 | TUI | Text-based User Interface — terminal UI. | `htop`, `ncurses` apps. |
 | UB | Undefined Behaviour — program operations for which the language standard imposes no requirements, allowing compilers to assume they never happen and enabling aggressive optimizations. | C/C++ out‑of‑bounds access, use‑after‑free, signed overflow; can lead to unpredictable results; use sanitizers to detect.
@@ -227,13 +234,16 @@ about the legacy/historical subsections:
 | Acronym | Meaning | Example |
 | --- | --- | --- |
 | ABI | Application Binary Interface — low-level contract governing calling conventions, data layout, and linkage between compiled code and the OS/runtime. | x86‑64 System V ABI, Windows x64 ABI; stable FFI boundaries. |
+| APK | Android Package Kit — archived bundle (ZIP with `AndroidManifest.xml`, resources, and compiled bytecode) used to distribute and install Android apps. | Build `app-release.apk`, sign it, and install with `adb install` or upload to Play. |
 | ASLR | Address Space Layout Randomization — security technique that randomizes process address spaces (stack/heap/ASLR-enabled libs) to make memory corruption exploits less reliable. | `cat /proc/sys/kernel/randomize_va_space`; Windows system-wide ASLR. |
+| BAT | Batch file — Windows Command Prompt script file executed by `cmd.exe`; commonly `.bat` or `.cmd`. | Automation scripts using built-ins like `echo`, `set`, `if`, `for`. |
 | BSS | Block Started by Symbol — segment for zero‑initialized or uninitialized static/global data that occupies memory at load/runtime but takes no space in the object file beyond metadata (size). | C `static int buf[4096];` goes to `.bss`; reduces binary size versus storing zeros. |
 | CMD | Windows Command Prompt — command-line interpreter (`cmd.exe`) for Windows providing batch scripting (.bat/.cmd) and built-in shell commands. | Run `cmd.exe`; use `dir`, `copy`, `set` and `%PATH%`; legacy scripts for automation. |
 | COW | Copy-On-Write — share pages or objects until a write occurs, then copy to preserve isolation; reduces memory/IO and enables efficient forks/snapshots. | `fork()` shares pages COW; VM snapshots; filesystem COW in ZFS/Btrfs. |
 | DLL | Dynamic-Link Library — shared library format on Windows loaded at runtime into a process address space. | `foo.dll` loaded via LoadLibrary; shared code/plugins. |
 | DYLIB | Dynamic Library — macOS shared library format loaded by the dynamic linker. | `libfoo.dylib` via dyld; `install_name_tool`/rpaths for relocation. |
 | ELF | Executable and Linkable Format — standard binary format for executables, object files, and shared libraries on Unix-like systems. | Linux binaries with sections/segments; inspect with `readelf`/`objdump`. |
+| EXE | Executable file — Windows program file using the Portable Executable (PE) format for executables and DLLs. | Launch `.exe` apps; inspect PE headers with `dumpbin`/`objdump`. |
 | FAT | File Allocation Table — simple filesystem used historically and for removable media; variants FAT12/16/32. | USB stick formatted as FAT32 for broad compatibility; firmware update drives. |
 | FS | File System — on-disk or logical structure and set of rules the OS uses to organize, store, and retrieve files/directories, including metadata and allocation. | ext4, NTFS, APFS, ZFS; mount/unmount volumes; permissions and journaling.
 | FUSE | Filesystem in Userspace — kernel interface to implement filesystems in user space processes. | Mount `sshfs`/`rclone` via FUSE; custom FS without kernel modules. |
@@ -254,19 +264,20 @@ about the legacy/historical subsections:
 | SUS | Single UNIX Specification — standard defining UNIX interfaces and behavior maintained by The Open Group, ensuring POSIX compliance and application portability. | SUS/POSIX APIs (`unistd.h`, signals, threads); conformant systems like AIX, HP‑UX, macOS. |
 | TID | Thread Identifier — numeric ID for a thread (often equals PID for single-threaded processes; Linux has per-thread TIDs). | `gettid()` on Linux; `pthread_self()` maps to a TID. |
 | TTY | Teletype/Terminal — character device for text I/O; terminal sessions. | `/dev/tty`, PTY in shells. |
+| **Legacy** {colspan=3} |
+| AIX | IBM's UNIX (Advanced Interactive eXecutive) for POWER systems, featuring LPARs, SMIT, JFS2, and enterprise tooling. | IBM Power Systems running AIX on POWER9/POWER10; manage with SMIT/VIOS. |
+| COM | DOS executable — simple flat binary loaded at offset 0x100 with ~64KB segment limit and no header. | Classic `.COM` utilities/programs on MS‑DOS/PC‑DOS; tiny loaders/stubs. |
+| HP-UX | Hewlett-Packard's UNIX for PA‑RISC and Itanium systems with LVM/VxFS and enterprise features. | HP Integrity servers running HP‑UX; SAM/SMH administration; Serviceguard clusters. |
+| MCP | Master Control Program — Unisys mainframe OS in the Burroughs large‑systems line, featuring a stack machine architecture and strong language support; still in use but niche. | Unisys ClearPath MCP systems (Burroughs B5000 lineage) running enterprise workloads. |
+| NT | New Technology — Microsoft’s NT family/architecture underlying Windows NT and its successors (2000/XP/Vista/7/8/10/11), featuring a hybrid kernel, HAL, NTFS, and Win32/NT native subsystems. | Windows NT lineage; `ver` shows NT versioning; services/session model and security based on NT architecture. |
 | UAC | User Account Control — Windows elevation and consent mechanism to limit silent privilege escalation. | Admin tasks prompt for consent; split‑token admin accounts. |
 | UDS | Unix Domain Socket — IPC mechanism using socket endpoints on the local host with filesystem pathnames or abstract namespace. | `/var/run/docker.sock`; faster than TCP on localhost. |
 | UNIX | Family of multiuser, multitasking operating systems originating at Bell Labs; basis for POSIX and many modern OSes. | Unix philosophy; shells, processes, files; ancestors to Linux, BSD, macOS. |
 | VFS | Virtual File System — OS abstraction layer that provides a uniform API over different filesystems and devices. | Linux VFS layer exposes common inode/dentry APIs across ext4, XFS, NFS, FUSE. |
 | VM | Virtual Memory — OS abstraction that gives processes isolated address spaces mapped to physical memory via paging/segmentation. | Per‑process address spaces, page tables, demand paging, copy‑on‑write. |
 | X11 | X Window System (Version 11) — network‑transparent windowing system and protocol for bitmap displays on UNIX‑like systems. | Xorg/XWayland on Linux; XQuartz on macOS; `ssh -X` X11 forwarding. |
-| ZFS | Zettabyte File System — advanced filesystem/volume manager with snapshots, checksums, compression, and COW semantics. | Create ZFS datasets/pools; instant snapshots/`zfs send` replication. |
 | z/OS | IBM's mainframe operating system for IBM Z, successor to OS/390 and MVS; provides JES2/3, RACF security, JCL batch, and UNIX System Services (POSIX environment). | Enterprise workloads on IBM Z mainframes; partitioned datasets, CICS/IMS, and USS shells. |
-| **Legacy** {colspan=3} |
-| AIX | IBM's UNIX (Advanced Interactive eXecutive) for POWER systems, featuring LPARs, SMIT, JFS2, and enterprise tooling. | IBM Power Systems running AIX on POWER9/POWER10; manage with SMIT/VIOS. |
-| HP-UX | Hewlett-Packard's UNIX for PA‑RISC and Itanium systems with LVM/VxFS and enterprise features. | HP Integrity servers running HP‑UX; SAM/SMH administration; Serviceguard clusters. |
-| MCP | Master Control Program — Unisys mainframe OS in the Burroughs large‑systems line, featuring a stack machine architecture and strong language support; still in use but niche. | Unisys ClearPath MCP systems (Burroughs B5000 lineage) running enterprise workloads. |
-| NT | New Technology — Microsoft’s NT family/architecture underlying Windows NT and its successors (2000/XP/Vista/7/8/10/11), featuring a hybrid kernel, HAL, NTFS, and Win32/NT native subsystems. | Windows NT lineage; `ver` shows NT versioning; services/session model and security based on NT architecture. |
+| ZFS | Zettabyte File System — advanced filesystem/volume manager with snapshots, checksums, compression, and COW semantics. | Create ZFS datasets/pools; instant snapshots/`zfs send` replication. |
 | **Historical** {colspan=3} |
 | CDE | Common Desktop Environment — classic UNIX desktop environment based on Motif and the X Window System; widely used on commercial UNIX workstations in the 1990s. | HP‑UX, Solaris, AIX shipped CDE as the default desktop; superseded by GNOME/KDE. |
 | CP/M | Control Program for Microcomputers — early microcomputer OS preceding MS‑DOS. | 1970s/80s 8‑bit systems running CP/M. |
@@ -276,6 +287,7 @@ about the legacy/historical subsections:
 | IRIX | SGI's UNIX for MIPS workstations/servers; renowned for graphics and the original home of XFS; discontinued. | SGI Octane/Onyx systems running IRIX; MIPSpro toolchain; legacy SGI graphics stacks. |
 | MULTICS | Multiplexed Information and Computing Service — influential time‑sharing OS from MIT/GE/Bell Labs that inspired many UNIX concepts. | 1960s/70s mainframes; security and modular design influenced Unix. |
 | OS/2 | IBM/Microsoft then IBM OS succeeding DOS. | OS/2 Warp on 1990s PCs. |
+| SVR4 | System V Release 4 — AT&T/Sun UNIX unifying System V, BSD, and Xenix features; foundation for many 1990s commercial UNIXes. | Solaris 2.x and UnixWare derive from SVR4 with STREAMS networking and SVR4 package tools. |
 | TSR | Terminate and Stay Resident — DOS resident utility/program. | Keyboard macros/clock TSRs in MS‑DOS. |
 | VMS | Virtual Memory System — DEC's operating system for VAX (later Alpha/Itanium as OpenVMS), featuring robust clustering and security. | VAX/VMS in enterprises; OpenVMS clusters with RMS/DCL.
 
@@ -298,9 +310,7 @@ about the legacy/historical subsections:
 
 | Acronym | Meaning | Example |
 | --- | --- | --- |
-| BAT | Batch file — Windows Command Prompt script file executed by `cmd.exe`; commonly `.bat` or `.cmd`. | Automation scripts using built-ins like `echo`, `set`, `if`, `for`. |
 | DVI | Device Independent file format — TeX's output format describing pages and typeset content in a device‑agnostic way, later converted to PostScript/PDF or displayed via drivers. | Generate `.dvi` from TeX; view/convert with `dvips`, `dvipdfmx`, or viewers like xdvi. |
-| EXE | Executable file — Windows program file using the Portable Executable (PE) format for executables and DLLs. | Launch `.exe` apps; inspect PE headers with `dumpbin`/`objdump`. |
 | PDF | Portable Document Format — fixed‑layout document format combining text, vector graphics, and images. | Generate reports/invoices; fillable forms; print‑ready docs. |
 | PNG | Portable Network Graphics — lossless raster image format with DEFLATE compression, alpha transparency, and gamma/metadata support. | `.png` UI assets/screenshots; better compression than BMP; supports transparency.
 | PS | PostScript — page description language and programming language used primarily in desktop publishing and printing workflows. | Generate vector/print-ready `.ps` files; printers interpret PostScript directly; PDF evolved from it.
@@ -310,7 +320,6 @@ about the legacy/historical subsections:
 | YAML | Human-friendly serialization format. | `docker-compose.yml` files. |
 | **Legacy** {colspan=3} |
 | BMP | Bitmap Image File — raster image format (Device‑Independent Bitmap) storing pixel data with optional RLE compression. | `.bmp` screenshots/icons; large files compared to PNG/JPEG. |
-| COM | DOS executable — simple flat binary loaded at offset 0x100 with ~64KB segment limit and no header. | Classic `.COM` utilities/programs on MS‑DOS/PC‑DOS; tiny loaders/stubs. |
 | RTF | Rich Text Format — plain-text document format with markup (control words and groups) for character/paragraph styling; widely supported across editors. | Save/export `.rtf` from word processors to interchange formatted text. |
 
 ## Data Encodings
@@ -400,11 +409,13 @@ about the legacy/historical subsections:
 | HLL | HyperLogLog — probabilistic algorithm for cardinality (distinct count) estimation that uses fixed, small memory with tunable relative error via stochastic averaging of leading-zero counts. | Approximate unique users/events with ~1–2% error using kilobytes of memory; streaming distinct counts in analytics pipelines. |
 | LSMT | Log-Structured Merge-Tree — write-optimized indexing/storage structure that buffers writes in memory and flushes them as sorted runs (SSTables) to disk, with background compaction/merging; lowers random writes at the cost of read/space amplification. | Used by LevelDB/RocksDB; LSM-based stores like Cassandra and HBase. |
 | MVCC | Multi-Version Concurrency Control — concurrency control that lets readers and writers proceed by keeping multiple row versions and using snapshot visibility rules. | PostgreSQL snapshot reads; VACUUM removes obsolete versions. |
+| MQ | Message Queue — durable, asynchronous messaging channel that buffers messages between producers and consumers to decouple services and smooth load. | RabbitMQ/SQS enqueue events; workers consume from the queue to process jobs off the critical path. |
 | NoSQL | Non-relational DBs: documents, key-values, graphs, wide columns. | MongoDB, Redis, Cassandra. |
 | OLAP | Online Analytical Processing — read-heavy analytics. | BI cubes, columnar stores. |
 | OLTP | Online Transaction Processing — write-heavy transactions. | Order processing systems. |
 | PK | Primary Key — unique, non-null identifier for a table row. | `users(id UUID PRIMARY KEY)`; composite keys across columns. |
 | RDBMS | Relational Database Management System — DBMS based on the relational model using tables, rows, and SQL with constraints and ACID transactions. | PostgreSQL, MySQL, SQL Server, Oracle; normalized schemas and joins. |
+| RDD | Resilient Distributed Dataset — fault-tolerant distributed collection in Apache Spark enabling parallel transformations across partitions with lineage-based recovery. | Spark job transforms an RDD with `rdd.map()`/`filter()` and caches it via `persist()` for reuse. |
 | SQL | Structured Query Language — query/manage relational DBs. | `SELECT * FROM users`. |
 | WAL | Write-Ahead Logging — durability mechanism that writes log records before data pages. | PostgreSQL WAL for crash recovery and replication. |
 
@@ -488,9 +499,11 @@ about the legacy/historical subsections:
 | IPsec | Internet Protocol Security — suite of protocols for authenticating and encrypting IP packets at the network layer (AH/ESP) with key exchange via IKE. | Site-to-site or remote-access VPNs using IKEv2 with ESP in tunnel mode; transport mode for host-to-host.
 | iSCSI | Internet Small Computer Systems Interface — block storage protocol that encapsulates SCSI commands over TCP/IP. | Connect initiators to targets on port 3260; boot from SAN; map LUNs over the network. |
 | ISP | Internet Service Provider — company that provides internet connectivity and related services. | Residential broadband, business fiber links, and transit. |
+| L2TP | Layer 2 Tunneling Protocol — encapsulates PPP frames to create tunnels across IP networks, typically paired with IPsec for encryption/authentication. | Remote-access VPN uses L2TP over IPsec (UDP 1701/500/4500) to tunnel client traffic through a secure gateway. |
 | LAN | Local Area Network — network covering a limited geographic area such as a home, office, or campus. | Ethernet/Wi‑Fi LAN with switches and access points. |
 | LDAP | Lightweight Directory Access Protocol — protocol for accessing and managing directory services. | Authenticate/lookup users and groups in an LDAP directory. |
 | MAC | Media Access Control — data-link sublayer that governs medium access, framing, and addressing on LANs. | Ethernet MAC handles frame delimiting, MAC addressing, and channel access. |
+| MPLS | Multiprotocol Label Switching — high-performance packet forwarding that uses short labels to make traffic-engineered L2.5 paths across provider cores. | ISP backbone uses MPLS L3VPNs/TE to steer customer traffic and provide QoS across the WAN. |
 | MTU | Maximum Transmission Unit — largest payload size (in bytes) that can be sent in a single layer‑2 frame without fragmentation. | Ethernet MTU 1500; jumbo frames MTU 9000; Path MTU Discovery avoids fragmentation. |
 | MX | Mail Exchanger — DNS record that specifies the mail servers responsible for accepting email for a domain, with preferences for priority/failover. | `example.com. MX 10 mail1.example.com.` and `MX 20 mail2.example.com.` as backup. |
 | NAT | Network Address Translation — remap private to public addresses. | Home routers performing PAT. |
@@ -500,6 +513,7 @@ about the legacy/historical subsections:
 | OSI | Open Systems Interconnection — conceptual seven‑layer networking reference model for describing protocols and interoperability (Layers 1–7: Physical→Application). | Map protocols to layers (e.g., Ethernet=L2, IP=L3, TCP=L4, HTTP=L7); teaching/troubleshooting taxonomy. |
 | OSPF | Open Shortest Path First — interior gateway routing protocol. | Multi-area OSPF in enterprises. |
 | P2P | Peer-to-Peer — decentralized communication model where nodes act as both clients and servers without a central coordinator. | BitTorrent swarms; WebRTC data channels; DHT-based peer discovery. |
+| QoS | Quality of Service — mechanisms that classify and prioritize traffic to meet latency, jitter, and loss requirements. | Configure DiffServ/DSCP queues on routers to give voice and video higher priority than bulk data. |
 | QUIC | Quick UDP Internet Connections — encrypted, multiplexed transport over UDP. | HTTP/3 runs over QUIC. |
 | SFTP | SSH File Transfer Protocol — file transfer over SSH. | `sftp user@host` uploads/downloads. |
 | SMB | Server Message Block — network file/printer sharing protocol used mainly by Windows; modern versions (SMBv2/v3) support signing/encryption. | Mount `\\server\share`; Samba on Unix; avoid SMBv1 due to security issues. |
@@ -903,6 +917,7 @@ about the legacy/historical subsections:
 | PITA | Pain In The Ass — something annoying or cumbersome; avoid in formal communication. | “That migration was a PITA.” |
 | PTO | Paid Time Off — time away from work. | “On PTO next week.” |
 | QQ | Quick Question — brief, low‑effort question or nudge for a short answer. | “QQ: is staging using the new DB URL?” |
+| RIP | Rest In Peace — tongue-in-cheek epitaph for a feature, service, or idea that just failed or was deprecated. | “RIP staging cluster after that migration.” |
 | RTFM | Read The F***ing Manual — read docs first. | `git rebase --help`. |
 | SME | Subject-Matter Expert — domain expert. | Security SME review. |
 | SMH | Shaking My Head — expresses disappointment or disbelief. | “Prod creds in a script? SMH.” |
