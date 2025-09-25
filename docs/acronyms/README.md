@@ -30,7 +30,10 @@ about the legacy/historical subsections:
 | EJB | Enterprise JavaBeans — server-side component model for building distributed, transactional applications in Java; heavyweight and largely superseded by lighter frameworks. | Session Beans, Entity Beans, MDBs in a Java EE/Jakarta EE application server. |
 | ESB | Enterprise Service Bus — centralized integration/message bus with mediation, routing, and governance typical of classic SOA; considered heavyweight today. | Hub‑and‑spoke integration; replaced by microservices and event streaming (Kafka). |
 | MOM | Message-Oriented Middleware — infrastructure for asynchronous communication between distributed systems via messages and queues, decoupling producers and consumers. | IBM MQ, TIBCO, MSMQ; modern equivalents include Kafka and RabbitMQ. |
+| OCX | OLE Control Extension — a legacy Microsoft standard for reusable software components based on COM/OLE, the predecessor to ActiveX controls. | Embedding third-party UI controls (`.ocx` files) in Visual Basic 6 applications. |
 | SOAP | XML-based messaging protocol for web services. | Enterprise integrations over SOAP. |
+| WCF | Windows Communication Foundation — a legacy .NET framework for building service-oriented applications. | Superseded by gRPC and ASP.NET Core Web API. |
+| WF | Windows Workflow Foundation — a legacy .NET framework for building workflow-based applications. | State machine or sequential workflows in older .NET applications. |
 | **Historical** {colspan=3} |
 | CORBA | Common Object Request Broker Architecture — OMG standard for language- and platform-neutral distributed objects communicating via an Object Request Broker. | Define interfaces in IDL; ORB uses IIOP for interop between stubs and skeletons.
 | DCE | Distributed Computing Environment — OSF framework for distributed applications providing RPC, security (Kerberos), directory, and threading services. | Build client/server apps with DCE RPC; secure with GSSAPI; use CDS for naming. |
@@ -81,6 +84,7 @@ about the legacy/historical subsections:
 | GA | General Availability — broad production release status following beta/RC; officially supported. | Mark v1.0 as GA and enable default rollout.
 | HCI | Human-Computer Interaction — discipline focused on designing, evaluating, and implementing user interfaces and human-centered systems. | Usability studies, prototyping flows, accessibility reviews for a new feature. |
 | I18N | Internationalization — design for multiple languages/locales. | Externalize strings; ICU formatting; locale-aware dates/numbers. |
+| ICU | International Components for Unicode — a mature and widely used set of C/C++ and Java libraries for Unicode support, internationalization, and globalization. | Use ICU for collation, date/time formatting, and character set conversion. |
 | KPI | Key Performance Indicator — metric tracking performance toward a goal. | Conversion rate, p95 latency, crash-free sessions. |
 | L10N | Localization — adapt an internationalized product for a locale. | Translate resources; RTL layout; localized units/images. |
 | LTS | Long-Term Support — release line maintained with security/critical fixes for an extended period. | Choose Node.js LTS for production; receive patches without feature churn. |
@@ -103,12 +107,19 @@ about the legacy/historical subsections:
 | VCS | Version Control System — track changes to code and collaborate. | Git (branches, commits, PRs), Mercurial. |
 | WIP | Work In Progress — items in progress; limit to improve flow. | Cap WIP per Kanban column. |
 | XP | Extreme Programming — agile practices emphasizing feedback/simplicity. | Pair programming, CI, refactoring, and TDD. |
+| **Legacy** {colspan=3} |
+| CVS | Concurrent Versions System — an early, influential client-server version control system that popularized features like branching and merging. | Superseded by Subversion (SVN) and later Git. |
+| **Historical** {colspan=3} |
+| Y2K | Year 2000 problem — class of bugs related to storing years with two digits, causing issues with dates in and after the year 2000. | Remediation projects to expand date fields and fix date logic. |
 
 ## Web Development
 
 | Acronym | Meaning | Example |
 | --- | --- | --- |
 | AJAX | Asynchronous JavaScript and XML — async HTTP from the browser. | Fetch data without full page reload. |
+| ARIA | Accessible Rich Internet Applications — a W3C specification for making web content and applications more accessible to people with disabilities. | Use `role="button"` and `aria-label` to make a `<div>` accessible as a button. |
+| ASP.NET | Active Server Pages .NET — Microsoft's web application framework for building dynamic web sites and services with languages like C#. | Build web APIs and Razor Pages with ASP.NET Core. |
+| ASGI | Asynchronous Server Gateway Interface — the modern, async-capable successor to WSGI for Python web applications. | Run a FastAPI or Django 3+ app with Uvicorn. |
 | CMS | Content Management System — application for creating, managing, and publishing website content, often with roles, workflows, and plugins; headless CMS expose content via APIs. | WordPress/Drupal; headless CMS like Contentful/Sanity. |
 | CSR | Client-Side Rendering — render in the browser via JS. | React SPA renders views on the client. |
 | CSS | Cascading Style Sheets — style language for HTML. | Tailwind/vanilla CSS styles pages. |
@@ -117,6 +128,7 @@ about the legacy/historical subsections:
 | GraphQL | Query language/runtime for typed APIs. | Client requests specific fields only. |
 | HTML | HyperText Markup Language — web markup. | `<div>`, `<a>`, `<section>` structure pages. |
 | JS | JavaScript — language of the web. | Frontend apps, Node.js scripts. |
+| IIS | Internet Information Services — Microsoft's web server software for Windows. | Host ASP.NET applications on Windows Server with IIS. |
 | LTR | Left-To-Right — text direction where writing proceeds from left to right; default for Latin scripts. | HTML `dir="ltr"`; ensure proper bidi handling with Unicode markers where needed. |
 | NPM | Node Package Manager — default package manager and registry client for Node.js, distributing JavaScript packages and managing project dependencies/scripts. | `npm install react` adds dependencies; `package.json` defines scripts run via `npm run build`. |
 | OpenAPI | Standard to describe HTTP APIs (Swagger). | Generate clients from `openapi.yaml`. |
@@ -132,20 +144,36 @@ about the legacy/historical subsections:
 | URL | Uniform Resource Locator — reference (address) to resources on a network using a scheme, host, and path. | `https://example.com/docs/index.html`. |
 | URN | Uniform Resource Name — a URI that names a resource without specifying its location; persistent, location‑independent identifiers. | `urn:isbn:9780143127796`, `urn:uuid:123e4567-e89b-12d3-a456-426614174000`. |
 | WASM | WebAssembly — portable fast binary format. | Run Rust/C++ in the browser. |
+| WCAG | Web Content Accessibility Guidelines — the primary international standard for web accessibility, published by the W3C. | Aim for WCAG 2.1 AA compliance with sufficient color contrast and keyboard navigation. |
 | WWW | World Wide Web — system of interlinked hypertext documents and resources accessed via the internet using HTTP(S) and URLs. | Browse websites over HTTPS with a web browser. |
+| WSGI | Web Server Gateway Interface — the standard interface between Python web applications and web servers. | Gunicorn/uWSGI running a Flask/Django app via a WSGI callable. |
 | **Legacy** {colspan=3} |
+| ASP | Active Server Pages — Microsoft's first server-side script engine for dynamically generated web pages; superseded by ASP.NET. | Classic ASP with VBScript (`<% ... %>`) on IIS. |
 | CGI | Common Gateway Interface — standard for web servers to execute external programs and generate dynamic content. | Apache invoking a CGI script to render a page. |
-| XHR | XMLHttpRequest — legacy browser API for making HTTP requests from JavaScript (superseded by `fetch`). | `xhr.open('GET', '/api')`; handle `onreadystatechange`.
+| IE | Internet Explorer — Microsoft's legacy web browser, superseded by Edge. | IE11 compatibility mode; legacy intranet sites requiring ActiveX. |
+| JSP | Jakarta Server Pages (JavaServer Pages) — a technology for creating dynamically generated web pages with Java code embedded in HTML. | `.jsp` files compiled into servlets on a Java application server. |
+| WSDL | Web Services Description Language — an XML-based interface definition language for describing the functionality of a SOAP web service. | Generate a client proxy from a `.wsdl` file; `?wsdl` endpoint on a SOAP service. |
+| XHR | XMLHttpRequest — legacy browser API for making HTTP requests from JavaScript (superseded by `fetch`). | `xhr.open('GET', '/api')`; handle `onreadystatechange`. |
 
 ## Programming Languages
 
 | Acronym | Meaning | Example |
 | --- | --- | --- |
+| PHP | PHP: Hypertext Preprocessor — a widely-used open source general-purpose scripting language that is especially suited for web development. | WordPress, Laravel, and Symfony are built with PHP. |
+| VBA | Visual Basic for Applications — the scripting language for Microsoft Office, used for automation and macros. | Automate Excel reports with VBA macros in the VBE. |
+| VB.NET | Visual Basic .NET — the modern, object-oriented successor to classic VB, running on the .NET platform. | Build Windows Forms or ASP.NET applications with VB.NET. |
 | **Legacy** {colspan=3} |
+| APL | A Programming Language — an array-oriented language known for its concise syntax using a special character set. | Financial modeling and data manipulation with APL's vector and matrix operations. |
+| AWK | Aho, Weinberger, and Kernighan — a domain-specific language for text processing, typically used for data extraction and reporting. | `awk '{print $1}' file.txt` to print the first column of a file. |
 | BASIC | Beginner's All-purpose Symbolic Instruction Code — simple, interactive language designed for accessibility, popular on microcomputers. | `10 PRINT "HELLO"`, `20 GOTO 10`; Microsoft BASIC, Dartmouth BASIC. |
 | COBOL | COmmon Business-Oriented Language — verbose, English-like language for business, finance, and administrative systems on mainframes. | `IDENTIFICATION DIVISION.`, `PERFORM ... UNTIL ...`; legacy financial systems. |
 | FORTRAN | FORmula TRANslation — pioneering compiled language for numeric and scientific computing. | `DO` loops, `GOTO`, `COMMON` blocks; used in HPC and scientific libraries. |
 | LISP | LISt Processing — early, influential high-level language family based on lambda calculus, pioneering many FP concepts and featuring code-as-data (homoiconicity). | `(defun factorial (n) ...)` in Common Lisp/Scheme; Emacs Lisp. |
+| ML | MetaLanguage — an influential family of functional programming languages known for its static type system, type inference, and algebraic data types. | Standard ML (SML) and OCaml are popular dialects; influenced F#, Rust, and Haskell. |
+| PL/I | Programming Language One — an imperative language developed by IBM for scientific, engineering, and business applications, combining features from FORTRAN and COBOL. | Legacy applications on IBM mainframes (z/OS). |
+| RPG | Report Program Generator — a high-level language for business applications, primarily on IBM i (AS/400) systems. | Business logic in fixed-format RPG IV on an IBM iSeries server. |
+| SML | Standard ML — a popular dialect of the ML programming language, known for its formal definition and use in language research. | SML/NJ and MLton are common compilers; used in theorem provers. |
+| VB | Visual Basic (Classic) — event-driven language and IDE for rapid application development on Windows before .NET. | VB6 applications with COM components and ADO database connections. |
 | **Historical** {colspan=3} |
 | ALGOL | ALGOrithmic Language — influential early family of imperative languages that introduced block structure, lexical scope, and formal grammar definition (BNF). | ALGOL 60/68 influenced Pascal, C, and many other languages. |
 
@@ -156,14 +184,17 @@ about the legacy/historical subsections:
 | AAA | Arrange–Act–Assert — unit testing pattern that structures tests into setup (arrange inputs/fixtures), execution (act), and verification (assert expected outcomes). | Arrange a service and mocks; Act by calling the method; Assert on result and interactions. |
 | ADT | Abstract Data Type — specification of behavior independent of implementation. | Stack/queue ADTs with array- or list-based implementations. |
 | ADT | Algebraic Data Type — composite types formed by sums (variants) and products (fields), enabling expressive, type-safe modeling. | Rust enums/Haskell data types; Option/Either in FP. |
+| AIO | Asynchronous I/O — a form of I/O processing that permits other processing to continue before the transmission has finished. | Linux `io_uring` or Windows IOCP for high-performance servers. |
 | API | Application Programming Interface — a defined surface for one piece of software to interact with another. | POSIX file APIs, a graphics library API, or an HTTP endpoint. |
 | ASM | Assembly Language — low-level programming language with a strong correspondence between instructions and the machine's architecture. | Write `syscall` wrappers in ASM; optimize hot loops with SIMD intrinsics or inline assembly. |
 | AVL | Adelson-Velsky and Landis tree — self‑balancing binary search tree that maintains height balance via rotations to ensure O(log n) search/insert/delete. | Implement an ordered map/set with AVL rotations (LL/LR/RL/RR). |
+| BCL | Base Class Library — the standard library of core types and functions in the .NET Framework and its successors. | Use types from `System` namespace like `String`, `List<T>`, and `HttpClient`. |
 | BFS | Breadth-First Search — graph/tree traversal that visits neighbors level by level using a queue; finds shortest paths in unweighted graphs. | Level-order traversal of a tree; BFS from a source to compute distances/parents. |
 | BSP | Binary Space Partitioning — recursively subdivide space with hyperplanes (planes in 3D, lines in 2D) to organize geometry for visibility, rendering order, and collision queries. | Classic FPS engines (e.g., Quake) use BSP trees for visibility/culling and painter's algorithm ordering. |
 | BST | Binary Search Tree — ordered binary tree supporting average O(log n) search/insert/delete when balanced; worst‑case O(n) if unbalanced. | Implement sets/maps; inorder traversal yields keys in sorted order. |
 | CAS | Compare-And-Swap — atomic operation that updates a memory location only if it still equals an expected value; foundation for lock‑free algorithms. | CAS loop for a lock‑free stack push; beware the ABA problem. |
 | CLI | Command-Line Interface — text-based commands. | `git`, `kubectl`, custom CLIs. |
+| CLI | Common Language Infrastructure — the open specification (ECMA-335) for the .NET runtime environment. | The .NET CLR is an implementation of the CLI standard. |
 | CLR | Common Language Runtime — .NET VM. | Runs C# assemblies. |
 | CRUD | Create, Read, Update, Delete — basic data ops. | REST endpoints map to CRUD on `users`. |
 | CUI | Character User Interface — text/character-based UI typically rendered in terminals with limited graphics; overlaps with TUI. | Installer wizards and ncurses-style menus in a terminal. |
@@ -172,6 +203,7 @@ about the legacy/historical subsections:
 | DSL | Domain-Specific Language — tailored language. | SQL, Regex, build DSLs. |
 | Regex | Regular Expression — declarative pattern syntax for matching, searching, and transforming strings; available in most languages and tooling with varying feature levels (POSIX, PCRE, etc.). | Use `/^foo.*bar$/` to validate inputs; run `rg --ignore-case 'error|warn'` to filter logs via regex. |
 | EOF | End Of File — no more data to read. | Read returns EOF on file end. |
+| FASM/MASM/NASM/TASM | Flat Assembler / Microsoft Macro Assembler / Netwide Assembler / Turbo Assembler — popular assemblers for the x86 architecture. | Writing bootloaders or optimizing code with x86 assembly. |
 | FFI | Foreign Function Interface — mechanism to call functions across language/ABI boundaries. | Rust `extern "C"` to call C; Python `ctypes`/`cffi` bindings. |
 | FIFO | First In, First Out — queue discipline. | Message queues processing order. |
 | FP | Functional Programming — pure functions/immutability. | Map/filter/reduce pipelines. |
@@ -188,6 +220,7 @@ about the legacy/historical subsections:
 | JDK | Java Development Kit — Java dev tools. | `javac`, `jar`. |
 | JRE | Java Runtime Environment — run Java apps. | `java -jar app.jar`. |
 | JVM | Java Virtual Machine — runs bytecode. | JVM-based languages (Kotlin, Scala). |
+| LINQ | Language-Integrated Query — a .NET feature that adds native data querying capabilities to languages like C#. | Use LINQ to query collections, databases (via EF), and XML. |
 | LRU | Least Recently Used — cache eviction policy that discards the least recently accessed items first. | LRU caches/maps in memory-constrained systems. |
 | LSB | Least Significant Bit — the bit with the lowest positional value in a binary number (2^0); determines odd/even and is affected first by increment. | In 0b1011, the LSB is 1; little‑endian stores LSB byte first. |
 | LSP | Language Server Protocol — standard JSON-RPC protocol between editors and language servers for code intelligence. | VS Code/Neovim language servers for hover, completion, diagnostics. |
@@ -213,8 +246,13 @@ about the legacy/historical subsections:
 | TUI | Text-based User Interface — terminal UI. | `htop`, `ncurses` apps. |
 | UB | Undefined Behaviour — program operations for which the language standard imposes no requirements, allowing compilers to assume they never happen and enabling aggressive optimizations. | C/C++ out‑of‑bounds access, use‑after‑free, signed overflow; can lead to unpredictable results; use sanitizers to detect.
 | UTC | Coordinated Universal Time — global time standard. | Timestamps/logs in UTC. |
+| UWP | Universal Windows Platform — a platform for creating apps that run across Windows devices. | Build a Windows Store app with UWP and XAML. |
+| VBE | Visual Basic Editor — the integrated development environment for writing and editing VBA code within Microsoft Office. | Press Alt+F11 in Excel to open the VBE. |
+| VS | Visual Studio — Microsoft's integrated development environment (IDE) for .NET and C++ development on Windows. | Develop, debug, and deploy applications with the Visual Studio IDE. |
 | WYSIWYG | What You See Is What You Get — direct-manipulation editor. | Rich text editors. |
-| **Historical** {colspan=3} |
+| WPF | Windows Presentation Foundation — a UI framework for building Windows desktop applications with XAML. | Modern desktop apps with data binding and hardware acceleration. |
+| XAML | Extensible Application Markup Language — a declarative markup language used by Microsoft UI frameworks like WPF and UWP. | Define UI layouts and data bindings in `.xaml` files. |
+| **Historical** {colspan=-3} |
 | RMI | Remote Method Invocation — Java's distributed objects technology enabling method calls on remote JVMs via stubs/skeletons over JRMP (or IIOP for RMI‑IIOP). | Early Java distributed systems; largely supplanted by HTTP/REST, gRPC, and message queues.
 
 ## Compilers
@@ -223,9 +261,11 @@ about the legacy/historical subsections:
 | --- | --- | --- |
 | AOT | Ahead-Of-Time compilation — compile before runtime. | Angular AOT compiles templates during build. |
 | AST | Abstract Syntax Tree — structured tree representation of parsed source code used by compilers and tooling. | AST nodes for statements/expressions in parsers/linters. |
+| ANTLR | ANother Tool for Language Recognition — a popular parser generator for reading, processing, executing, or translating structured text or binary files. | Generate a parser from a grammar file for a custom language. |
 | BNF | Backus–Naur Form — notation for expressing context‑free grammars used to define programming language syntax. | Language specs define grammar productions in BNF or EBNF. |
 | CFG | Context‑Free Grammar — formal grammar class used to define programming language syntax; typically expressed in BNF/EBNF and parsed by LL/LR/GLR/PEG parsers. | Write grammar productions; generate parsers with yacc/bison/ANTLR.
 | CFG | Control Flow Graph — directed graph of basic blocks and edges representing possible control transfers within a function/program; foundation for data‑flow analysis and many optimizations. | Build CFG to compute dominators/loops; enable DCE, SSA construction, and liveness. |
+| CIL | Common Intermediate Language — the bytecode language for the .NET runtime (CLR), to which languages like C# and VB.NET compile. | `ildasm` to inspect the CIL of a .NET assembly; also known as MSIL. |
 | CSE | Common Subexpression Elimination — remove repeated identical expressions by computing once and reusing the value within a region. | Within a block, compute `x+y` once and reuse; global variants extend across blocks. |
 | DCE | Dead Code Elimination — remove code shown by analysis to have no effect on program outputs/side effects, improving size and performance. | Eliminate unused assignments/branches after liveness/constant propagation; `-O2` passes in LLVM/GCC. |
 | DFA | Data Flow Analysis — family of static analyses that compute facts about program variables/paths over a control flow graph using lattice/transfer functions (e.g., reaching definitions, liveness, constant propagation). | Run forward/backward analyses on a CFG; feed results to optimizations like DCE, CSE, and register allocation. |
@@ -270,17 +310,21 @@ about the legacy/historical subsections:
 | DYLIB | Dynamic Library — macOS shared library format loaded by the dynamic linker. | `libfoo.dylib` via dyld; `install_name_tool`/rpaths for relocation. |
 | ELF | Executable and Linkable Format — standard binary format for executables, object files, and shared libraries on Unix-like systems. | Linux binaries with sections/segments; inspect with `readelf`/`objdump`. |
 | EXE | Executable file — Windows program file using the Portable Executable (PE) format for executables and DLLs. | Launch `.exe` apps; inspect PE headers with `dumpbin`/`objdump`. |
-| FAT | File Allocation Table — simple filesystem used historically and for removable media; variants FAT12/16/32. | USB stick formatted as FAT32 for broad compatibility; firmware update drives. |
 | FS | File System — on-disk or logical structure and set of rules the OS uses to organize, store, and retrieve files/directories, including metadata and allocation. | ext4, NTFS, APFS, ZFS; mount/unmount volumes; permissions and journaling.
 | FUSE | Filesystem in Userspace — kernel interface to implement filesystems in user space processes. | Mount `sshfs`/`rclone` via FUSE; custom FS without kernel modules. |
 | GNOME | GNU Network Object Model Environment — free, open‑source desktop environment for UNIX-like systems, part of the GNU Project. | Default desktop on many Linux distributions; GNOME Shell with Wayland/X11. |
-| HAL | Hardware Abstraction Layer — OS layer that hides hardware specifics behind a uniform API so drivers/system code can run across platforms. | Windows HAL; OS kernels providing common driver interfaces across architectures.
+| GDT | Global Descriptor Table — a core data structure in the x86 architecture that defines memory segments for the CPU. | Kernel setup of GDT for code/data segments in protected mode. |
+| HAL | Hardware Abstraction Layer — OS layer that hides hardware specifics behind a uniform API so drivers/system code can run across platforms. | Windows HAL; OS kernels providing common driver interfaces across architectures. |
+| IDT | Interrupt Descriptor Table — x86 data structure that associates interrupt vectors with the addresses of their interrupt service routines (ISRs). | OS populates the IDT to handle hardware interrupts and exceptions. |
+| IFS | Installable File System — an API in an operating system that allows new file systems to be loaded dynamically. | Windows IFS for NTFS, FAT32, and third-party file systems; OS/2's IFS. |
 | IPC | Inter-Process Communication — exchange/coordinate between processes. | Pipes, sockets, shared memory, signals. |
 | ISR | Interrupt Service Routine — function invoked by the OS in response to an interrupt to handle the event and acknowledge the controller. | Keyboard ISR on IRQ1 reads scancode; timer ISR updates ticks and EOIs the APIC. |
 | KDE | K Desktop Environment (now the KDE community and Plasma desktop) — free, open‑source desktop environment and software suite for UNIX-like systems. | KDE Plasma on Linux/BSD; highly configurable desktop with KWin and Qt apps. |
 | L4 | L4 microkernel family — influential second-generation microkernel design emphasizing minimality, high performance, and user-space servers. | seL4 (verified secure); Fiasco.OC; used in secure embedded systems and virtualization. |
 | QNX | QNX Neutrino RTOS — commercial Unix-like real-time operating system with a microkernel architecture, widely used in embedded systems. | Automotive infotainment (BlackBerry IVY), industrial controllers, medical devices. |
 | Mach-O | Mach Object — executable/object file format used by macOS/iOS for binaries and libraries. | Inspect with `otool`/`lldb`; `libfoo.dylib` and `foo.app/Contents/MacOS/foo`. |
+| MSI | Microsoft Installer — an installer package file format and API for Windows. | `.msi` packages for installing software on Windows. |
+| NDIS | Network Driver Interface Specification — a Microsoft API for network card drivers, forming a layer between the protocol stack and the hardware driver. | Writing an NDIS miniport driver; the standard for Windows network drivers. |
 | NTFS | New Technology File System — Windows journaling filesystem with ACLs, alternate data streams, compression, and quotas. | Format a Windows system volume as NTFS; set ACLs with icacls. |
 | OS | Operating System — system software that manages hardware resources and provides common services for programs. | Linux, Windows, macOS; kernel, drivers, processes, filesystems. |
 | PE | Portable Executable — Windows binary format for executables, DLLs, and object files. | Inspect with `dumpbin`/`objdump`; sections, import/export tables. |
@@ -289,6 +333,7 @@ about the legacy/historical subsections:
 | POSIX | Portable OS Interface — Unix-like standard APIs. | `fork`, `exec`, `pthread` APIs. |
 | PTY | Pseudo Terminal — virtual terminal pair (master/slave) used by terminal emulators and remote sessions to emulate a real TTY. | `/dev/pts/*`, `ssh -t`, `forkpty`, `tmux`.
 | RTOS | Real-Time Operating System — OS designed for deterministic response and bounded latency, with priority-based scheduling and real-time primitives. | FreeRTOS, Zephyr, VxWorks on microcontrollers/embedded systems; hard vs soft real-time. |
+| RPM | RPM Package Manager (originally Red Hat Package Manager) — a package management system used by many Linux distributions. | `rpm -i package.rpm`; `yum`/`dnf` use RPM packages. |
 | SO | Shared Object — Unix/Linux shared library format loaded by the dynamic linker. | `libfoo.so` via ld.so/`dlopen`; sonames and rpaths. |
 | SUS | Single UNIX Specification — standard defining UNIX interfaces and behavior maintained by The Open Group, ensuring POSIX compliance and application portability. | SUS/POSIX APIs (`unistd.h`, signals, threads); conformant systems like AIX, HP‑UX, macOS. |
 | TCB | Thread Control Block — kernel data structure that stores the state of a thread, including its registers, stack pointer, and scheduling information. | Analogous to a PCB but for a thread; managed by the scheduler. |
@@ -297,30 +342,42 @@ about the legacy/historical subsections:
 | **Legacy** {colspan=3} |
 | AIX | IBM's UNIX (Advanced Interactive eXecutive) for POWER systems, featuring LPARs, SMIT, JFS2, and enterprise tooling. | IBM Power Systems running AIX on POWER9/POWER10; manage with SMIT/VIOS. |
 | COM | DOS executable — simple flat binary loaded at offset 0x100 with ~64KB segment limit and no header. | Classic `.COM` utilities/programs on MS‑DOS/PC‑DOS; tiny loaders/stubs. |
-| HP-UX | Hewlett-Packard's UNIX for PA‑RISC and Itanium systems with LVM/VxFS and enterprise features. | HP Integrity servers running HP‑UX; SAM/SMH administration; Serviceguard clusters. |
+| UDS | Unix Domain Socket — IPC mechanism using socket endpoints on the local host with filesystem pathnames or abstract namespace. | `/var/run/docker.sock`; faster than TCP on localhost. |
+| VDSO | virtual Dynamic Shared Object — small shared library exposed by the kernel and mapped into user processes to provide fast, syscall-free access to certain kernel routines. | `gettimeofday()` calls on Linux are often implemented via the vDSO to avoid context switches. |
+| VFAT | Virtual FAT — an extension to the FAT filesystem that introduced long filename support in Windows 95. | Enabled filenames longer than the 8.3 DOS convention. |
+| VFS | Virtual File System — OS abstraction layer that provides a uniform API over different filesystems and devices. | Linux VFS layer exposes common inode/dentry APIs across ext4, XFS, NFS, FUSE. |
+| JCL | Job Control Language — scripting language used on IBM mainframes to control batch job execution. | `//SYSIN DD *` statements in a JCL deck to submit a batch job. |
 | MCP | Master Control Program — Unisys mainframe OS in the Burroughs large‑systems line, featuring a stack machine architecture and strong language support; still in use but niche. | Unisys ClearPath MCP systems (Burroughs B5000 lineage) running enterprise workloads. |
 | NT | New Technology — Microsoft’s NT family/architecture underlying Windows NT and its successors (2000/XP/Vista/7/8/10/11), featuring a hybrid kernel, HAL, NTFS, and Win32/NT native subsystems. | Windows NT lineage; `ver` shows NT versioning; services/session model and security based on NT architecture. |
 | UAC | User Account Control — Windows elevation and consent mechanism to limit silent privilege escalation. | Admin tasks prompt for consent; split‑token admin accounts. |
 | UDS | Unix Domain Socket — IPC mechanism using socket endpoints on the local host with filesystem pathnames or abstract namespace. | `/var/run/docker.sock`; faster than TCP on localhost. |
 | VDSO | virtual Dynamic Shared Object — small shared library exposed by the kernel and mapped into user processes to provide fast, syscall-free access to certain kernel routines. | `gettimeofday()` calls on Linux are often implemented via the vDSO to avoid context switches. |
+| VFAT | Virtual FAT — an extension to the FAT filesystem that introduced long filename support in Windows 95. | Enabled filenames longer than the 8.3 DOS convention. |
 | VFS | Virtual File System — OS abstraction layer that provides a uniform API over different filesystems and devices. | Linux VFS layer exposes common inode/dentry APIs across ext4, XFS, NFS, FUSE. |
 | VM | Virtual Memory — OS abstraction that gives processes isolated address spaces mapped to physical memory via paging/segmentation. | Per‑process address spaces, page tables, demand paging, copy‑on‑write. |
 | X11 | X Window System (Version 11) — network‑transparent windowing system and protocol for bitmap displays on UNIX‑like systems. | Xorg/XWayland on Linux; XQuartz on macOS; `ssh -X` X11 forwarding. |
 | z/OS | IBM's mainframe operating system for IBM Z, successor to OS/390 and MVS; provides JES2/3, RACF security, JCL batch, and UNIX System Services (POSIX environment). | Enterprise workloads on IBM Z mainframes; partitioned datasets, CICS/IMS, and USS shells. |
 | ZFS | Zettabyte File System — advanced filesystem/volume manager with snapshots, checksums, compression, and COW semantics. | Create ZFS datasets/pools; instant snapshots/`zfs send` replication. |
 | **Historical** {colspan=3} |
+| A/UX | Apple UNIX — Apple's early implementation of Unix for their 68k-based Macintosh computers, featuring a Mac-like GUI. | An early attempt to merge the Mac GUI with a POSIX-compliant Unix kernel. |
 | CDE | Common Desktop Environment — classic UNIX desktop environment based on Motif and the X Window System; widely used on commercial UNIX workstations in the 1990s. | HP‑UX, Solaris, AIX shipped CDE as the default desktop; superseded by GNOME/KDE. |
+| COFF | Common Object File Format — early, influential format for executables and object files on Unix-like systems. | Predecessor to ELF and PE; used in early System V. |
 | CP/M | Control Program for Microcomputers — early microcomputer OS preceding MS‑DOS. | 1970s/80s 8‑bit systems running CP/M. |
 | CTSS | Compatible Time-Sharing System — pioneering time-sharing OS developed at MIT for the IBM 7090/7094; introduced concepts like password logins and interactive command shells; precursor to Multics. | MIT Project MAC on IBM 7094; early 1960s interactive computing. |
 | DG/UX | Data General's UNIX for AViiON servers/workstations; SVR4-based, multi-processor support; discontinued. | DG AViiON systems running DG/UX; enterprise UNIX of the 1990s. |
 | DOS | Disk Operating System — family of disk‑based OSes. | MS‑DOS, PC‑DOS, DR‑DOS. |
 | EMS | Expanded Memory Specification — paged memory technique (bank switching) to access >1MB of RAM on 8086/286 PCs in real mode via a 64KB page frame in the UMA. | Lotus/Intel/Microsoft (LIM) EMS; configure with EMM386.EXE for DOS games/apps. |
+| GEM | Graphics Environment Manager — a WIMP-style GUI from Digital Research, used on the Atari ST and Amstrad PCs. | The GEM desktop environment; competitor to early Mac OS and Windows. |
+| GEOS | Graphic Environment Operating System — a GUI-based operating system for 8-bit home computers and later for PCs. | Popular on the Commodore 64; PC/GEOS was an alternative to early Windows. |
 | HMA | High Memory Area — the first ~64KB of extended memory, made accessible in real mode on 286+ CPUs by manipulating the A20 line. | Load DOS into the HMA (`DOS=HIGH`) to free up conventional memory. |
 | IRIX | SGI's UNIX for MIPS workstations/servers; renowned for graphics and the original home of XFS; discontinued. | SGI Octane/Onyx systems running IRIX; MIPSpro toolchain; legacy SGI graphics stacks. |
+| LM | LAN Manager — a network operating system (NOS) developed by Microsoft and 3Com, a predecessor to Windows NT Server. | Competed with Novell NetWare; ran on OS/2. |
 | MFT | Multiprogramming with a Fixed number of Tasks — an early configuration of IBM's OS/360 that managed a fixed number of concurrent jobs in static memory partitions. | One of the primary OS/360 options alongside MVT (Variable number of Tasks). |
+| MP/M | Multiprogramming Monitor for Microprocessors — a multi-user version of the CP/M operating system. | Early 8-bit multi-user business systems; predecessor to Concurrent CP/M. |
 | MULTICS | Multiplexed Information and Computing Service — influential time‑sharing OS from MIT/GE/Bell Labs that inspired many UNIX concepts. | 1960s/70s mainframes; security and modular design influenced Unix. |
 | MVS | Multiple Virtual Storage — mainstream IBM mainframe OS from the System/370 era onward, providing robust batch and transaction processing; evolved into OS/390 and z/OS. | Run CICS/IMS transactions; submit JCL batch jobs; manage DASD with VSAM. |
 | MVT | Multiprogramming with a Variable number of Tasks — a configuration of IBM's OS/360 that was a precursor to MVS, allowing for a dynamic number of concurrent jobs. | One of the primary OS/360 options alongside MFT (Fixed number of Tasks). |
+| NLM | NetWare Loadable Module — a server module (driver, application, or utility) that could be dynamically loaded and unloaded in the Novell NetWare operating system. | `.NLM` files for drivers and server applications on a NetWare server. |
 | OS/2 | IBM/Microsoft then IBM OS succeeding DOS. | OS/2 Warp on 1990s PCs. |
 | OS/360 | Operating System/360 — IBM's influential mainframe OS for the System/360, introducing concepts like JCL, partitioned datasets, and a family of compatible systems. | Run batch jobs with JCL; manage datasets on DASD; MFT/MVT variants. |
 | OS/370 | Operating System/370 — successor to OS/360 for System/370 mainframes, introducing virtual memory (SVS/MVS). | MVS (Multiple Virtual Storage) became the mainstream OS/370 version. |
@@ -332,7 +389,8 @@ about the legacy/historical subsections:
 | VM/370 | Virtual Machine/370 — IBM's first official release of the VM hypervisor for the System/370, a landmark in virtualization. | Predecessor to later VM/ESA and z/VM systems. |
 | VM/CMS | Virtual Machine / Conversational Monitor System — the combination of the VM hypervisor and its single-user interactive CMS operating system. | The primary user experience on IBM mainframe time-sharing systems. |
 | VMS | Virtual Memory System — DEC's operating system for VAX (later Alpha/Itanium as OpenVMS), featuring robust clustering and security. | VAX/VMS in enterprises; OpenVMS clusters with RMS/DCL. |
-| XMS | Extended Memory Specification — standard for DOS programs to access extended memory (>1MB) on 286+ CPUs via a driver (HIMEM.SYS) and A20 gate control. | Load DOS high (`DOS=HIGH`); use XMS for RAM disks and apps needing large buffers.
+| WfW | Windows for Workgroups — an early version of Microsoft Windows that integrated peer-to-peer networking directly into the OS. | Windows 3.11 for Workgroups with File and Print Sharing. |
+| XMS | Extended Memory Specification — standard for DOS programs to access extended memory (>1MB) on 286+ CPUs via a driver (HIMEM.SYS) and A20 gate control. | Load DOS high (`DOS=HIGH`); use XMS for RAM disks and apps needing large buffers. |
 
 ## Document Markup
 
@@ -346,6 +404,7 @@ about the legacy/historical subsections:
 | XSLT | Extensible Stylesheet Language Transformations — declarative language for transforming XML documents using template rules, XPath selection, and functions. | Transform DocBook/XML to HTML/PDF with Saxon/Xalan; XSLT 1.0/2.0/3.0. |
 | **Legacy** {colspan=3} |
 | DTD | Document Type Definition — schema language defining the legal structure/elements/attributes of SGML/XML documents. | Validate XML with a DTD; `<!DOCTYPE ...>` declarations; legacy vs XML Schema/Relax NG. |
+| XSD | XML Schema Definition — the W3C standard for defining the structure and data types of XML documents; the powerful successor to DTD. | Validate XML against an `.xsd` schema; generate code from schemas. |
 | **Historical** {colspan=3} |
 | SGML | Standard Generalized Markup Language — meta-language for defining markup languages; foundation for HTML/XML; rarely used directly today. | SGML-based HTML 2.0/3.2 era; modern stacks use XML/HTML5 instead.
 
@@ -353,16 +412,22 @@ about the legacy/historical subsections:
 
 | Acronym | Meaning | Example |
 | --- | --- | --- |
+| AAC | Advanced Audio Coding — a lossy audio compression format that is the successor to MP3, offering better quality at similar bitrates. | Standard audio format for YouTube, Apple devices, and digital video broadcasting. |
 | DVI | Device Independent file format — TeX's output format describing pages and typeset content in a device‑agnostic way, later converted to PostScript/PDF or displayed via drivers. | Generate `.dvi` from TeX; view/convert with `dvips`, `dvipdfmx`, or viewers like xdvi. |
-| PDF | Portable Document Format — fixed‑layout document format combining text, vector graphics, and images. | Generate reports/invoices; fillable forms; print‑ready docs. |
-| PNG | Portable Network Graphics — lossless raster image format with DEFLATE compression, alpha transparency, and gamma/metadata support. | `.png` UI assets/screenshots; better compression than BMP; supports transparency.
+| EPUB | Electronic Publication — a popular open standard for e-books, using web technologies like HTML, CSS, and SVG. | Read `.epub` files on an e-reader or with a software viewer. |
+| ICO | Icon file format — container for one or more images in various sizes/color depths, used for favicons and application icons. | `favicon.ico` in the web root; Windows `.exe` icon resources. |
+| OTF | OpenType Font — cross-platform font format that can contain PostScript or TrueType outlines and supports advanced typographic features. | `.otf` fonts for professional typography; supersedes PostScript Type 1. |
+| PNG | Portable Network Graphics — lossless raster image format with DEFLATE compression, alpha transparency, and gamma/metadata support. | `.png` UI assets/screenshots; better compression than BMP; supports transparency. |
 | PS | PostScript — page description language and programming language used primarily in desktop publishing and printing workflows. | Generate vector/print-ready `.ps` files; printers interpret PostScript directly; PDF evolved from it.
 | SVG | Scalable Vector Graphics — XML-based vector image format for resolution-independent graphics. | Inline icons/diagrams in HTML; CSS/SMIL animations. |
 | TOML | Tom's Obvious, Minimal Language — minimal configuration format with clear semantics. | `pyproject.toml`, `Cargo.toml` tool configs. |
 | TTF | TrueType Font — outline font format using quadratic Bézier curves; widely supported across operating systems and browsers. | `.ttf` fonts for desktop/web (often inside `.ttc` collections or wrapped as WOFF/WOFF2 for the web).
+| WOFF | Web Open Font Format — compressed container format for web fonts (TrueType/OpenType), enabling faster delivery; WOFF2 offers improved compression. | Serve `.woff2` with a `.woff` fallback for modern web typography. |
 | YAML | Human-friendly serialization format. | `docker-compose.yml` files. |
 | **Legacy** {colspan=3} |
 | BMP | Bitmap Image File — raster image format (Device‑Independent Bitmap) storing pixel data with optional RLE compression. | `.bmp` screenshots/icons; large files compared to PNG/JPEG. |
+| GIF | Graphics Interchange Format — legacy lossless raster image format limited to 256 colors, best known for supporting simple animations. | Animated memes; superseded by PNG for static images and APNG/video for complex animations. |
+| MP3 | MPEG-1 Audio Layer III — a popular lossy audio compression format that revolutionized digital music. | `.mp3` files for music; superseded by AAC but still widely used. |
 | RTF | Rich Text Format — plain-text document format with markup (control words and groups) for character/paragraph styling; widely supported across editors. | Save/export `.rtf` from word processors to interchange formatted text. |
 
 ## Data Encodings
@@ -399,11 +464,17 @@ about the legacy/historical subsections:
 | JSON-LD | JSON for Linking Data — JSON‑based serialization for Linked Data/RDF that uses `@context` to map terms to IRIs and add semantics to JSON documents. | Embed schema.org with `<script type="application/ld+json">` on web pages; exchange RDF graphs in JSON for knowledge graphs/APIs. |
 | JSONL | JSON Lines — newline‑delimited JSON records for streaming/append‑friendly logs and datasets (aka NDJSON). | One JSON object per line; easy to process with line‑oriented tools. |
 | netCDF | Network Common Data Form — self‑describing, portable data formats and libraries for array‑oriented scientific data; supports classic (CDF), 64‑bit offset, and netCDF‑4/HDF5. | Earth science datasets (grids/time series); interoperable with many scientific tools.
-| ORC | Optimized Row Columnar — columnar storage format optimized for analytics with predicate pushdown, compression, and statistics. | Store big data tables in ORC on Hadoop/Spark; efficient scans and compression.
-| RDF | Resource Description Framework — W3C model for describing and linking data using triples (subject–predicate–object), often serialized as Turtle/RDF/XML/JSON‑LD. | Knowledge graphs, linked data; schema.org markup via JSON‑LD.
+| ORC | Optimized Row Columnar — columnar storage format optimized for analytics with predicate pushdown, compression, and statistics. | Store big data tables in ORC on Hadoop/Spark; efficient scans and compression. |
+| OWL | Web Ontology Language — a family of knowledge representation languages for authoring ontologies, based on RDF and standardized by the W3C. | Define classes, properties, and relationships for a domain in an ontology. |
+| RDF | Resource Description Framework — W3C model for describing and linking data using triples (subject–predicate–object), often serialized as Turtle/RDF/XML/JSON‑LD. | Knowledge graphs, linked data; schema.org markup via JSON‑LD. |
+| RDFS | RDF Schema — a vocabulary for defining classes and properties for RDF data, providing a basic ontology framework. | `rdfs:Class`, `rdfs:subClassOf`, `rdfs:domain`, `rdfs:range`. |
+| SPARQL | SPARQL Protocol and RDF Query Language — the standard query language for RDF databases (triple stores). | `SELECT ?s ?p ?o WHERE { ?s ?p ?o }` to query a graph. |
+| SKOS | Simple Knowledge Organization System — a W3C standard for representing knowledge organization systems like thesauruses and taxonomies. | Define concepts with `skos:Concept` and relationships like `skos:broader`. |
 | TSV | Tab-Separated Values — plain text tabular format using tabs as delimiters. | `users.tsv` exports with tab‑delimited fields. |
 | **Legacy** {colspan=3} |
+| FOAF | Friend of a Friend — one of the earliest and most famous Semantic Web ontologies, used to describe people and their relationships. | Define a person's profile using `foaf:Person`, `foaf:name`, `foaf:knows`. |
 | JSONP | JSON with Padding — legacy technique to circumvent same‑origin policy by wrapping JSON in a callback for script tags. | `callback({ ... })` responses consumed via `<script>`; replaced by CORS. |
+| MARC | Machine-Readable Cataloging — a standard for the representation and communication of bibliographic and related information in machine-readable form. | Library automation systems use MARC records to manage catalogs. |
 | RSS | Really Simple Syndication — XML-based web feed format for publishing updates. | Blog feed at `/feed.xml`; subscribe in a feed reader. |
 
 ## Data Formats (Compression & Archival)
@@ -432,6 +503,7 @@ about the legacy/historical subsections:
 | Acronym | Meaning | Example |
 | --- | --- | --- |
 | ACID | Atomicity, Consistency, Isolation, Durability — transaction guarantees. | Bank transfer completes fully or not at all. |
+| ADO.NET | ActiveX Data Objects .NET — the modern data access framework for the .NET platform, succeeding classic ADO. | `SqlConnection` and `DataSet` for database operations in C#/VB.NET. |
 | BASE | Basically Available, Soft state, Eventual consistency — distributed tradeoff. | Eventual consistency across regions. |
 | BI | Business Intelligence — processes/tools to analyze business data for insights and decision‑making. | Dashboards and reports in Looker/Power BI over a warehouse. |
 | BLOB | Binary Large Object — large binary field in a DB. | Store images/files as BLOBs or in object storage. |
@@ -441,15 +513,18 @@ about the legacy/historical subsections:
 | CRDT | Conflict-free Replicated Data Type — data structures that merge deterministically without coordination for eventual consistency. | LWW-Element-Set, G-Counter; collaborative docs with Automerge/Yjs. |
 | CTE | Common Table Expression — named temporary result set referenced within a statement. | `WITH recent AS (SELECT ...) SELECT * FROM recent WHERE ...`. |
 | DB | Database — organized data managed by a DBMS. | Postgres/MySQL database with tables, indexes, and transactions. |
+| DB2 | DB2 — IBM's family of relational database management systems (RDBMS) running on platforms from Linux/Unix/Windows to mainframes (z/OS). | Enterprise data warehousing and OLTP on DB2 for z/OS or LUW. |
 | DBMS | Database Management System — software that manages databases, provides storage, query, and transaction processing. | PostgreSQL, MySQL, SQLite, Oracle, SQL Server. |
 | DDL | Data Definition Language — SQL for defining/modifying schema objects. | `CREATE TABLE`, `ALTER TABLE`, `CREATE INDEX`. |
 | DLQ | Dead Letter Queue — holding queue/topic for messages/events that could not be processed or delivered after retries, isolating poison messages for inspection and remediation. | SQS redrive policy sends failed messages to a DLQ; Kafka error/"-dlq" topic. |
 | DML | Data Manipulation Language — SQL for querying and changing data. | `SELECT`, `INSERT`, `UPDATE`, `DELETE`. |
 | ERD | Entity Relationship Diagram — visual schema modeling notation that captures entities, their attributes, and relationships/cardinalities before implementing a database. | Sketch an ERD in crow's-foot notation to model `Customer`–`Order`–`OrderLine` relationships prior to creating tables. |
+| EF | Entity Framework — Microsoft's object-relational mapping (ORM) framework for .NET. | Map database tables to C# objects with EF Core; use LINQ to query data. |
 | DW | Data Warehouse — centralized, integrated repository optimized for analytics. | Snowflake/BigQuery/Redshift with star/snowflake schemas. |
 | ELT | Extract, Load, Transform — load raw data then transform in the warehouse. | Modern ELT with dbt/BigQuery. |
 | ETL | Extract, Transform, Load — data integration pipeline. | Batch load to data warehouse. |
 | FK | Foreign Key — constraint that enforces referential integrity by requiring values to exist in a referenced table. | `orders.user_id` references `users.id`; ON DELETE CASCADE. |
+| GIS | Geographic Information System — system for capturing, storing, analyzing, and managing spatial or geographic data. | Analyze spatial data with ArcGIS or QGIS; build location-aware apps. |
 | HLL | HyperLogLog — probabilistic algorithm for cardinality (distinct count) estimation that uses fixed, small memory with tunable relative error via stochastic averaging of leading-zero counts. | Approximate unique users/events with ~1–2% error using kilobytes of memory; streaming distinct counts in analytics pipelines. |
 | LSMT | Log-Structured Merge-Tree — write-optimized indexing/storage structure that buffers writes in memory and flushes them as sorted runs (SSTables) to disk, with background compaction/merging; lowers random writes at the cost of read/space amplification. | Used by LevelDB/RocksDB; LSM-based stores like Cassandra and HBase. |
 | MVCC | Multi-Version Concurrency Control — concurrency control that lets readers and writers proceed by keeping multiple row versions and using snapshot visibility rules. | PostgreSQL snapshot reads; VACUUM removes obsolete versions. |
@@ -462,6 +537,14 @@ about the legacy/historical subsections:
 | RDD | Resilient Distributed Dataset — fault-tolerant distributed collection in Apache Spark enabling parallel transformations across partitions with lineage-based recovery. | Spark job transforms an RDD with `rdd.map()`/`filter()` and caches it via `persist()` for reuse. |
 | SQL | Structured Query Language — query/manage relational DBs. | `SELECT * FROM users`. |
 | WAL | Write-Ahead Logging — durability mechanism that writes log records before data pages. | PostgreSQL WAL for crash recovery and replication. |
+| **Legacy** {colspan=3} |
+| ADO | ActiveX Data Objects — a legacy Microsoft data access framework for connecting to databases from languages like classic VB and ASP. | `ADODB.Connection` and `Recordset` objects for database queries. |
+| CICS | Customer Information Control System — IBM mainframe transaction processing monitor that provides high-volume, secure, and reliable online transaction processing. | Legacy banking and airline systems running CICS transactions. |
+| DAO | Data Access Objects — a legacy Microsoft data access API primarily used for accessing Jet (Microsoft Access) databases. | Predecessor to ADO; used heavily in classic VB applications. |
+| IMS | Information Management System — IBM's combined hierarchical database and transaction manager for mainframes, a precursor to relational databases. | High-performance transaction processing on z/OS; IMS DB/DC. |
+| OLE DB | Object Linking and Embedding, Database — a low-level Microsoft API for accessing a wide variety of data sources. | The underlying interface for ADO; connect to SQL Server via the OLE DB provider. |
+| RDO | Remote Data Objects — a legacy Microsoft data access API for remote relational databases, superseded by ADO. | Early client-server applications in Visual Basic connecting to SQL Server. |
+| VSAM | Virtual Storage Access Method — the primary data storage method on IBM z/OS for structured data. | Key-sequenced datasets (KSDS) used by CICS and batch applications. |
 
 ## Artificial Intelligence
 
@@ -512,6 +595,7 @@ about the legacy/historical subsections:
 | FLOPS | Floating-Point Operations Per Second — measure of compute performance for CPUs/GPUs/accelerators. | GPU rated at 30 TFLOPS; benchmark sustained vs peak GFLOPS. |
 | FPS | Frames Per Second — render/update frequency for graphics/video; higher is smoother within latency/refresh constraints. | Games target 60+ FPS; VR aims for 90–120 FPS. |
 | INP | Interaction to Next Paint — user input responsiveness (Web Vitals). | INP < 200 ms. |
+| IPC | Instructions Per Clock/Cycle — measure of a CPU's architectural efficiency, independent of clock speed. | A CPU with higher IPC can be faster than one with a higher clock rate. |
 | IOPS | Input/Output Operations Per Second — storage throughput measurement. | NVMe SSD sustaining 500k+ random read IOPS. |
 | LCP | Largest Contentful Paint — main content render time (Web Vitals). | LCP < 2.5 s. |
 | LoC | Lines of Code — simple size metric counting source lines; can indicate scope but is a poor proxy for complexity or value. | Compare module sizes; avoid using LoC alone for productivity.
@@ -527,13 +611,16 @@ about the legacy/historical subsections:
 
 | Acronym | Meaning | Example |
 | --- | --- | --- |
-| AJAX | Asynchronous JavaScript and XML — async HTTP from the browser. | Fetch data without full page reload. |
 | AMQP | Advanced Message Queuing Protocol — open standard for asynchronous messaging between applications, enabling reliable, interoperable, and feature-rich communication. | RabbitMQ/ActiveMQ brokers implementing AMQP 0-9-1 or 1.0 for queuing and routing. |
 | ARP | Address Resolution Protocol — map IP addresses to MAC addresses on a LAN. | ARP cache; gratuitous ARP. |
+| AS | Autonomous System — a collection of IP networks under a single administrative control, identified by an ASN and used in BGP routing. | An ISP, a university, or a large tech company's network. |
+| ASN | Autonomous System Number — a globally unique identifier for a network, used in BGP routing. | ISP route announcements include their ASN; `AS15169` is Google's ASN. |
+| BIND | Berkeley Internet Name Domain — a widely used, open-source DNS server. | Configure zones in `named.conf`; query a BIND server with `dig`. |
 | BGP | Border Gateway Protocol — inter-domain routing protocol of the internet. | ISP peering and route advertisements. |
 | BPF | Berkeley Packet Filter — kernel-level virtual machine for packet filtering/observability (eBPF on modern kernels). | Capture packets with tcpdump; eBPF programs for tracing. |
 | CIDR | Classless Inter-Domain Routing — notation for IP prefixes and aggregation. | `10.0.0.0/16` VPC; subnetting `/24`; route summarization. |
 | CNAME | Canonical Name — DNS record that aliases one hostname to another. | `www` CNAME to `example.com`; avoid at zone apex without ALIAS/ANAME. |
+| CRC | Cyclic Redundancy Check — an error-detecting code used to detect accidental changes to digital data. | Ethernet frame check sequence (FCS); CRC-32 in ZIP/PNG files. |
 | DHCP | Dynamic Host Configuration Protocol — automatic IP configuration. | DHCP assigns IP/gateway/DNS. |
 | DHT | Distributed Hash Table — decentralized key-value store that partitions data across a peer-to-peer network, enabling scalable lookups without a central server. | BitTorrent Mainline DHT for peer discovery; IPFS for content addressing. |
 | DoH | DNS over HTTPS — perform DNS resolution over HTTPS for privacy/integrity. | `https://dns.google/dns-query` DoH endpoint. |
@@ -561,6 +648,7 @@ about the legacy/historical subsections:
 | OSI | Open Systems Interconnection — conceptual seven‑layer networking reference model for describing protocols and interoperability (Layers 1–7: Physical→Application). | Map protocols to layers (e.g., Ethernet=L2, IP=L3, TCP=L4, HTTP=L7); teaching/troubleshooting taxonomy. |
 | OSPF | Open Shortest Path First — interior gateway routing protocol. | Multi-area OSPF in enterprises. |
 | P2P | Peer-to-Peer — decentralized communication model where nodes act as both clients and servers without a central coordinator. | BitTorrent swarms; WebRTC data channels; DHT-based peer discovery. |
+| PoE | Power over Ethernet — standard for providing electrical power through Ethernet cables to devices like IP cameras, VoIP phones, and wireless access points. | 802.3af/at/bt standards for PoE/PoE+/PoE++. |
 | QoS | Quality of Service — mechanisms that classify and prioritize traffic to meet latency, jitter, and loss requirements. | Configure DiffServ/DSCP queues on routers to give voice and video higher priority than bulk data. |
 | QUIC | Quick UDP Internet Connections — encrypted, multiplexed transport over UDP. | HTTP/3 runs over QUIC. |
 | SFTP | SSH File Transfer Protocol — file transfer over SSH. | `sftp user@host` uploads/downloads. |
@@ -568,6 +656,7 @@ about the legacy/historical subsections:
 | SNMP | Simple Network Management Protocol — protocol for monitoring and managing networked devices via a hierarchical MIB of OIDs, supporting polling and asynchronous traps/informs. | Poll interfaces/CPU via GET/GETNEXT/GETBULK; receive traps; v1/v2c (community) and v3 (auth/privacy). |
 | SMTP | Simple Mail Transfer Protocol — send email. | MTA relaying messages. |
 | SSE | Server-Sent Events — HTTP-based server→client stream. | `EventSource('/events')`. |
+| STP | Spanning Tree Protocol — network protocol that ensures a loop-free topology for bridged Ethernet networks. | Switches running STP/RSTP to prevent broadcast storms. |
 | TCP | Transmission Control Protocol — reliable byte stream. | HTTP, TLS use TCP. |
 | TCP/IP | Transmission Control Protocol / Internet Protocol — foundational internet protocol suite encompassing transport, network, and related layers. | Classic network stack model; "TCP/IP networking" on UNIX systems. |
 | TLD | Top-Level Domain — the highest level in the DNS hierarchy, forming the rightmost label of a domain name. | `.com`, `.org`, country-code TLDs like `.uk`; ICANN-managed root zone. |
@@ -576,15 +665,19 @@ about the legacy/historical subsections:
 | UNC | Universal Naming Convention — Windows network path notation for accessing resources by server/share. | `\\\\server\\share\\folder\\file.txt`; used with SMB. |
 | VLAN | Virtual Local Area Network — Layer 2 network segmentation on a switch, isolating broadcast domains; tagging via IEEE 802.1Q. | VLAN 10/20 on access/trunk ports; tagged vs untagged frames. |
 | WAN | Wide Area Network — network spanning large geographic areas interconnecting LANs over provider links or the public internet. | MPLS links, SD‑WAN, site‑to‑site VPN between offices. |
-| WHOIS | WHOIS protocol — query/response protocol for retrieving registration information about internet resources such as domain names and IP address allocations. | `whois example.com` to get registrar/registrant data; RDAP is the modern HTTP-based successor.
+| WebRTC | Web Real-Time Communication — a framework providing browsers and mobile applications with real-time communication (RTC) capabilities via simple APIs. | Peer-to-peer video conferencing, screen sharing, and data channels in the browser. |
+| WHOIS | WHOIS protocol — query/response protocol for retrieving registration information about internet resources such as domain names and IP address allocations. | `whois example.com` to get registrar/registrant data; RDAP is the modern HTTP-based successor. |
 | WS | WebSocket — full-duplex over single TCP connection. | `ws://example.com/socket`. |
 | WSS | WebSocket Secure — WebSocket over TLS. | `wss://example.com/socket`. |
 | **Legacy** {colspan=3} |
+| ADSL | Asymmetric Digital Subscriber Line — a common type of DSL where download speeds are faster than upload speeds. | Consumer broadband over telephone lines. |
+| DSL | Digital Subscriber Line — a family of technologies for transmitting digital data over telephone lines. | ADSL, SDSL, VDSL are all types of DSL. |
 | FTP | File Transfer Protocol — legacy, unencrypted by default. | `ftp` client for file transfers. |
 | FTPS | FTP over TLS — encrypted FTP. | Implicit/explicit FTPS modes. |
 | iPXE | Open-source network boot firmware/bootloader extending PXE with HTTP(S), iSCSI, FCoE, AoE, scripts, and TLS. | Chainload iPXE via PXE; fetch an HTTPS boot script to load kernel/initrd.
 | IRC | Internet Relay Chat — real-time text messaging protocol and networks for group channels and direct messages. | Join #project on Libera Chat using irssi or WeeChat. |
-| NNTP | Network News Transfer Protocol — application protocol for distributing, querying, and posting Usenet articles over TCP. | Connect to Usenet servers on 119 (or 563 for NNTPS) to read/post news.
+| NIS | Network Information Service — a legacy Unix directory service for distributing system configuration data like user and host names between computers on a network. | Originally known as Yellow Pages (YP); superseded by LDAP. |
+| NNTP | Network News Transfer Protocol — application protocol for distributing, querying, and posting Usenet articles over TCP. | Connect to Usenet servers on 119 (or 563 for NNTPS) to read/post news. |
 | POP3 | Post Office Protocol v3 — simple email retrieval. | Fetch-and-delete mailbox flow. |
 | PPP | Point-to-Point Protocol — data link layer protocol for encapsulating network traffic over serial links; supports authentication, compression, and multilink. | Dial-up links; PPPoE for broadband; CHAP/PAP authentication. |
 | PPTP | Point-to-Point Tunneling Protocol — legacy VPN tunneling protocol that encapsulates PPP over GRE with MPPE encryption; considered insecure and deprecated. | Historical Windows VPNs using PPTP; replace with IPsec/OpenVPN/WireGuard/L2TP over IPsec. |
@@ -594,13 +687,21 @@ about the legacy/historical subsections:
 | RSH | Remote Shell — BSD plaintext remote command execution; superseded by SSH. | `rsh host command` on legacy UNIX; avoid due to lack of security. |
 | TFTP | Trivial File Transfer Protocol — simple UDP-based file transfer protocol commonly used for network boot and configuration. | PXE firmware downloads boot images via TFTP; no auth/encryption. |
 | UPnP | Universal Plug and Play — discovery and control protocols for devices/services on a local network; includes IGD for NAT port mappings. | Home routers auto‑open ports via UPnP IGD; device discovery/control on LANs. |
+| VDSL | Very-high-bit-rate Digital Subscriber Line — a faster version of DSL, often used for fiber-to-the-curb deployments. | Higher speeds over shorter distances than ADSL. |
+| XMPP | Extensible Messaging and Presence Protocol — open, federated XML-based protocol for instant messaging and presence. | Jabber, Google Talk (legacy); used in federated chat and IoT. |
 | **Historical** {colspan=3} |
+| AIM | AOL Instant Messenger — a pioneering instant messaging service from AOL, popular in the late 1990s and 2000s. | Buddy Lists, away messages, and chat sounds. |
 | ARPANET | Advanced Research Projects Agency Network — pioneering packet‑switched network and direct precursor to the modern Internet. | 1969 UCLA–SRI link; IMPs; 1983 cutover from NCP to TCP/IP. |
+| ATM | Asynchronous Transfer Mode — a telecommunications standard for cell-based switching, designed for high-speed voice, video, and data. | Used in telco backbones and for DSL; superseded by IP-based networks. |
 | BBS | Bulletin Board System — pre‑web dial‑up systems. | Modem dial‑ins for forums/files before the web. |
 | BOOTP | Bootstrap Protocol — assigns IP configuration to diskless clients at boot, predecessor to DHCP. | Network boot ROM requests IP/gateway/TFTP server; largely replaced by DHCP. |
+| CSMA/CD | Carrier-Sense Multiple Access with Collision Detection — media access control method used by early Ethernet on a shared bus. | Half-duplex hubs; nodes listen before transmitting and detect collisions. |
+| CSNET | Computer Science Network — an early computer network that provided services to university computer science departments, funded by the NSF. | A key stepping stone between ARPANET and the modern internet. |
 | DECnet | Digital Equipment Corporation's proprietary network protocol suite for DEC systems; largely superseded by TCP/IP. | VAX/VMS clusters and DEC systems communicating over DECnet Phase IV/V. |
+| ICQ | "I Seek You" — one of the first internet-wide instant messaging services. | User identification numbers (UINs) and the "uh-oh!" sound. |
 | IPX | Internetwork Packet Exchange — Novell's network-layer protocol used with SPX and NetWare; replaced by IP in modern networks. | Legacy NetWare LANs using IPX addressing and routing. |
 | ISDN | Integrated Services Digital Network — circuit‑switched digital telephony offering voice and data over PSTN with separate bearer/signaling channels. | BRI (2B+D) for small sites; PRI (23B+D NA / 30B+D EU) for trunks. |
+| MSN | The Microsoft Network — an early online service and ISP from Microsoft, later known for its web portal and instant messenger. | MSN Messenger was a major competitor to AIM and ICQ. |
 | NCP | NetWare Core Protocol — Novell NetWare file/print service protocol suite running over IPX/SPX (later IP). | Legacy NetWare clients mapping drives/printers via NCP.
 | NCP | Network Control Program — early ARPANET host protocol providing a transport layer and flow control prior to the adoption of TCP/IP. | Used until the 1983 flag day cutover to TCP/IP; sockets over NCP.
 | NDS | Novell Directory Services — directory service for managing identities, resources, and access in Novell NetWare environments (later evolved into eDirectory). | Centralized users/groups/policies across NetWare; replaced/renamed as eDirectory.
@@ -660,6 +761,7 @@ about the legacy/historical subsections:
 | RBAC | Role-Based Access Control — role-granted permissions. | Admin/Editor/Viewer roles. |
 | RCE | Remote Code Execution — run arbitrary code remotely. | Deserialization exploit. |
 | ROP | Return-Oriented Programming — code reuse attack that chains existing instruction sequences ("gadgets") ending in `ret` to execute arbitrary code, bypassing DEP/NX. | Chain ROP gadgets from loaded libraries to call `mprotect` and make the stack executable. |
+| SAM | Security Accounts Manager — the database in Windows that stores user passwords (as hashes) and security principals. | The SAM file (`%SystemRoot%/system32/config/SAM`); `lsass.exe` protects it. |
 | RSA | Rivest–Shamir–Adleman — widely used public‑key cryptosystem for encryption and signatures. | 2048‑bit RSA keys; RSA‑PKCS#1 signatures; TLS certs. |
 | SAST | Static App Security Testing — analyze code/binaries. | SAST pipeline checks. |
 | SBOM | Software Bill of Materials — inventory of components, dependencies, and versions in software artifacts for transparency and vulnerability management. | Generate CycloneDX/SPDX SBOMs in CI; scan against CVEs. |
@@ -676,6 +778,8 @@ about the legacy/historical subsections:
 | XSS | Cross-Site Scripting — script injection into pages. | Output encoding, CSP. |
 | **Legacy** {colspan=3} |
 | MD5 | Message Digest Algorithm 5 — legacy 128-bit cryptographic hash function; cryptographically broken (collisions) and unsuitable for security, but still used for checksums. | `md5sum file.iso` to verify integrity; avoid for passwords/signatures. |
+| NTLM | NT LAN Manager — a legacy Microsoft authentication protocol suite, superseded by Kerberos. | Windows workgroup authentication; fallback when Kerberos is unavailable. |
+| RACF | Resource Access Control Facility — the primary security system on IBM mainframes (z/OS), controlling access to datasets, applications, and system resources. | Define user profiles and grant dataset access with RACF commands. |
 | **Historical** {colspan=3} |
 | SSL | Secure Sockets Layer — legacy to TLS. | Deprecated; use TLS. |
 
@@ -726,6 +830,7 @@ about the legacy/historical subsections:
 | --- | --- | --- |
 | AMD64 | 64‑bit x86 architecture introduced by AMD (aka x86‑64, adopted by Intel as Intel 64) extending IA‑32 with 64‑bit registers, more general‑purpose registers, and long mode. | Build for `x86_64`/`amd64`; Linux System V AMD64 ABI; Windows x64 with WOW64 for 32‑bit apps. |
 | ARM64 | 64‑bit ARM architecture (aka AArch64, ARMv8‑A and later) with a new instruction set and execution state distinct from 32‑bit ARM (AArch32). | Build for `arm64`/`aarch64`; Apple Silicon Macs, AWS Graviton/Neoverse servers, Android flagship SoCs. |
+| ASIC | Application-Specific Integrated Circuit — a chip customized for a particular use, rather than for general-purpose use like a CPU. | Bitcoin mining ASICs; Google TPU for machine learning. |
 | CHERI | Capability Hardware Enhanced RISC Instructions — architectural extensions that add tagged, unforgeable capabilities to enforce fine‑grained memory safety and compartmentalization. | CHERI‑RISC‑V/MIPS; pointers carry bounds/permissions; safer C/C++ and sandboxing.
 | CISC | Complex Instruction Set Computer — CPU design approach featuring larger, more complex, and variable‑length instructions, often implemented with microcode. | x86/x86‑64 architectures; `REP MOVS`, string ops, rich addressing modes. |
 | CUDA | Compute Unified Device Architecture — NVIDIA's parallel computing platform and programming model for GPUs. | Launch kernels in CUDA C++; PyTorch/TensorFlow GPU ops. |
@@ -743,29 +848,48 @@ about the legacy/historical subsections:
 | SPARC | Scalable Processor ARChitecture — RISC CPU architecture originally developed by Sun Microsystems, widely used in servers/workstations and embedded systems. | SPARC V8/V9 (32/64‑bit); UltraSPARC/Oracle SPARC running Solaris/illumos. |
 | X86-64 | Generic name for the 64‑bit x86 ISA (defined by AMD as AMD64 and implemented by Intel as Intel 64/EM64T); adds 64‑bit mode and more registers over IA‑32. | Build for `x86_64`; 64‑bit OSes and apps on AMD/Intel processors. |
 | **Historical** {colspan=3} |
+| AT | Advanced Technology — the IBM PC/AT was the successor to the XT, introducing the 16-bit ISA bus, the 286 processor, and the AT keyboard connector. | The AT form factor and motherboard design influenced PCs for years. |
+| CD-i | Compact Disc Interactive — a multimedia CD player and platform developed by Philips and Sony. | Known for its games and educational titles in the early 1990s. |
 | IA-64 | Intel Itanium architecture — 64‑bit EPIC (Explicitly Parallel Instruction Computing) ISA developed by Intel/HP; distinct from x86/x86‑64 and now discontinued. | Itanium servers/workstations running HP‑UX, OpenVMS, and legacy Windows Server for Itanium‑based systems. |
+| MSX | Machines with Software eXchangeability — a standardized home computer architecture from the 1980s. | Popular in Japan and Europe; Konami games on MSX. |
 | PDP | Programmed Data Processor — DEC minicomputer line before VAX. | PDP‑8, PDP‑11 systems. |
 | VAX | Virtual Address eXtension — DEC 32‑bit minicomputer architecture. | VAX/VMS systems in universities and industry. |
+| XT | Extended Technology — the IBM PC XT was an early version of the PC that included a hard drive. | The 8-bit bus architecture of the PC/XT. |
 
-## Hardware (CPU)
+## Hardware (CPU / General)
 
 | Acronym | Meaning | Example |
 | --- | --- | --- |
 | ALU | Arithmetic Logic Unit — digital circuit in the CPU that performs integer arithmetic and bitwise operations. | Add, subtract, AND/OR/XOR, shifts/rotates executed by the ALU pipelines. |
-| AMX | Advanced Matrix Extensions — x86 instruction set extensions providing tiled matrix operations accelerated in hardware. | Intel AMX for deep‑learning inference/training (tile registers, TMUL). |
 | AP | Application Processor — any non‑bootstrap CPU core in an SMP system that is brought online by the BSP to run the OS scheduler and workloads. | OS sends INIT/SIPI to start APs after BSP init; threads scheduled across APs. |
-| APIC | Advanced Programmable Interrupt Controller — modern local/IO APICs providing scalable interrupt delivery in SMP systems. | LAPIC per core and IOAPIC for external IRQs on x86. |
-| AVX | Advanced Vector Extensions — x86 SIMD instruction set extensions for wide vector operations (256/512-bit in AVX/AVX-512). | AVX2 for integer ops; AVX-512 for HPC workloads. |
 | BSP | Bootstrap Processor — on multi-processor systems (e.g., x86 SMP), the primary CPU core that starts executing firmware/boot code and brings up the OS, which then initializes the remaining cores as Application Processors (APs). | Firmware runs on the BSP first; OS sends INIT/SIPI to start APs. |
 | CPU | Central Processing Unit — main processor that executes instructions. | x86-64 CPUs with multiple cores/threads and SIMD. |
 | FPU | Floating Point Unit — hardware for floating-point arithmetic. | IEEE 754 operations, SIMD extensions. |
 | L1/L2/L3 | Level 1/2/3 Cache — hierarchical caches in a CPU that store frequently accessed data to reduce latency to main memory. | L1 is fastest/smallest (per-core I/D); L2 is larger (per-core); L3 is largest (shared). |
 | MMU | Memory Management Unit — hardware for virtual memory and address translation. | x86-64 paging with TLBs. |
-| NMI | Non-Maskable Interrupt — high-priority hardware interrupt that cannot be disabled by normal interrupt masking, used for critical fault or watchdog conditions. | Watchdog parity/ECC errors trigger NMI; OS NMI handler logs/diagnoses hangs.
+| NMI | Non-Maskable Interrupt — high-priority hardware interrupt that cannot be disabled by normal interrupt masking, used for critical fault or watchdog conditions. | Watchdog parity/ECC errors trigger NMI; OS NMI handler logs/diagnoses hangs. |
 | SIMD | Single Instruction, Multiple Data — vector parallelism executing the same instruction across multiple data lanes. | SSE/AVX on x86, NEON on ARM. |
-| SSE | Streaming SIMD Extensions — x86 SIMD instruction set extensions for parallel vector operations. | SSE2/SSE4 intrinsics; compiler autovectorization for math/graphics. |
 | TLB | Translation Lookaside Buffer — small cache of virtual→physical address translations used by the MMU. | TLB hits speed up paging; TLB flush on context switch. |
+
+## Hardware (CPU / ARM)
+
+| Acronym | Meaning | Example |
+| --- | --- | --- |
+| EL0/1/2/3 | Exception Levels — ARMv8 privilege levels: EL0 (unprivileged), EL1 (OS kernel), EL2 (hypervisor), EL3 (secure monitor). | User apps run at EL0; the kernel at EL1; KVM at EL2. |
+| GIC | Generic Interrupt Controller — standard ARM architecture for managing interrupts, routing them from peripherals to CPU cores. | GICv2/v3/v4; the ARM equivalent of x86's APIC. |
+| NEON | ARM's advanced SIMD (Single Instruction, Multiple Data) architecture extension for accelerating multimedia and signal processing. | NEON intrinsics for video encoding; equivalent to x86 SSE/AVX. |
+| SVE | Scalable Vector Extension — next-generation SIMD instruction set for ARM AArch64, designed for HPC with vector-length agnostic programming. | High-performance computing workloads on ARM servers. |
+
+## Hardware (CPU / x86)
+
+| Acronym | Meaning | Example |
+| --- | --- | --- |
+| AMX | Advanced Matrix Extensions — x86 instruction set extensions providing tiled matrix operations accelerated in hardware. | Intel AMX for deep‑learning inference/training (tile registers, TMUL). |
+| APIC | Advanced Programmable Interrupt Controller — modern local/IO APICs providing scalable interrupt delivery in SMP systems. | LAPIC per core and IOAPIC for external IRQs on x86. |
+| AVX | Advanced Vector Extensions — x86 SIMD instruction set extensions for wide vector operations (256/512-bit in AVX/AVX-512). | AVX2 for integer ops; AVX-512 for HPC workloads. |
+| SSE | Streaming SIMD Extensions — x86 SIMD instruction set extensions for parallel vector operations. | SSE2/SSE4 intrinsics; compiler autovectorization for math/graphics. |
 | VMX | Virtual Machine Extensions — Intel x86 virtualization extensions (VT‑x) that add CPU modes/instructions (VMX root/non‑root, VMXON/VMXOFF, VMLAUNCH/VMRESUME) and a VMCS for hardware‑assisted virtualization. | Enable VT‑x in firmware; KVM/Hyper‑V/VMware use VMX to run guests with hardware assist. |
+| xAPIC | Extended APIC — the default operational mode for the modern x86 APIC, using MMIO for register access. | The OS maps the LAPIC's MMIO region to send IPIs and manage local interrupts. |
 | **Historical** {colspan=3} |
 | MMX | MultiMedia eXtensions — early x86 SIMD instruction set for integer vector operations. | Legacy MMX ops predating SSE on Pentium-era CPUs. |
 
@@ -800,9 +924,18 @@ about the legacy/historical subsections:
 
 | Acronym | Meaning | Example |
 | --- | --- | --- |
+| AHB | Advanced High-performance Bus — an AMBA bus protocol for connecting lower-performance peripherals. | Part of the on-chip bus fabric in an ARM SoC. |
+| AMBA | Advanced Microcontroller Bus Architecture — a family of on-chip interconnect specifications for connecting functional blocks in an SoC. | AMBA protocols include AXI, AHB, and APB. |
+| APB | Advanced Peripheral Bus — a low-bandwidth AMBA bus protocol for simple peripherals. | Connecting UARTs, GPIO, and timers in an SoC. |
+| AXI | Advanced eXtensible Interface — a high-performance AMBA bus protocol for demanding components like CPUs, GPUs, and memory controllers. | The main high-speed bus in a modern ARM SoC. |
+| CCIX | Cache Coherent Interconnect for Accelerators — an industry standard for coherent interconnects between processors and accelerators. | Connecting FPGAs or GPUs to an ARM server CPU. |
+| CMN | Coherent Mesh Network — ARM's high-performance mesh interconnect for connecting components within an SoC and between multiple SoCs. | The socket-to-socket interconnect in multi-socket ARM servers. |
 | GPIO | General-Purpose Input/Output — configurable digital pins on microcontrollers/SoCs used for reading inputs and driving outputs; often support pull‑ups/downs and interrupts. | Toggle Raspberry Pi GPIO with `libgpiod`; configure pin mode and edge interrupts. |
+| DMI | Direct Media Interface — Intel's proprietary link between a CPU and the Platform Controller Hub (PCH). | DMI 3.0/4.0 providing bandwidth for peripherals connected to the PCH. |
 | HBA | Host Bus Adapter — adapter that connects a host system to storage or network devices over a high‑speed bus/fabric (e.g., SAS, Fibre Channel). | FC/SAS HBAs in servers to attach SAN/storage arrays; visible via `lspci`. |
 | HCI | Host Controller Interface — standardized command/event interface between a host stack and a hardware controller (notably in Bluetooth; also USB xHCI). | Capture Bluetooth HCI packets with `btmon`; interact via UART/USB HCI. |
+| I2C | Inter-Integrated Circuit — a synchronous, multi-controller, multi-peripheral serial bus used for attaching low-speed peripherals to a motherboard or embedded system. | Connect sensors/EEPROMs to a microcontroller (SDA/SCL lines). |
+| JTAG | Joint Test Action Group — industry standard for on-chip debugging, programming, and testing of integrated circuits. | Use a JTAG debugger to halt a CPU, inspect registers, and flash firmware. |
 | MIDI | Musical Instrument Digital Interface — standard protocol/interface for transmitting musical performance data between instruments, controllers, and computers. | 5‑pin DIN or USB‑MIDI; Note On/Off, Control Change; DAW controlling a synth. |
 | PCI | Peripheral Component Interconnect — hardware bus standard for attaching peripherals. | PCI devices enumerated by bus/device/function. |
 | PCIe | PCI Express — high-speed serial successor to PCI with lanes and links. | x16 GPU slot; NVMe drives over PCIe. |
@@ -810,14 +943,19 @@ about the legacy/historical subsections:
 | SPI | Serial Peripheral Interface — synchronous serial bus with master/slave (controller/peripheral) and separate data lines for full-duplex transfers. | Connect sensors/flash to microcontrollers (MOSI/MISO/SCLK/CS); higher speed than I²C.
 | UART | Universal Asynchronous Receiver-Transmitter — hardware for serial communication using asynchronous framing (start/stop bits) over TTL/RS-232 levels. | Debug console on microcontrollers; `/dev/ttyS*`/`/dev/ttyUSB*`; 115200 8N1. |
 | USB | Universal Serial Bus — standard for cables and connectors between computers and peripherals. | USB 3.x devices; HID, storage, and serial classes. |
+| UPI | Ultra Path Interconnect — Intel's current point-to-point processor interconnect for server CPUs, successor to QPI. | High-speed link between sockets on multi-processor Xeon systems. |
 | **Legacy** {colspan=3} |
 | COM | Serial COM port — PC designation for RS‑232 serial interfaces (COM1/COM2/...), typically provided by 16550‑class UARTs on DB‑9 connectors. | Connect via null‑modem/USB‑serial; Windows `COM3:`; Linux `/dev/ttyS0` serial consoles. |
+| LPC | Low Pin Count — a bus used on PC-compatible motherboards to connect low-bandwidth devices to the southbridge. | Connects the Super I/O chip, BIOS ROM, and TPM. |
+| QPI | QuickPath Interconnect — Intel's point-to-point processor interconnect that replaced the FSB; superseded by UPI. | High-speed link between CPU and I/O hub on Nehalem/Sandy Bridge-E systems. |
 | **Historical** {colspan=3} |
 | EISA | Extended Industry Standard Architecture — 32‑bit ISA-compatible bus developed by a consortium as an open alternative to MCA; supported bus mastering and IRQ sharing. | Server‑class 486 systems with EISA expansion cards; later replaced by PCI. |
+| FSB | Front-Side Bus — the main interface between the CPU and the northbridge in older PC architectures, superseded by on-chip memory controllers and point-to-point interconnects. | Pentium 4 on an 800MHz FSB; overclocking by raising the FSB speed. |
 | ISA | Industry Standard Architecture — legacy 8/16‑bit PC expansion bus. | Sound/IO cards on 286/386 era PCs. |
 | LPT | Line Printer port — PC parallel printer interface (Centronics/IEEE 1284), addressed as LPT1/LPT2; largely obsolete. | Parallel printers and hardware dongles; DB‑25 connectors; IEEE 1284 SPP/EPP/ECP modes. |
 | MCA | Micro Channel Architecture — IBM's proprietary 32‑bit bus introduced with PS/2 systems as a successor to ISA; offered bus mastering and improved throughput but lacked industry adoption. | IBM PS/2 expansion cards; supplanted by EISA/PCI. |
 | Q-BUS | DEC Q‑bus — asynchronous multiplexed address/data bus used in later PDP‑11 and early MicroVAX systems; lower-cost successor to Unibus with fewer signals. | Q‑bus backplanes/peripherals in PDP‑11/23 and MicroVAX; legacy DEC minicomputers. |
+| PCMCIA | Personal Computer Memory Card International Association — the standard for laptop expansion cards (e.g., modems, network cards) before USB and ExpressCard. | Also known as PC Card; Type I/II/III cards. |
 | Unibus | DEC Unibus — early synchronous shared backplane bus interconnecting CPU, memory, and peripherals in PDP‑11 systems; predecessor to Q‑bus. | PDP‑11 Unibus backplanes/peripherals; historical DEC minicomputers. |
 | VLB | VESA Local Bus — high‑speed local bus before PCI. | 486 motherboards with VLB video/IO cards. |
 | VME | VMEbus (Versa Module Europa) — parallel backplane bus standard (IEEE 1014) widely used in embedded/industrial systems with Eurocard form factors (3U/6U) and modular CPU/I/O cards. | VME chassis in telecom, industrial control, and defense; CPU cards and I/O modules on a shared backplane. |
@@ -838,6 +976,7 @@ about the legacy/historical subsections:
 | SAS | Serial Attached SCSI — point‑to‑point serial interface for enterprise storage. | 12Gb/s SAS HDDs/SSDs; SAS expanders/backplanes. |
 | SATA | Serial ATA — interface for connecting storage devices. | 2.5" SATA SSDs and HDDs. |
 | SD | Secure Digital — flash memory card format with variants (SD/SDHC/SDXC) commonly used in portable devices; typically formatted with FAT32 or exFAT. | Cameras, handheld consoles, and phones; microSD cards with adapters. |
+| SMART | Self-Monitoring, Analysis and Reporting Technology — monitoring system in disk drives to detect and report on indicators of drive reliability. | `smartctl` to read SMART data and predict drive failure. |
 | SSD | Solid-State Drive — storage device using flash memory (no moving parts), offering low latency and high throughput. | NVMe SSDs for fast boot and build times. |
 | **Legacy** {colspan=3} |
 | EIDE | Enhanced IDE — extensions to IDE/PATA. | Support for larger drives and ATAPI. |
@@ -860,8 +999,10 @@ about the legacy/historical subsections:
 | Acronym | Meaning | Example |
 | --- | --- | --- |
 | DP | DisplayPort — digital display interface with high bandwidth, daisy‑chaining via MST, and adaptive sync support. | DP 1.4/2.0 to high‑refresh monitors; USB‑C DP Alt Mode; MST hub. |
+| EDID | Extended Display Identification Data — data structure provided by a display to describe its capabilities (e.g., resolution, timings) to a video source. | GPU reads monitor's EDID over DDC to configure the display mode. |
 | DPI | Dots Per Inch — measure of print/display resolution; colloquially used for screens though PPI is more precise. | 300‑DPI print quality; “Retina” displays around ~220 PPI. |
 | GPU | Graphics Processing Unit — highly parallel processor optimized for graphics and compute. | CUDA/OpenCL workloads; 3D rendering. |
+| HDCP | High-bandwidth Digital Content Protection — copy protection scheme to prevent copying of digital audio/video content as it travels across connections. | HDMI/DisplayPort connections requiring HDCP for protected content playback. |
 | HDMI | High-Definition Multimedia Interface — digital audio/video interface for connecting sources to displays. | HDMI 2.0/2.1 to monitors/TVs; HDCP for protected content. |
 | LCD | Liquid Crystal Display — flat‑panel display technology that uses liquid crystals modulated by a backlight to produce images. | IPS/TN/VA LCD panels; requires LED backlight. |
 | LED | Light‑Emitting Diode — semiconductor light source; in monitors/TVs, often shorthand for LED‑backlit LCDs (not emissive per‑pixel). | Status indicator LEDs; LED‑backlit LCD monitors/TVs. |
@@ -883,6 +1024,7 @@ about the legacy/historical subsections:
 | CGA | Color Graphics Adapter — IBM PC color graphics standard. | 320×200 4‑color modes on early PCs. |
 | CRT | Cathode Ray Tube — vacuum tube display technology that steers electron beams across a phosphor‑coated screen to form images. | Legacy CRT monitors/TVs; scanlines, phosphor persistence, high refresh at lower resolutions. |
 | EGA | Enhanced Graphics Adapter — improved IBM graphics adapter. | 640×350 16‑color graphics. |
+| MDA | Monochrome Display Adapter — the original text-only video card for the IBM PC. | 80x25 character mode with a green or amber phosphor monitor. |
 
 ## Hardware (General)
 
@@ -899,7 +1041,9 @@ about the legacy/historical subsections:
 | MMIO | Memory-Mapped I/O — device registers mapped into the CPU address space for control/status. | Writing to MMIO addresses to control PCIe device registers. |
 | NIC | Network Interface Controller — hardware that connects a computer to a network. | Ethernet adapters; 10/25/40/100GbE NICs with offloads. |
 | OEM | Original Equipment Manufacturer — company that produces components or products that are marketed by another company; also denotes vendor‑specific builds/licenses. | OEM Windows licenses preinstalled on PCs; OEM parts used by system integrators.
-| PC | Personal Computer — general-purpose computer intended for individual use; commonly refers to IBM‑PC compatible systems running Windows/Linux. | Desktop/tower PC with x86‑64 CPU and discrete GPU.
+| PC | Personal Computer — general-purpose computer intended for individual use; commonly refers to IBM‑PC compatible systems running Windows/Linux. | Desktop/tower PC with x86‑64 CPU and discrete GPU. |
+| PCH | Platform Controller Hub — the modern Intel chipset, handling I/O functions for peripherals. | The Z690 PCH provides USB, SATA, and additional PCIe lanes. |
+| PnP | Plug and Play — automatic device detection, enumeration, and configuration by the OS/firmware, minimizing manual setup and IRQ/DMA conflicts. | ACPI/PCI PnP; USB devices enumerated and drivers auto‑loaded. |
 | PSU | Power Supply Unit — converts AC mains to regulated DC rails to power computer components; rated by wattage and efficiency. | ATX PSUs providing +12V/+5V/+3.3V; 80 PLUS efficiency tiers; modular cabling. |
 | RTC | Real-Time Clock — hardware clock that keeps time across reboots/power cycles, often backed by a battery. | System reads RTC (CMOS/ACPI) at boot to set the OS clock. |
 | SBC | Single-Board Computer — complete computer on a single circuit board integrating CPU, memory, storage, and I/O. | Raspberry Pi, BeagleBone; runs Linux for embedded/edge. |
@@ -907,8 +1051,10 @@ about the legacy/historical subsections:
 | SMBIOS | System Management BIOS — firmware tables that describe hardware to the OS. | DMI/SMBIOS tables expose model, memory, and slots. |
 | SoC | System on Chip — integrated circuit that consolidates CPU cores, GPU, memory controllers, and I/O peripherals on a single die/package. | Smartphone/tablet SoCs (Apple M‑series, Qualcomm Snapdragon); embedded ARM SoCs. |
 | TPM | Trusted Platform Module — hardware-based security chip for keys and attestation. | TPM 2.0 used by Secure Boot and disk encryption. |
+| VHDL | VHSIC Hardware Description Language — a hardware description language used in electronic design automation to describe digital and mixed-signal systems. | Design FPGAs and ASICs with VHDL; `entity`, `architecture`, `process`. |
 | **Historical** {colspan=3} |
 | PIC | Programmable Interrupt Controller — legacy interrupt controller (e.g., Intel 8259A) that routes hardware IRQs to the CPU. | Classic x86 uses dual 8259 PICs remapped during OS init. |
+| PDA | Personal Digital Assistant — a handheld device that combined computing, telephone/fax, and networking features; a precursor to the smartphone. | Palm Pilot, Apple Newton, Windows CE devices. |
 | PIT | Programmable Interval Timer — legacy timer chip (e.g., Intel 8253/8254) that divides a ~1.193182 MHz input clock to produce periodic interrupts for task scheduling and timekeeping. | Configure PIT channel 0 to generate IRQ0 for early OS scheduler ticks; retained as a fallback timer during boot. |
 
 ## Firmware
@@ -919,11 +1065,16 @@ about the legacy/historical subsections:
 | AML | ACPI Machine Language — pseudo-code bytecode interpreted by the OS to evaluate ACPI objects and methods from the DSDT/SSDTs. | AML interpreter in the kernel executes methods to handle power events. |
 | DSDT | Differentiated System Description Table — primary ACPI table from firmware containing the base definition of devices and power objects in AML. | The OS loads and interprets the DSDT at boot to enumerate devices. |
 | FADT | Fixed ACPI Description Table — ACPI table that provides pointers to other tables and defines fixed hardware register blocks. | Contains addresses for power management timers and SCI interrupt info. |
+| GRUB | GRand Unified Bootloader — a popular bootloader from the GNU project, used by most Linux distributions. | The GRUB menu for selecting an OS to boot; `grub.cfg` configuration. |
 | MADT | Multiple APIC Description Table — ACPI table that describes all the interrupt controllers (APICs, IOAPICs) in the system. | The OS uses the MADT to initialize CPUs and route interrupts in an SMP system. |
 | PnP | Plug and Play — automatic device detection, enumeration, and configuration by the OS/firmware, minimizing manual setup and IRQ/DMA conflicts. | ACPI/PCI PnP; USB devices enumerated and drivers auto‑loaded. |
+| PSCI | Power State Coordination Interface — ARM standard for power management, allowing an OS to request power state changes from system firmware. | OS uses PSCI calls for CPU hotplug, idle, and system shutdown. |
 | RSDP | Root System Description Pointer — firmware structure that locates the main ACPI tables (RSDT/XSDT) in memory for the OS. | The OS scans for the "RSD PTR " signature in low memory to find the RSDP. |
 | RSDT | Root System Description Table — 32-bit ACPI table that contains pointers to all other description tables. | Superseded by the 64-bit XSDT on modern systems. |
 | SBI | Supervisor Binary Interface — standard interface between a RISC‑V supervisor OS and machine‑mode firmware providing services (timers, IPIs, power, console) via SBI calls; commonly implemented by OpenSBI. | Boot flow: ROM/FSBL → OpenSBI (SBI firmware) → U‑Boot/Linux; OS issues `ecall` to SBI for privileged services. |
+| SCI | System Control Interrupt — a dedicated interrupt used by ACPI to signal power management and other system events to the OS. | ACPI SCI handler for lid open/close or power button events. |
+| SMI | System Management Interrupt — a high-priority interrupt that causes the CPU to enter System Management Mode (SMM). | Triggered by hardware or firmware to handle platform-specific events. |
+| SMM | System Management Mode — a special-purpose CPU mode in x86 for handling system-wide functions like power management and proprietary OEM code, transparent to the OS. | SMI handler for power button events; legacy USB keyboard emulation. |
 | SSDT | Secondary System Description Table — additional ACPI tables containing AML definitions that supplement or modify the DSDT. | Used for device-specific configuration or hot-plug support. |
 | UEFI | Unified Extensible Firmware Interface — modern firmware replacing legacy BIOS with a flexible boot and runtime services model. | UEFI boot managers, GPT disks, Secure Boot. |
 | XSDT | Extended System Description Table — 64-bit version of the RSDT that contains pointers to all other ACPI description tables. | Used by modern 64-bit operating systems to find ACPI tables. |
@@ -932,6 +1083,7 @@ about the legacy/historical subsections:
 | **Historical** {colspan=3} |
 | APM | Advanced Power Management — legacy firmware interface for power management, superseded by ACPI. | APM BIOS calls for sleep/shutdown on pre-ACPI systems. |
 | BIOS | Basic Input/Output System — legacy PC firmware that initializes hardware and boots the OS. | PC firmware POST and boot sequence on legacy/CSM systems. |
+| POST | Power-On Self-Test — diagnostic sequence run by firmware (esp. legacy BIOS) at startup to check hardware integrity. | Beep codes on failure; memory/drive checks during boot. |
 
 ## Culture & Misc
 
@@ -970,6 +1122,7 @@ about the legacy/historical subsections:
 | IRL | In Real Life — referring to the physical/offline world as opposed to online/virtual contexts. | “Let's meet IRL next week.” |
 | LGTM | Looks Good To Me — code review approval. | “LGTM, ship it.” |
 | LMGTFY | Let Me Google That For You — snarky suggestion to search the web first; use sparingly as it can come across as dismissive. | “LMGTFY: how to clear npm cache.” |
+| MAME | Multiple Arcade Machine Emulator — a free and open-source emulator designed to recreate the hardware of arcade game systems in software. | Preserve gaming history by playing classic arcade games with MAME. |
 | LMK | Let Me Know — request a follow-up. | “LMK if the deploy finishes.” |
 | MOTD | Message Of The Day — login banner/notice. | `/etc/motd` on login. |
 | NIH | Not Invented Here — bias to build your own instead of using existing solutions. | Replacing a mature library with custom code. |
@@ -984,6 +1137,7 @@ about the legacy/historical subsections:
 | PITA | Pain In The Ass — something annoying or cumbersome; avoid in formal communication. | “That migration was a PITA.” |
 | PTO | Paid Time Off — time away from work. | “On PTO next week.” |
 | QQ | Quick Question — brief, low‑effort question or nudge for a short answer. | “QQ: is staging using the new DB URL?” |
+| RPG | Role-Playing Game — a game in which players assume the roles of characters in a fictional setting. | Tabletop RPGs like D&D; computer RPGs like Final Fantasy. |
 | RIP | Rest In Peace — tongue-in-cheek epitaph for a feature, service, or idea that just failed or was deprecated. | “RIP staging cluster after that migration.” |
 | RTFM | Read The F***ing Manual — read docs first. | `git rebase --help`. |
 | SME | Subject-Matter Expert — domain expert. | Security SME review. |
@@ -1004,6 +1158,8 @@ about the legacy/historical subsections:
 | WTF | What The F*** — expression of surprise, confusion, or frustration; avoid in formal communication. | “WTF happened to the build pipeline?” |
 | YMMV | Your Mileage May Vary — results differ. | Different env outcomes. |
 | YOLO | You Only Live Once — humorously justifies taking a risk; use with care. | "YOLO deploy" on Friday — probably don't. |
+| **Legacy** {colspan=3} |
+| MUD | Multi-User Dungeon — a text-based, online multiplayer role-playing game; a precursor to MMORPGs. | Connect via Telnet; DikuMUD, LPMud, MUSH/MUCK/MOO variants. |
 
 ## Organizations
 
@@ -1025,6 +1181,7 @@ about the legacy/historical subsections:
 | NIST | National Institute of Standards and Technology — U.S. federal agency that develops standards, guidelines, and measurements to improve technology, cybersecurity, and commerce. | NIST SP 800‑53/63/171 security guidelines; NIST hash/SHA competition; time services. |
 | OASIS | OASIS Open — consortium that develops open standards for security, identity, content, and more. | SAML, STIX/TAXII, KMIP; technical committees and OASIS specifications.
 | OMG | Object Management Group — consortium that develops technology standards, notably modeling/specification standards. | UML, CORBA, BPMN standards; working groups and specifications. |
+| OWASP | Open Web Application Security Project — a non-profit foundation focused on improving software security. | The OWASP Top 10 list of critical web application security risks; OWASP ZAP scanner. |
 | OSI | Open Source Initiative — OSI-approved licenses. | Open Source Definition stewardship. |
 | PCI-SIG | Peripheral Component Interconnect Special Interest Group — consortium that develops and maintains PCI and PCI Express specifications and compliance programs. | PCIe 5.0/6.0 specs, CEM/ECNs; compliance workshops and device interoperability testing.
 | SPEC | Standard Performance Evaluation Corporation — develops industry‑standard benchmarks for computing performance and energy. | SPEC CPU, SPECjbb, SPECpower; widely cited performance metrics. |
