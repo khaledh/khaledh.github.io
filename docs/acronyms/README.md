@@ -189,6 +189,7 @@ about the legacy/historical subsections:
 | ASM | Assembly Language — low-level programming language with a strong correspondence between instructions and the machine's architecture. | Write `syscall` wrappers in ASM; optimize hot loops with SIMD intrinsics or inline assembly. |
 | AVL | Adelson-Velsky and Landis tree — self‑balancing binary search tree that maintains height balance via rotations to ensure O(log n) search/insert/delete. | Implement an ordered map/set with AVL rotations (LL/LR/RL/RR). |
 | BCL | Base Class Library — the standard library of core types and functions in the .NET Framework and its successors. | Use types from `System` namespace like `String`, `List<T>`, and `HttpClient`. |
+| BEAM | Bogdan's Erlang Abstract Machine — the virtual machine at the core of the Erlang and Elixir ecosystems, known for its concurrency and fault tolerance. | The BEAM VM powers highly concurrent systems like WhatsApp. |
 | BFS | Breadth-First Search — graph/tree traversal that visits neighbors level by level using a queue; finds shortest paths in unweighted graphs. | Level-order traversal of a tree; BFS from a source to compute distances/parents. |
 | BSP | Binary Space Partitioning — recursively subdivide space with hyperplanes (planes in 3D, lines in 2D) to organize geometry for visibility, rendering order, and collision queries. | Classic FPS engines (e.g., Quake) use BSP trees for visibility/culling and painter's algorithm ordering. |
 | BST | Binary Search Tree — ordered binary tree supporting average O(log n) search/insert/delete when balanced; worst‑case O(n) if unbalanced. | Implement sets/maps; inorder traversal yields keys in sorted order. |
@@ -233,6 +234,7 @@ about the legacy/historical subsections:
 | OLE | Object Linking and Embedding — Microsoft technology (built on COM) for embedding and linking documents/objects between applications. | Embed an Excel sheet in a Word doc; OLE automation for Office apps. |
 | OOM | Out Of Memory — condition where available memory is exhausted and allocations fail. | Linux OOM killer terminates processes; runtime throws OOM error. |
 | OOP | Object-Oriented Programming — encapsulation/inheritance/polymorphism. | Classes, interfaces, virtual methods. |
+| OTP | Open Telecom Platform — the standard library, design principles, and set of tools for building robust, concurrent systems in Erlang/Elixir. | `gen_server` and `supervisor` are key OTP behaviours. |
 | ORM | Object-Relational Mapping — map objects to relational tables. | ORM entities and repositories. |
 | PCRE | Perl Compatible Regular Expressions — regex libraries and syntax compatible with Perl's regex engine (PCRE/PCRE2). | `grep -P`, nginx, PHP use PCRE/PCRE2 for advanced regex features.
 | RAII | Resource Acquisition Is Initialization — lifetime control. | C++ locks released at scope end. |
@@ -275,6 +277,7 @@ about the legacy/historical subsections:
 | FAM | Flexible Array Member — language/ABI feature where a struct’s last field is a size‑unspecified array used to tail‑allocate variable‑length data; not counted in `sizeof` and requires custom allocation/copy logic. | In C (C99+): `struct S{size_t n; int a[];};` allocate with `malloc(sizeof(struct S)+n*sizeof(int))`; `a` occupies trailing storage. |
 | GCC | GNU Compiler Collection — suite of compilers for C/C++/Fortran and more. | `gcc`/`g++` toolchains for building software. |
 | GVN | Global Value Numbering — discover semantically equivalent computations (beyond syntactic equality) to eliminate redundancies across the dominator tree. | Treat `t=x; z=t+y` as `x+y`; coalesce values through copies/φ nodes in SSA. |
+| HM | Hindley–Milner — a classical type inference algorithm that automatically deduces the types of expressions in some statically typed languages. | The basis for type inference in ML-family languages and Haskell. |
 | IR | Intermediate Representation — compiler/transformation-friendly program form between source and machine code. | LLVM IR, SSA-based IRs used for optimization. |
 | JIT | Just-In-Time compilation — runtime optimization. | HotSpot JIT compiles hot methods. |
 | LICM | Loop-Invariant Code Motion — hoist computations whose operands don’t change within a loop to preheaders, and sink post‑loop where safe. | Move `len(arr)`/`c*2` out of the loop body to reduce work. |
@@ -651,6 +654,7 @@ about the legacy/historical subsections:
 | PoE | Power over Ethernet — standard for providing electrical power through Ethernet cables to devices like IP cameras, VoIP phones, and wireless access points. | 802.3af/at/bt standards for PoE/PoE+/PoE++. |
 | QoS | Quality of Service — mechanisms that classify and prioritize traffic to meet latency, jitter, and loss requirements. | Configure DiffServ/DSCP queues on routers to give voice and video higher priority than bulk data. |
 | QUIC | Quick UDP Internet Connections — encrypted, multiplexed transport over UDP. | HTTP/3 runs over QUIC. |
+| RDP | Remote Desktop Protocol — a proprietary protocol from Microsoft for remote access to a graphical user interface on a Windows machine. | Connect to a Windows server with an RDP client; `mstsc.exe`. |
 | SFTP | SSH File Transfer Protocol — file transfer over SSH. | `sftp user@host` uploads/downloads. |
 | SMB | Server Message Block — network file/printer sharing protocol used mainly by Windows; modern versions (SMBv2/v3) support signing/encryption. | Mount `\\server\share`; Samba on Unix; avoid SMBv1 due to security issues. |
 | SNMP | Simple Network Management Protocol — protocol for monitoring and managing networked devices via a hierarchical MIB of OIDs, supporting polling and asynchronous traps/informs. | Poll interfaces/CPU via GET/GETNEXT/GETBULK; receive traps; v1/v2c (community) and v3 (auth/privacy). |
@@ -1170,6 +1174,7 @@ about the legacy/historical subsections:
 | ASF | Apache Software Foundation — non‑profit that supports Apache open source projects and communities. | Apache HTTP Server, Hadoop, Kafka, Spark under the ASF.
 | CNCF | Cloud Native Computing Foundation — part of the Linux Foundation hosting cloud‑native projects and standards. | Kubernetes, Prometheus, Envoy; CNCF landscape and graduation levels.
 | ECMA | Ecma International — industry association for information and communication systems standards. | ECMAScript (JavaScript), C# (ECMA-334), CLI (ECMA-335). |
+| EFF | Electronic Frontier Foundation — a non-profit organization defending civil liberties in the digital world. | Advocates for privacy, free speech, and innovation online. |
 | FSF | Free Software Foundation — GNU/GPL steward. | Publishes GPL family. |
 | GNU | GNU’s Not Unix — FSF project and philosophy. | GNU toolchain/userland. |
 | IANA | Internet Assigned Numbers Authority — coordinates global IP addressing, DNS root zone management (with ICANN), and protocol parameter registries (ports, DHCP options, etc.). | Port numbers and protocol parameters registries; root zone management with ICANN.
