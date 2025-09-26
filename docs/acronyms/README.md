@@ -63,6 +63,7 @@ about the legacy/historical subsections:
 | SDI | Single-Document Interface — application model where each document is opened in its own separate top-level window. | Web browsers, VS Code; each window is an independent instance. |
 | SRP | Single Responsibility Principle — one reason to change. | Split parsing and rendering into separate classes. |
 | UML | Unified Modeling Language — notation to visualize/design systems. | Class and sequence diagrams for architecture and behavior. |
+| WIMP | Windows, Icons, Menus, Pointer — classic graphical user interface paradigm built around overlapping windows, iconography, menu bars, and a pointing device. | Xerox Star and Apple Macintosh popularized WIMP desktops; modern desktop OSes retain the model. |
 | WET | Write Everything Twice — tongue-in-cheek opposite of DRY. | Duplicate code rather than refactor. |
 | YAGNI | You Aren't Gonna Need It — don't build features until necessary. | Skip a caching layer until profiling shows the need. |
 | **Legacy** {colspan=3} |
@@ -338,24 +339,26 @@ about the legacy/historical subsections:
 | RTOS | Real-Time Operating System — OS designed for deterministic response and bounded latency, with priority-based scheduling and real-time primitives. | FreeRTOS, Zephyr, VxWorks on microcontrollers/embedded systems; hard vs soft real-time. |
 | RPM | RPM Package Manager (originally Red Hat Package Manager) — a package management system used by many Linux distributions. | `rpm -i package.rpm`; `yum`/`dnf` use RPM packages. |
 | SO | Shared Object — Unix/Linux shared library format loaded by the dynamic linker. | `libfoo.so` via ld.so/`dlopen`; sonames and rpaths. |
-| SUS | Single UNIX Specification — standard defining UNIX interfaces and behavior maintained by The Open Group, ensuring POSIX compliance and application portability. | SUS/POSIX APIs (`unistd.h`, signals, threads); conformant systems like AIX, HP‑UX, macOS. |
+| SUS | Single UNIX Specification — standard defining UNIX interfaces and behavior maintained by The Open Group, ensuring POSIX compliance and application portability. | SUS/POSIX APIs (`unistd.h`, signals, threads); conformant systems like AIX, HP-UX, macOS. |
 | TCB | Thread Control Block — kernel data structure that stores the state of a thread, including its registers, stack pointer, and scheduling information. | Analogous to a PCB but for a thread; managed by the scheduler. |
 | TID | Thread Identifier — numeric ID for a thread (often equals PID for single-threaded processes; Linux has per-thread TIDs). | `gettid()` on Linux; `pthread_self()` maps to a TID. |
+| TPF | Transaction Processing Facility — IBM's high-performance successor to ACP, optimized for nonstop, large-scale transaction processing on mainframes in aviation, finance, and hospitality. | Airlines, card networks, and hotels run IBM ZTPF/TPF on IBM Z to process reservations and payments at extreme throughput. |
 | TTY | Teletype/Terminal — character device for text I/O; terminal sessions. | `/dev/tty`, PTY in shells. |
 | **Legacy** {colspan=3} |
 | AIX | IBM's UNIX (Advanced Interactive eXecutive) for POWER systems, featuring LPARs, SMIT, JFS2, and enterprise tooling. | IBM Power Systems running AIX on POWER9/POWER10; manage with SMIT/VIOS. |
 | COM | DOS executable — simple flat binary loaded at offset 0x100 with ~64KB segment limit and no header. | Classic `.COM` utilities/programs on MS‑DOS/PC‑DOS; tiny loaders/stubs. |
-| UDS | Unix Domain Socket — IPC mechanism using socket endpoints on the local host with filesystem pathnames or abstract namespace. | `/var/run/docker.sock`; faster than TCP on localhost. |
-| VDSO | virtual Dynamic Shared Object — small shared library exposed by the kernel and mapped into user processes to provide fast, syscall-free access to certain kernel routines. | `gettimeofday()` calls on Linux are often implemented via the vDSO to avoid context switches. |
-| VFAT | Virtual FAT — an extension to the FAT filesystem that introduced long filename support in Windows 95. | Enabled filenames longer than the 8.3 DOS convention. |
-| VFS | Virtual File System — OS abstraction layer that provides a uniform API over different filesystems and devices. | Linux VFS layer exposes common inode/dentry APIs across ext4, XFS, NFS, FUSE. |
+| IVT | Interrupt Vector Table — x86 real‑mode table at 0x0000:0000 with 256 interrupt pointers; superseded by IDT in protected/long mode. | Bootloaders may patch IVT entries before switching modes. |
 | JCL | Job Control Language — scripting language used on IBM mainframes to control batch job execution. | `//SYSIN DD *` statements in a JCL deck to submit a batch job. |
 | MCP | Master Control Program — Unisys mainframe OS in the Burroughs large‑systems line, featuring a stack machine architecture and strong language support; still in use but niche. | Unisys ClearPath MCP systems (Burroughs B5000 lineage) running enterprise workloads. |
 | NT | New Technology — Microsoft’s NT family/architecture underlying Windows NT and its successors (2000/XP/Vista/7/8/10/11), featuring a hybrid kernel, HAL, NTFS, and Win32/NT native subsystems. | Windows NT lineage; `ver` shows NT versioning; services/session model and security based on NT architecture. |
 | UAC | User Account Control — Windows elevation and consent mechanism to limit silent privilege escalation. | Admin tasks prompt for consent; split‑token admin accounts. |
 | UDS | Unix Domain Socket — IPC mechanism using socket endpoints on the local host with filesystem pathnames or abstract namespace. | `/var/run/docker.sock`; faster than TCP on localhost. |
+| UDS | Unix Domain Socket — IPC mechanism using socket endpoints on the local host with filesystem pathnames or abstract namespace. | `/var/run/docker.sock`; faster than TCP on localhost. |
+| VDSO | virtual Dynamic Shared Object — small shared library exposed by the kernel and mapped into user processes to provide fast, syscall-free access to certain kernel routines. | `gettimeofday()` calls on Linux are often implemented via the vDSO to avoid context switches. |
 | VDSO | virtual Dynamic Shared Object — small shared library exposed by the kernel and mapped into user processes to provide fast, syscall-free access to certain kernel routines. | `gettimeofday()` calls on Linux are often implemented via the vDSO to avoid context switches. |
 | VFAT | Virtual FAT — an extension to the FAT filesystem that introduced long filename support in Windows 95. | Enabled filenames longer than the 8.3 DOS convention. |
+| VFAT | Virtual FAT — an extension to the FAT filesystem that introduced long filename support in Windows 95. | Enabled filenames longer than the 8.3 DOS convention. |
+| VFS | Virtual File System — OS abstraction layer that provides a uniform API over different filesystems and devices. | Linux VFS layer exposes common inode/dentry APIs across ext4, XFS, NFS, FUSE. |
 | VFS | Virtual File System — OS abstraction layer that provides a uniform API over different filesystems and devices. | Linux VFS layer exposes common inode/dentry APIs across ext4, XFS, NFS, FUSE. |
 | VM | Virtual Memory — OS abstraction that gives processes isolated address spaces mapped to physical memory via paging/segmentation. | Per‑process address spaces, page tables, demand paging, copy‑on‑write. |
 | X11 | X Window System (Version 11) — network‑transparent windowing system and protocol for bitmap displays on UNIX‑like systems. | Xorg/XWayland on Linux; XQuartz on macOS; `ssh -X` X11 forwarding. |
@@ -386,14 +389,25 @@ about the legacy/historical subsections:
 | OS/370 | Operating System/370 — successor to OS/360 for System/370 mainframes, introducing virtual memory (SVS/MVS). | MVS (Multiple Virtual Storage) became the mainstream OS/370 version. |
 | OS/390 | Successor to MVS/ESA, integrating UNIX services (USS) and other modern features into the core mainframe OS; predecessor to z/OS. | Run UNIX and batch workloads on the same system; prepare for Y2K. |
 | OSF/1 | Open Software Foundation's UNIX, later Digital UNIX/Tru64; SVR4-based with Mach kernel components and advanced features. | DEC Alpha systems running Digital UNIX; TruCluster high-availability. |
+| RISC OS | Acorn's desktop operating system for ARM-based Archimedes and Risc PC machines, featuring a WIMP interface and cooperative multitasking. | Run on Acorn Archimedes/Risc PC systems; modern builds run RISC OS Open on Raspberry Pi. |
 | SVR4 | System V Release 4 — AT&T/Sun UNIX unifying System V, BSD, and Xenix features; foundation for many 1990s commercial UNIXes. | Solaris 2.x and UnixWare derive from SVR4 with STREAMS networking and SVR4 package tools. |
-| TSR | Terminate and Stay Resident — DOS resident utility/program. | Keyboard macros/clock TSRs in MS‑DOS. |
+| TSR | Terminate and Stay Resident — DOS resident utility/program. | Keyboard macros/clock TSRs in MS-DOS. |
 | UMA | Upper Memory Area — the memory block between 640KB and 1MB on PCs, used for system BIOS, option ROMs, and video memory; free portions (UMBs) could map drivers/TSRs. | Load drivers high with `DEVICEHIGH` in `CONFIG.SYS` to free conventional memory. |
 | VM/370 | Virtual Machine/370 — IBM's first official release of the VM hypervisor for the System/370, a landmark in virtualization. | Predecessor to later VM/ESA and z/VM systems. |
 | VM/CMS | Virtual Machine / Conversational Monitor System — the combination of the VM hypervisor and its single-user interactive CMS operating system. | The primary user experience on IBM mainframe time-sharing systems. |
 | VMS | Virtual Memory System — DEC's operating system for VAX (later Alpha/Itanium as OpenVMS), featuring robust clustering and security. | VAX/VMS in enterprises; OpenVMS clusters with RMS/DCL. |
 | WfW | Windows for Workgroups — an early version of Microsoft Windows that integrated peer-to-peer networking directly into the OS. | Windows 3.11 for Workgroups with File and Print Sharing. |
 | XMS | Extended Memory Specification — standard for DOS programs to access extended memory (>1MB) on 286+ CPUs via a driver (HIMEM.SYS) and A20 gate control. | Load DOS high (`DOS=HIGH`); use XMS for RAM disks and apps needing large buffers. |
+| **Historical** {colspan=3} |
+| ACP | Airline Control Program — IBM's specialized high-throughput transaction processing operating system for System/360 and System/370, engineered for airline reservations and other real-time industries; predecessor to TPF. | Run on IBM mainframes to power reservation systems; later evolved into the Transaction Processing Facility (TPF). |
+| ITS | Incompatible Timesharing System — MIT's hacker-centric time-sharing OS for the PDP-6 and PDP-10 that introduced extensible systems, open access, and influential developer culture. | Hackers ran ITS on MIT AI Lab PDP-10s; today enthusiasts explore it via SIMH/KA/KI/KL emulators. |
+| RSTS | Resource Sharing Time-Sharing — DEC's multi-user PDP-11 operating system that merged RT-11 friendliness with RSX services for schools and business computing. | Boot RSTS/E on a PDP-11 or under SIMH to run BASIC, COBOL, and timeshared workloads. |
+| RSX | Real-Time System Executive — DEC's multi-user, multitasking real-time operating system family for PDP-11 minicomputers. | Run RSX-11M/RSX-11M-Plus on PDP-11 hardware or via SIMH for industrial control and retrocomputing. |
+| RT-11 | Real-Time 11 — DEC's single-user real-time operating system for PDP-11 minicomputers, optimized for lab automation and embedded control. | Load RT-11 from floppy/disk on PDP-11 hardware or run under SIMH for vintage development. |
+| SABRE | Semi-Automated Business Research Environment — American Airlines/IBM's pioneering real-time airline reservation system derived from SAGE concepts. | Early 1960s SABRE mainframes booked flights via networked agent terminals; evolved into modern Sabre GDS platforms. |
+| SAGE | Semi-Automatic Ground Environment — Cold War-era air defense system combining massive AN/FSQ-7 computers, radar feeds, and real-time command software to track aircraft and coordinate intercepts. | 1950s USAF direction centers ran SAGE consoles and radar plots; preserved today via simulations and museum restorations. |
+| TOPS | Total Operating System — DEC's time-sharing operating systems for the PDP-10/DECsystem-10 (TOPS-10) and DECsystem-20 (TOPS-20), foundational during the ARPANET era. | Explore TOPS-10/TOPS-20 on emulated DECsystem hardware; develop with ITS-style monitors and early networking tools. |
+| VAXELN | VAX Embedded Local Network — DEC's real-time operating system for VAX systems that provided networked, event-driven control applications with VMS tooling. | Build VAXELN images on VMS hosts and deploy to VAX hardware or emulators for industrial automation use cases. |
 
 ## Document Markup
 
@@ -544,6 +558,9 @@ about the legacy/historical subsections:
 | ADO | ActiveX Data Objects — a legacy Microsoft data access framework for connecting to databases from languages like classic VB and ASP. | `ADODB.Connection` and `Recordset` objects for database queries. |
 | CICS | Customer Information Control System — IBM mainframe transaction processing monitor that provides high-volume, secure, and reliable online transaction processing. | Legacy banking and airline systems running CICS transactions. |
 | DAO | Data Access Objects — a legacy Microsoft data access API primarily used for accessing Jet (Microsoft Access) databases. | Predecessor to ADO; used heavily in classic VB applications. |
+| CODASYL | Conference/Committee on Data Systems Languages — consortium behind COBOL and the DBTG network database model that specified schemas, subschemas, and navigation APIs for early DBMS. | CODASYL DBTG specs defined the network data model adopted by IDS, IDMS, and other mainframe DBMSs. |
+| IDMS | Integrated Database Management System — commercial network database derived from IDS, providing CODASYL DBTG-compliant data/navigation on IBM mainframes. | CA-IDMS on IBM z/OS runs core enterprise apps using CODASYL sets and schemas. |
+| IDS | Integrated Data Store — Charles Bachman’s pioneering network database management system for GE mainframes, influencing CODASYL DBTG standards and later products like IDMS. | Run IDS/II on GE 600/635 systems to model hierarchical/network data; precursor to commercial IDMS releases. |
 | IMS | Information Management System — IBM's combined hierarchical database and transaction manager for mainframes, a precursor to relational databases. | High-performance transaction processing on z/OS; IMS DB/DC. |
 | OLE DB | Object Linking and Embedding, Database — a low-level Microsoft API for accessing a wide variety of data sources. | The underlying interface for ADO; connect to SQL Server via the OLE DB provider. |
 | RDO | Remote Data Objects — a legacy Microsoft data access API for remote relational databases, superseded by ADO. | Early client-server applications in Visual Basic connecting to SQL Server. |
@@ -814,9 +831,12 @@ about the legacy/historical subsections:
 | IoT | Internet of Things — networked embedded devices and sensors that collect data and interact with the physical world. | MQTT devices sending telemetry to an IoT hub. |
 | K8S | Kubernetes — container orchestration. | `kubectl get pods`. |
 | KMS | Key Management Service — managed key storage and cryptographic operations. | AWS KMS for envelope encryption and key rotation. |
-| KVM | Kernel-based Virtual Machine — Linux kernel virtualization enabling VMs with hardware acceleration via KVM modules. | Run QEMU with KVM for near‑native performance; manage with libvirt/virt‑manager. |
+| KVM | Kernel-based Virtual Machine — Linux kernel virtualization enabling VMs with hardware acceleration via KVM modules. | Run QEMU with KVM for near-native performance; manage with libvirt/virt-manager. |
 | LB | Load Balancer — distributes traffic across multiple backends for scalability and resilience. | AWS ALB/NLB, HAProxy/Nginx with health checks and stickiness. |
-| LXC | Linux Containers — OS‑level virtualization using cgroups/namespaces to isolate processes. | Run lightweight containers without a separate kernel per instance. |
+| LXC | Linux Containers — OS-level virtualization using cgroups/namespaces to isolate processes. | Run lightweight containers without a separate kernel per instance. |
+| QEMU | Quick EMUlator — open-source machine emulator and virtualizer supporting full-system emulation and hardware-accelerated virtualization across many architectures. | Boot ARM or RISC-V guests with `qemu-system-*`; pair with KVM for x86 virtualization on Linux hosts. |
+| TCG | Tiny Code Generator — QEMU's dynamic binary translation engine that recompiles guest CPU instructions into host machine code at runtime when hardware acceleration isn't available. | Run QEMU in pure emulation mode; TCG translates ARM guest opcodes to x86 host instructions on the fly. |
+| SIMH | Simulator for Historical Computers — open-source emulator suite for classic minicomputers/mainframes (PDP-11, VAX, IBM 1401, etc.), preserving vintage software environments. | Boot a PDP-11 running RT-11/RSX or a VAX/VMS system image for retrocomputing and software archaeology. |
 | MPI | Message Passing Interface — standardized API for distributed-memory parallel programming using processes that communicate via messages. | Launch ranks with `mpirun` (OpenMPI/MPICH); use collectives like `MPI_Bcast`/`MPI_Reduce`. |
 | NAS | Network-Attached Storage — dedicated file storage accessible over a network. | Home/SMB NAS appliances exposing NFS/SMB shares. |
 | OCI | Open Container Initiative — specs for container images and runtimes. | OCI Image format and OCI Runtime (runc). |
@@ -832,8 +852,9 @@ about the legacy/historical subsections:
 
 | Acronym | Meaning | Example |
 | --- | --- | --- |
-| AMD64 | 64‑bit x86 architecture introduced by AMD (aka x86‑64, adopted by Intel as Intel 64) extending IA‑32 with 64‑bit registers, more general‑purpose registers, and long mode. | Build for `x86_64`/`amd64`; Linux System V AMD64 ABI; Windows x64 with WOW64 for 32‑bit apps. |
-| ARM64 | 64‑bit ARM architecture (aka AArch64, ARMv8‑A and later) with a new instruction set and execution state distinct from 32‑bit ARM (AArch32). | Build for `arm64`/`aarch64`; Apple Silicon Macs, AWS Graviton/Neoverse servers, Android flagship SoCs. |
+| AMD64 | 64-bit x86 architecture introduced by AMD (aka x86-64, adopted by Intel as Intel 64) extending IA-32 with 64-bit registers, more general-purpose registers, and long mode. | Build for `x86_64`/`amd64`; Linux System V AMD64 ABI; Windows x64 with WOW64 for 32-bit apps. |
+| ARM | Advanced RISC Machines — 32-bit RISC architecture (AArch32) originating from Acorn, spanning ARMv1-v7 cores widely used in mobile, embedded, and microcontroller systems. | Cross-compile for `armv7`/`armhf`; run 32-bit ARM Linux on Raspberry Pi models or Cortex-M firmware.
+| ARM64 | 64-bit ARM architecture (aka AArch64, ARMv8-A and later) with a new instruction set and execution state distinct from 32-bit ARM (AArch32). | Build for `arm64`/`aarch64`; Apple Silicon Macs, AWS Graviton/Neoverse servers, Android flagship SoCs. |
 | ASIC | Application-Specific Integrated Circuit — a chip customized for a particular use, rather than for general-purpose use like a CPU. | Bitcoin mining ASICs; Google TPU for machine learning. |
 | CHERI | Capability Hardware Enhanced RISC Instructions — architectural extensions that add tagged, unforgeable capabilities to enforce fine‑grained memory safety and compartmentalization. | CHERI‑RISC‑V/MIPS; pointers carry bounds/permissions; safer C/C++ and sandboxing.
 | CISC | Complex Instruction Set Computer — CPU design approach featuring larger, more complex, and variable‑length instructions, often implemented with microcode. | x86/x86‑64 architectures; `REP MOVS`, string ops, rich addressing modes. |
